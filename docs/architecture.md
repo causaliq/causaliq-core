@@ -1,12 +1,12 @@
-# Architecture Vision for causaliq-repo-template
+# Architecture Vision for causaliq-core
 
 ## CausalIQ Ecosystem
 
-causaliq-repo-template is part of the CausalIQ ecosystem which provides
+causaliq-core is part of the CausalIQ ecosystem which provides
 packages for causal discovery and inference supported by LLMs.
 
 
-## Design Principles for causaliq-repo-template
+## Design Principles for causaliq-core
 
 ### Core Philosophy
 

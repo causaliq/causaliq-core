@@ -12,4 +12,4 @@ jobs:
     with:
       python-versions: '["3.9", "3.10", "3.11", "3.12"]'
       operating-systems: '["ubuntu-latest", "windows-latest", "macos-latest"]'
-      package-name: "causaliq-repo-template"
+      package-name: "causaliq-core"
