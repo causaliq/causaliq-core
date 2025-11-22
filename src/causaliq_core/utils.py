@@ -1,8 +1,8 @@
 """
-Enhanced enumeration classes for CausalIQ Core.
+Enhanced enumeration classes and utility functions for CausalIQ Core.
 
-This module provides extended enumeration functionality that allows enums
-to carry additional attributes beyond their basic values.
+This module provides extended enumeration functionality and other utility
+classes commonly used across the CausalIQ ecosystem.
 """
 
 from enum import Enum

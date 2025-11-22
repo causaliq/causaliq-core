@@ -31,6 +31,7 @@ keywords = ["causaliq"]
 requires-python = ">=3.9"
 dependencies = [
     "click>=8.0.0",
+    "numpy>=1.20.0",
 ]
 
 [project.optional-dependencies]

@@ -1,8 +1,8 @@
-"""Unit tests for enhanced enumeration classes."""
+"""Unit tests for enhanced enumeration functionality."""
 
 import pytest
 
-from causaliq_core.utils.enums import EnumWithAttrs
+from causaliq_core.utils import EnumWithAttrs
 
 
 class ExampleEnumWithAttrs(EnumWithAttrs):
