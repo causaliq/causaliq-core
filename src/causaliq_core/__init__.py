@@ -13,8 +13,10 @@ __description__ = "Template package for CausalIQ repos"
 __url__ = "https://github.com/causaliq/causaliq-core"
 __license__ = "MIT"
 
+
 # Version tuple for programmatic access
 VERSION = tuple(map(int, __version__.split(".")))
+
 
 __all__ = [
     "__version__",

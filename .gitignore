@@ -32,6 +32,12 @@ MANIFEST
 *.manifest
 *.spec
 
+# Legacy code being migrated
+legacy/
+
+# LLM prompts - keep this private for now
+llm_prompts.md
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
