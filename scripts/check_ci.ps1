@@ -1,9 +1,17 @@
 # Pre-commit CI checks script
 # Runs the same checks as GitHub Actions locally
+#
+# Parameters:
+#   -Fast: Skip type checking and run only unit/functional tests (fastest)
+#   -Fix: Auto-fix formatting issues instead of just checking
+#   -IncludeSlow: Include slow tests (system resource tests, disabled by default)
+#
+# Default behavior: Full checks with coverage but excluding slow tests for faster development
 
 param(
     [switch]$Fast,
-    [switch]$Fix
+    [switch]$Fix,
+    [switch]$IncludeSlow
 )
 
 # Ensure we're using a Python virtualenvironment
@@ -83,8 +91,10 @@ if (-not $Fast) {
 # 5. Tests
 if ($Fast) {
     $testResult = Test-Command "python -m pytest -v tests/unit/ tests/functional/" "Fast tests"
+} elseif ($IncludeSlow) {
+    $testResult = Test-Command "python -m pytest -v --cov=src/causaliq_core --cov-report=term-missing" "Full test suite with slow tests"
 } else {
-    $testResult = Test-Command "python -m pytest -v --cov=src/causaliq_core --cov-report=term-missing" "Full test suite"
+    $testResult = Test-Command "python -m pytest -v --cov=src/causaliq_core --cov-report=term-missing -m 'not slow'" "Full test suite (excluding slow tests)"
 }
 $allPassed = $allPassed -and $testResult
 
