@@ -1031,6 +1031,18 @@ _stable_random: Optional[List[float]] = None
 _stable_random_offset: int = 0
 
 
+def _ensure_stable_random_initialized() -> None:
+    """
+    Ensure stable random sequence is properly initialized.
+
+    This helper function ensures consistent initialization across
+    all usage contexts to prevent intermittent failures.
+    """
+    global _stable_random
+    if _stable_random is None:
+        _stable_random = STABLE_RANDOM_SEQUENCE.copy()
+
+
 def random_generator() -> Generator:
     """
     Get the current random number generator instance.
@@ -1103,9 +1115,11 @@ def stable_random(path: Optional[str] = None) -> float:
     """
     global _stable_random, _stable_random_offset  # noqa: F824
 
-    if _stable_random is None:
-        # Initialize from embedded sequence instead of file
-        _stable_random = STABLE_RANDOM_SEQUENCE.copy()
+    # Ensure consistent initialization
+    _ensure_stable_random_initialized()
+
+    # After initialization, _stable_random is guaranteed to be a List[float]
+    assert _stable_random is not None  # For MyPy type checking
 
     if not len(_stable_random):
         raise StopIteration("No more stable random numbers")
@@ -1132,7 +1146,7 @@ def init_stable_random(offset: int = 0) -> None:
     """
     global _stable_random, _stable_random_offset
     _stable_random_offset = offset
-    _stable_random = None
+    _stable_random = None  # Force re-initialization with new offset
 
 
 class RandomIntegers:

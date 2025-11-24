@@ -2,7 +2,7 @@
 
 import pytest
 
-from causaliq_core.math import ln, rndsf
+from causaliq_core.utils import ln, rndsf
 
 
 # Test rndsf function - type errors
