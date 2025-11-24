@@ -8,8 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Initial project structure and scaffolding with environment setup, dummy CLI,
-  pytest testing and CI testing on github.
+- Nothing yet
 
 ### Changed
 - Nothing yet
@@ -26,6 +25,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - Nothing yet
 
-## [0.1.0] - 2025-09-29
+## [0.1.0] - 2024-11-24
 
 ### Added
+- Mathematical utilities for significant figures and logarithms
+- Environment detection with intelligent caching
+- Enhanced enumeration classes with metadata
+- Timing and performance measurement tools
+- Stable cross-platform random number generation
+- Command-line interface and graph utilities
+- Comprehensive API documentation

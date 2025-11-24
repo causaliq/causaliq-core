@@ -5,14 +5,14 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "causaliq-core"
 dynamic = ["version"]
-description = "A template for CausalIQ repos"
+description = "Core utilities and classes for the CausalIQ ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "CausalIQ", email = "info@causaliq.com"},
+    {name = "CausalIQ", email = "info@causaliq.org"},
 ]
 maintainers = [
-    {name = "CausalIQ", email = "info@causaliq.com"},
+    {name = "Dr. Ken Kitson", email = "info@causaliq.org"},
 ]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
