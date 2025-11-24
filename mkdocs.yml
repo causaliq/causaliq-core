@@ -1,6 +1,8 @@
 site_name: causaliq-core
 theme:
   name: material
+  toc:
+    title: "on this page"
   palette:
     # Light mode
     - scheme: light
@@ -41,8 +43,21 @@ extra_css:
 
 nav:
   - Home: index.md
-  - Architecture: architecture.md
-  - API Reference: api.md
+  - Roadmap: roadmap.md
+  - Architecture: 
+    - Architectural Overview: architecture/overview.md
+  - API Reference: 
+    - API Overview: api/overview.md
+    - Main Package: api/main.md
+    - CLI: api/cli.md
+    - Graph: api/graph.md
+    - Utils:
+      - Overview: api/utils.md
+      - Mathematical Functions: api/utils_math.md
+      - Environment: api/utils_environment.md
+      - Random Numbers: api/utils_random.md
+      - Timing: api/utils_timing.md
+  - Testing: testing.md
 
 plugins:
   - search
@@ -79,3 +94,48 @@ plugins:
             backlinks: tree
             show_bases: false
             show_inheritance_diagram: true
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+      title: On this page
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: causaliq
+      repo: causaliq
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+copyright: |
+  &copy; 2025 CausalIQ Research.

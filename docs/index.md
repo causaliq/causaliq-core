@@ -1,4 +1,4 @@
-# [Title for causaliq-core]
+# CausalIQ Core
 
 <!-- add in coverage and CI badges when repo is public -->
 
@@ -6,14 +6,23 @@
 
 ## Welcome
 
-Welcome to the documentation for [**causaliq-core**] — [... briefly describe the purpose]
+Welcome to the documentation for the CausalIQ Core — part of the [CausalIQ ecosystem](https://causaliq.org) for intelligent causal discovery. 
+
+CausalIQ Core provides functionality required by several CausalIQ projects. It is not envisaged that it will be used or called directly itself, nor can it be directly used in [CausalIQ Workflows](https://causaliq.org/projects/workflow/).
 
 ---
 
 ## Overview
 
-causaliq-core is designed for [... more details about functionality]
-This site provides detailed documentation, architectural vision, design notes, and API reference for users and contributors.
+CausalIQ Core provides the following common functionality required by several user-facing CausalIQ packages in the following areas:
+
+- **graph**: support for general graphs, PDAGs and CPDAGs used in causal discovery;
+- **bn**: support for Bayesian Networks (BNs);
+- **io**: filesystem io and format conversion, particularly relating to standard formats for graphs (.graphml, .dsc etc) and BNs (.xdsl)
+- **utils**: utility enums, functions and classes, relating to random numbers, mathematical functions, path handling etc.
+
+This site provides detailed documentation, including: development roadmap, architectural vision, design notes, and API reference for contributors. Since this is not a "user-facing" capability a user guide is not provided.
+
 
 ---
 
@@ -25,9 +34,10 @@ For a quickstart guide and installation instructions, see the [README on GitHub]
 
 ## Documentation Contents
 
-- [Architecture](architecture.md): Learn about the overall architectire of causaliq-core
-- [API Reference](api.md): Full Python API documentation.
-- [Contributing Guidelines](https://github.com/causaliq/causaliq-core/blob/main/CONTRIBUTING.md)
+- [Development Roadmap](roadmap.md): roadmap of upcoming features
+- [Architecture](architecture/overview.md): overall architecture and design notes
+- [API Reference](api/overview.md): complete reference for Python code
+- [Development Guidelines](https://github.com/causaliq/causaliq-core/blob/main/CONTRIBUTING.md): CausalIQ guidelines for developers
 - [Changelog](https://github.com/causaliq/causaliq-core/blob/main/CHANGELOG.md)
 - [License](https://github.com/causaliq/causaliq-core/blob/main/LICENSE)
 
