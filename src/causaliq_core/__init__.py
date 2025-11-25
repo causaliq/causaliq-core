@@ -20,7 +20,6 @@ VERSION = tuple(map(int, __version__.split(".")))
 # Legacy software version constant (migrated from legacy.py)
 SOFTWARE_VERSION: int = 229
 
-
 __all__ = [
     "__version__",
     "__author__",

@@ -7,6 +7,9 @@ from typing import Dict, List, Optional
 
 from pandas import DataFrame
 
+# Import graph classes - moved to top to fix E402
+from .sdg import SDG
+
 # Supported BayeSys versions for graph comparison semantics
 BAYESYS_VERSIONS = ["v1.3", "v1.5+"]
 
@@ -61,3 +64,7 @@ class EdgeType(Enum):
     SEMIDIRECTED = (4, EdgeMark.CIRCLE, EdgeMark.ARROW, "o->")
     NONDIRECTED = (5, EdgeMark.CIRCLE, EdgeMark.CIRCLE, "o-o")
     SEMIUNDIRECTED = (6, EdgeMark.CIRCLE, EdgeMark.LINE, "o-")
+
+
+# Export public interface
+__all__ = ["EdgeType", "EdgeMark", "adjmat", "SDG", "BAYESYS_VERSIONS"]
