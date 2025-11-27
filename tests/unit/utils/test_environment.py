@@ -6,9 +6,9 @@ and suitable for frequent execution during development.
 """
 
 import json
+import sys
 import tempfile
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 
@@ -44,14 +44,13 @@ def test_environment_fresh_cache_mocked(monkeypatch):
         def mock_get_cpu_info():
             return mock_cpu_info
 
-        monkeypatch.setattr(
-            "causaliq_core.utils.user_cache_dir", mock_cache_dir
-        )
-        monkeypatch.setattr("causaliq_core.utils.uname", mock_uname)
-        monkeypatch.setattr(
-            "causaliq_core.utils.get_cpu_info", mock_get_cpu_info
-        )
-        monkeypatch.setattr("causaliq_core.utils.virtual_memory", mock_memory)
+        # Get the actual environment module from sys.modules
+        env_module = sys.modules["causaliq_core.utils.environment"]
+
+        monkeypatch.setattr(env_module, "user_cache_dir", mock_cache_dir)
+        monkeypatch.setattr(env_module, "uname", mock_uname)
+        monkeypatch.setattr(env_module, "get_cpu_info", mock_get_cpu_info)
+        monkeypatch.setattr(env_module, "virtual_memory", mock_memory)
 
         result = environment()
 
@@ -91,16 +90,18 @@ def test_environment_use_existing_cache_mocked(monkeypatch):
         with open(cache_path, "w") as f:
             json.dump(expected_data, f)
 
+        # Get the actual environment module from sys.modules
+        env_module = sys.modules["causaliq_core.utils.environment"]
+
         monkeypatch.setattr(
-            "causaliq_core.utils.user_cache_dir", lambda *args: temp_dir
+            env_module, "user_cache_dir", lambda *args: temp_dir
         )
 
         # Mock time to ensure cache appears fresh (current time)
-        with patch(
-            "causaliq_core.utils.time",
-            return_value=cache_path.stat().st_mtime + 1000,
-        ):
-            result = environment()
+        monkeypatch.setattr(
+            env_module, "time", lambda: cache_path.stat().st_mtime + 1000
+        )
+        result = environment()
 
         # Should return cached data without calling system functions
         assert result == expected_data
@@ -140,19 +141,20 @@ def test_environment_stale_cache_refresh_mocked(monkeypatch):
         with open(cache_path, "w") as f:
             json.dump(old_data, f)
 
+        # Get the actual environment module from sys.modules
+        env_module = sys.modules["causaliq_core.utils.environment"]
+
         monkeypatch.setattr(
-            "causaliq_core.utils.user_cache_dir", lambda *args: temp_dir
+            env_module, "user_cache_dir", lambda *args: temp_dir
         )
-        monkeypatch.setattr("causaliq_core.utils.uname", mock_uname)
-        monkeypatch.setattr(
-            "causaliq_core.utils.get_cpu_info", lambda: mock_cpu_info
-        )
-        monkeypatch.setattr("causaliq_core.utils.virtual_memory", mock_memory)
+        monkeypatch.setattr(env_module, "uname", mock_uname)
+        monkeypatch.setattr(env_module, "get_cpu_info", lambda: mock_cpu_info)
+        monkeypatch.setattr(env_module, "virtual_memory", mock_memory)
 
         # Mock time to make cache appear stale (25 hours old)
         current_time = cache_path.stat().st_mtime + (25 * 3600)
-        with patch("causaliq_core.utils.time", return_value=current_time):
-            result = environment()
+        monkeypatch.setattr(env_module, "time", lambda: current_time)
+        result = environment()
 
         # Should return refreshed data
         assert result == new_data
@@ -183,11 +185,12 @@ def test_environment_custom_cache_dir_mocked(monkeypatch):
     with tempfile.TemporaryDirectory() as temp_dir:
         custom_cache_dir = str(Path(temp_dir) / "custom_cache")
 
-        monkeypatch.setattr("causaliq_core.utils.uname", mock_uname)
-        monkeypatch.setattr(
-            "causaliq_core.utils.get_cpu_info", lambda: mock_cpu_info
-        )
-        monkeypatch.setattr("causaliq_core.utils.virtual_memory", mock_memory)
+        # Get the actual environment module from sys.modules
+        env_module = sys.modules["causaliq_core.utils.environment"]
+
+        monkeypatch.setattr(env_module, "uname", mock_uname)
+        monkeypatch.setattr(env_module, "get_cpu_info", lambda: mock_cpu_info)
+        monkeypatch.setattr(env_module, "virtual_memory", mock_memory)
 
         result = environment(cache_dir=custom_cache_dir)
 
@@ -227,11 +230,19 @@ def test_environment_cache_directory_creation_mocked(monkeypatch):
         def mock_get_cpu_info():
             return mock_cpu_info
 
-        monkeypatch.setattr("causaliq_core.utils.uname", mock_uname)
         monkeypatch.setattr(
-            "causaliq_core.utils.get_cpu_info", mock_get_cpu_info
+            sys.modules["causaliq_core.utils.environment"], "uname", mock_uname
         )
-        monkeypatch.setattr("causaliq_core.utils.virtual_memory", mock_memory)
+        monkeypatch.setattr(
+            sys.modules["causaliq_core.utils.environment"],
+            "get_cpu_info",
+            mock_get_cpu_info,
+        )
+        monkeypatch.setattr(
+            sys.modules["causaliq_core.utils.environment"],
+            "virtual_memory",
+            mock_memory,
+        )
 
         result = environment(cache_dir=custom_cache_dir)
 
@@ -280,20 +291,31 @@ def test_environment_json_error_handling_mocked(monkeypatch):
             return mock_cpu_info
 
         monkeypatch.setattr(
-            "causaliq_core.utils.user_cache_dir", mock_cache_dir
+            sys.modules["causaliq_core.utils.environment"],
+            "user_cache_dir",
+            mock_cache_dir,
         )
-        monkeypatch.setattr("causaliq_core.utils.uname", mock_uname)
         monkeypatch.setattr(
-            "causaliq_core.utils.get_cpu_info", mock_get_cpu_info
+            sys.modules["causaliq_core.utils.environment"], "uname", mock_uname
         )
-        monkeypatch.setattr("causaliq_core.utils.virtual_memory", mock_memory)
+        monkeypatch.setattr(
+            sys.modules["causaliq_core.utils.environment"],
+            "get_cpu_info",
+            mock_get_cpu_info,
+        )
+        monkeypatch.setattr(
+            sys.modules["causaliq_core.utils.environment"],
+            "virtual_memory",
+            mock_memory,
+        )
 
         # Mock time to make corrupted cache appear fresh
-        with patch(
-            "causaliq_core.utils.time",
-            return_value=cache_path.stat().st_mtime + 1000,
-        ):
-            result = environment()
+        monkeypatch.setattr(
+            sys.modules["causaliq_core.utils.environment"],
+            "time",
+            lambda: cache_path.stat().st_mtime + 1000,
+        )
+        result = environment()
 
         # Should handle the error and return fresh data
         expected = {
@@ -327,30 +349,31 @@ def test_environment_cache_write_error_in_error_path_mocked(monkeypatch):
         with open(cache_path, "w") as f:
             f.write("invalid json content")
 
+        # Get the actual environment module from sys.modules
+        env_module = sys.modules["causaliq_core.utils.environment"]
+
         monkeypatch.setattr(
-            "causaliq_core.utils.user_cache_dir", lambda *args: temp_dir
+            env_module, "user_cache_dir", lambda *args: temp_dir
         )
-        monkeypatch.setattr("causaliq_core.utils.uname", mock_uname)
-        monkeypatch.setattr(
-            "causaliq_core.utils.get_cpu_info", lambda: mock_cpu_info
-        )
-        monkeypatch.setattr("causaliq_core.utils.virtual_memory", mock_memory)
+        monkeypatch.setattr(env_module, "uname", mock_uname)
+        monkeypatch.setattr(env_module, "get_cpu_info", lambda: mock_cpu_info)
+        monkeypatch.setattr(env_module, "virtual_memory", mock_memory)
 
         # Mock time to make corrupted cache appear fresh
-        with patch(
-            "causaliq_core.utils.time",
-            return_value=cache_path.stat().st_mtime + 1000,
-        ):
-            # Mock open to fail on write attempts
-            original_open = open
+        monkeypatch.setattr(
+            env_module, "time", lambda: cache_path.stat().st_mtime + 1000
+        )
 
-            def mock_failing_write(*args, **kwargs):
-                if len(args) > 1 and args[1] == "w":
-                    raise PermissionError("Cannot write to cache")
-                return original_open(*args, **kwargs)
+        # Mock open to fail on write attempts
+        original_open = open
 
-            with patch("builtins.open", side_effect=mock_failing_write):
-                result = environment()
+        def mock_failing_write(*args, **kwargs):
+            if len(args) > 1 and args[1] == "w":
+                raise PermissionError("Cannot write to cache")
+            return original_open(*args, **kwargs)
+
+        monkeypatch.setattr("builtins.open", mock_failing_write)
+        result = environment()
 
         # Should still return correct data despite both read and write errors
         expected = {
