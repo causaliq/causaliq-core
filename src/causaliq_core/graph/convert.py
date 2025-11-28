@@ -139,7 +139,7 @@ def toCPDAG(pdag: PDAG) -> Union[PDAG, None]:
     return fromDAG(dag) if dag is not None else None
 
 
-def is_cpdag(pdag: PDAG) -> bool:
+def is_CPDAG(pdag: PDAG) -> bool:
     """
     Whether the PDAG is a Completed PDAG (CPDAG)
 

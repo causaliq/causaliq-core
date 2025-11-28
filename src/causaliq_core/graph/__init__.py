@@ -7,7 +7,7 @@ from typing import Dict, List, Optional
 from pandas import DataFrame
 
 # Import conversion functions
-from .convert import extendPDAG, fromDAG, is_cpdag, toCPDAG
+from .convert import extendPDAG, fromDAG, is_CPDAG, toCPDAG
 from .dag import DAG, NotDAGError
 
 # Import enums
@@ -65,6 +65,6 @@ __all__ = [
     "fromDAG",
     "toCPDAG",
     "extendPDAG",
-    "is_cpdag",
+    "is_CPDAG",
     "BAYESYS_VERSIONS",
 ]
