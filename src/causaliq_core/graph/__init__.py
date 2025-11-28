@@ -2,10 +2,17 @@
 Graph-related enums and utilities for CausalIQ Core.
 """
 
-from enum import Enum
 from typing import Dict, List, Optional
 
 from pandas import DataFrame
+
+# Import conversion functions
+from .convert import extendPDAG, fromDAG, is_cpdag, toCPDAG
+from .dag import DAG, NotDAGError
+
+# Import enums
+from .enums import EdgeMark, EdgeType
+from .pdag import PDAG, NotPDAGError
 
 # Import graph classes - moved to top to fix E402
 from .sdg import SDG
@@ -45,26 +52,19 @@ def adjmat(columns: Optional[Dict[str, List[int]]] = None) -> DataFrame:
     return adjmat_df.set_index("")
 
 
-class EdgeMark(Enum):
-    """Supported 'ends' of an edge in a graph."""
-
-    NONE = 0
-    LINE = 1
-    ARROW = 2
-    CIRCLE = 3
-
-
-class EdgeType(Enum):
-    """Supported edge types and their symbols."""
-
-    NONE = (0, EdgeMark.NONE, EdgeMark.NONE, "")
-    DIRECTED = (1, EdgeMark.LINE, EdgeMark.ARROW, "->")
-    UNDIRECTED = (2, EdgeMark.LINE, EdgeMark.LINE, "-")
-    BIDIRECTED = (3, EdgeMark.ARROW, EdgeMark.ARROW, "<->")
-    SEMIDIRECTED = (4, EdgeMark.CIRCLE, EdgeMark.ARROW, "o->")
-    NONDIRECTED = (5, EdgeMark.CIRCLE, EdgeMark.CIRCLE, "o-o")
-    SEMIUNDIRECTED = (6, EdgeMark.CIRCLE, EdgeMark.LINE, "o-")
-
-
 # Export public interface
-__all__ = ["EdgeType", "EdgeMark", "adjmat", "SDG", "BAYESYS_VERSIONS"]
+__all__ = [
+    "EdgeType",
+    "EdgeMark",
+    "adjmat",
+    "SDG",
+    "PDAG",
+    "NotPDAGError",
+    "DAG",
+    "NotDAGError",
+    "fromDAG",
+    "toCPDAG",
+    "extendPDAG",
+    "is_cpdag",
+    "BAYESYS_VERSIONS",
+]
