@@ -6,6 +6,9 @@ from typing import Dict, List, Optional
 
 from pandas import DataFrame
 
+# Import io module
+from . import io
+
 # Import conversion functions
 from .convert import dag_to_pdag, extend_pdag, is_cpdag, pdag_to_cpdag
 from .dag import DAG, NotDAGError
@@ -67,4 +70,5 @@ __all__ = [
     "extend_pdag",
     "is_cpdag",
     "BAYESYS_VERSIONS",
+    "io",
 ]
