@@ -71,7 +71,7 @@ class DAG(PDAG):
                 yield node
 
     def to_string(self) -> str:
-        """Compact (bnlearn) string representation of DAG e.g. [A][B][C|A:B].
+        """Compact (bnlearn) string representation of DAG e.g. `[A][B][C|A:B]`.
 
         Returns:
             Description of graph.
