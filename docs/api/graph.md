@@ -1,6 +1,68 @@
-# Graph Module
+# Graph Module Overview
 
-The `causaliq_core.graph` module provides graph-related enumerations and utilities for representing different types of edges used in causal discovery algorithms.
+The `causaliq_core.graph` module provides graph-related classes and utilities for representing different types of graphs used in causal discovery algorithms, including directed acyclic graphs (DAGs), partially directed acyclic graphs (PDAGs), and summary dependence graphs (SDGs).
+
+## Core Components
+
+### [SDG - Summary Dependence Graph](graph_sdg.md)
+Base graph class supporting mixed edge types:
+
+- Directed, undirected, and bidirected edges
+- General graph operations and validation
+- Foundation for specialized graph types
+
+### [PDAG - Partially Directed Acyclic Graph](graph_pdag.md) 
+Specialized graph for causal discovery:
+
+- Directed and undirected edges (no bidirected)
+- Represents uncertainty in edge orientation
+- Used in constraint-based causal discovery
+
+### [DAG - Directed Acyclic Graph](graph_dag.md)
+Fully oriented causal structures:
+
+- Only directed edges
+- Represents definite causal relationships
+- Topological ordering and string representation
+
+### [Graph Conversion Functions](graph_convert.md)
+Transform between graph representations:
+
+- `dag_to_pdag()` - DAG to equivalence class PDAG
+- `pdag_to_cpdag()` - Complete a PDAG to CPDAG form
+- `extend_pdag()` - Extend PDAG to consistent DAG
+- `is_cpdag()` - Check if PDAG is completed
+- `dict_to_adjmat()` - Convert dictionary to adjacency matrix DataFrame
+
+## I/O Functions
+
+### [Common I/O Functions](graph_io_common.md)
+Unified interface for reading and writing graphs:
+
+- `read()` - Automatically detects format and reads graphs
+- `write()` - Automatically detects format and writes graphs
+- Supports `.csv` (Bayesys) and `.tetrad` (Tetrad) formats
+- Available directly from `causaliq_core.graph` for convenience
+
+### [Bayesys Format I/O](graph_io_bayesys.md)
+CSV-based graph file format:
+
+- `read()` - Read graphs from Bayesys CSV files
+- `write()` - Write graphs to Bayesys CSV format
+
+### [Tetrad Format I/O](graph_io_tetrad.md)
+Native Tetrad software format:
+
+- `read()` - Read graphs from Tetrad format files
+- `write()` - Write graphs to Tetrad format
+- Supports both DAGs and PDAGs
+
+### [Tetrad Format I/O](graph_io_tetrad.md)
+Native Tetrad graph file format:
+
+- `read()` - Read graphs from Tetrad format files
+- `write()` - Write graphs to Tetrad format
+- Supports both DAGs and PDAGs
 
 ## Constants
 
@@ -107,7 +169,8 @@ print(f"End: {edge.end_mark}")
         members_order: source
         group_by_category: true
         show_category_heading: true
+        filters: ["!^SDG$", "!^PDAG$", "!^DAG$", "!^dag_to_pdag$", "!^pdag_to_cpdag$", "!^extend_pdag$", "!^is_cpdag$"]
 
 ## Implementation Notes
 
-These enumerations provide a standardised way to represent edge types commonly used in causal discovery algorithms, including directed edges, undirected edges, and partially directed edges found in PDAGs (Partially Directed Acyclic Graphs).
+These classes and functions provide a standardised way to represent and manipulate different graph types commonly used in causal discovery algorithms. The hierarchy (SDG → PDAG → DAG) reflects increasing constraints on edge types and graph structure.

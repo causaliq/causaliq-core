@@ -25,7 +25,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - Nothing yet
 
-## [0.1.0] - 2024-11-24
+## [0.2.0 Graph classes] - 2025-11-30
+
+### Added
+- Simple Dependency Graphs (`SDG`)
+- Partially Diracted Acyclic Graphs (`PDAG` and `CPDAG`)
+- Directed Acyclic Graphs (`DAG`)
+- conversion between the different graph types
+- read and write Tetrad and Bayesys format graph definition files
+
+
+## [0.1.0 Foundation and utilities] - 2025-11-24
 
 ### Added
 - Mathematical utilities for significant figures and logarithms
