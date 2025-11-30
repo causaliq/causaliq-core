@@ -6,7 +6,8 @@
 #   graph, and ab(graph) validates graph as being A-->B
 #
 
-from causaliq_core.graph import PDAG, EdgeType, adjmat
+from causaliq_core.graph import PDAG, EdgeType
+from causaliq_core.graph.convert import dict_to_adjmat
 
 
 def empty(check=None):
@@ -23,7 +24,7 @@ def empty(check=None):
     assert check.is_PDAG() is True
     assert check.number_components() == 0
     assert check.parents == {}
-    assert check.to_adjmat().equals(adjmat({}))
+    assert check.to_adjmat().equals(dict_to_adjmat({}))
 
 
 def a(check=None):
@@ -40,7 +41,7 @@ def a(check=None):
     assert check.is_PDAG() is True
     assert check.number_components() == 1
     assert check.parents == {}
-    assert check.to_adjmat().equals(adjmat({"A": [0]}))
+    assert check.to_adjmat().equals(dict_to_adjmat({"A": [0]}))
 
     return None
 
@@ -59,7 +60,7 @@ def ab(check=None):
     assert check.is_PDAG() is True
     assert check.number_components() == 1
     assert check.parents == {"B": ["A"]}
-    assert check.to_adjmat().equals(adjmat({"A": [0, 0], "B": [1, 0]}))
+    assert check.to_adjmat().equals(dict_to_adjmat({"A": [0, 0], "B": [1, 0]}))
 
     return None
 
@@ -78,7 +79,7 @@ def ab_2(check=None):  # same as ab but specified differently
     assert check.is_PDAG() is True
     assert check.number_components() == 1
     assert check.parents == {"B": ["A"]}
-    assert check.to_adjmat().equals(adjmat({"A": [0, 0], "B": [1, 0]}))
+    assert check.to_adjmat().equals(dict_to_adjmat({"A": [0, 0], "B": [1, 0]}))
 
     return None
 
@@ -97,7 +98,7 @@ def ba(check=None):
     assert check.is_PDAG() is True
     assert check.number_components() == 1
     assert check.parents == {"A": ["B"]}
-    assert check.to_adjmat().equals(adjmat({"A": [0, 1], "B": [0, 0]}))
+    assert check.to_adjmat().equals(dict_to_adjmat({"A": [0, 1], "B": [0, 0]}))
 
     return None
 
@@ -115,7 +116,7 @@ def a_b(check=None):
     assert check.is_DAG() is True
     assert check.number_components() == 2
     assert check.parents == {}
-    assert check.to_adjmat().equals(adjmat({"A": [0, 0], "B": [0, 0]}))
+    assert check.to_adjmat().equals(dict_to_adjmat({"A": [0, 0], "B": [0, 0]}))
 
     return None
 
@@ -134,7 +135,7 @@ def ab3(check=None):
     assert check.is_PDAG() is True
     assert check.number_components() == 1
     assert check.parents == {}
-    assert check.to_adjmat().equals(adjmat({"A": [0, 0], "B": [2, 0]}))
+    assert check.to_adjmat().equals(dict_to_adjmat({"A": [0, 0], "B": [2, 0]}))
 
     return None
 
@@ -154,7 +155,7 @@ def a_b_c(check=None):
     assert check.number_components() == 3
     assert check.parents == {}
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 0], "B": [0, 0, 0], "C": [0, 0, 0]})
+        dict_to_adjmat({"A": [0, 0, 0], "B": [0, 0, 0], "C": [0, 0, 0]})
     )
 
     return None
@@ -175,7 +176,7 @@ def ac_b(check=None):
     assert check.number_components() == 2
     assert check.parents == {"C": ["A"]}
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 0], "B": [0, 0, 0], "C": [1, 0, 0]})
+        dict_to_adjmat({"A": [0, 0, 0], "B": [0, 0, 0], "C": [1, 0, 0]})
     )
 
 
@@ -194,7 +195,7 @@ def ac_b2(check=None):
     assert check.number_components() == 2
     assert check.parents == {}
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 0], "B": [0, 0, 0], "C": [2, 0, 0]})
+        dict_to_adjmat({"A": [0, 0, 0], "B": [0, 0, 0], "C": [2, 0, 0]})
     )
 
     return None
@@ -218,7 +219,7 @@ def abc(check=None):
     assert check.number_components() == 1
     assert check.parents == {"C": ["B"], "B": ["A"]}
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 0], "B": [1, 0, 0], "C": [0, 1, 0]})
+        dict_to_adjmat({"A": [0, 0, 0], "B": [1, 0, 0], "C": [0, 1, 0]})
     )
 
     return None
@@ -242,7 +243,7 @@ def abc2(check=None):
     assert check.number_components() == 1
     assert check.parents == {"C": ["B"], "B": ["A"]}
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 0], "B": [1, 0, 0], "C": [0, 1, 0]})
+        dict_to_adjmat({"A": [0, 0, 0], "B": [1, 0, 0], "C": [0, 1, 0]})
     )
 
     return None
@@ -266,7 +267,7 @@ def abc3(check=None):
     assert check.number_components() == 1
     assert check.parents == {"C": ["B"]}
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 0], "B": [2, 0, 0], "C": [0, 1, 0]})
+        dict_to_adjmat({"A": [0, 0, 0], "B": [2, 0, 0], "C": [0, 1, 0]})
     )
 
     return None
@@ -290,7 +291,7 @@ def abc4(check=None):
     assert check.number_components() == 1
     assert check.parents == {}
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 0], "B": [2, 0, 0], "C": [0, 2, 0]})
+        dict_to_adjmat({"A": [0, 0, 0], "B": [2, 0, 0], "C": [0, 2, 0]})
     )
 
     return None
@@ -314,7 +315,7 @@ def abc5(check=None):
     assert check.number_components() == 1
     assert check.parents == {"B": ["A"]}
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 0], "B": [1, 0, 0], "C": [0, 2, 0]})
+        dict_to_adjmat({"A": [0, 0, 0], "B": [1, 0, 0], "C": [0, 2, 0]})
     )
 
     return None
@@ -338,7 +339,7 @@ def abc6(check=None):  # B - A - C
     assert check.number_components() == 1
     assert check.parents == {}
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 0], "B": [2, 0, 0], "C": [2, 0, 0]})
+        dict_to_adjmat({"A": [0, 0, 0], "B": [2, 0, 0], "C": [2, 0, 0]})
     )
 
     return None
@@ -363,7 +364,7 @@ def ab_ac(check=None):
     assert check.number_components() == 1
     assert check.parents == {"C": ["A"], "B": ["A"]}
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 0], "B": [1, 0, 0], "C": [1, 0, 0]})
+        dict_to_adjmat({"A": [0, 0, 0], "B": [1, 0, 0], "C": [1, 0, 0]})
     )
 
     return None
@@ -386,7 +387,7 @@ def ba_bc(check=None):  # A<-B->C
     assert check.number_components() == 1
     assert check.parents == {"A": ["B"], "C": ["B"]}
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 1, 0], "B": [0, 0, 0], "C": [0, 1, 0]})
+        dict_to_adjmat({"A": [0, 1, 0], "B": [0, 0, 0], "C": [0, 1, 0]})
     )
 
     return None
@@ -411,7 +412,7 @@ def ac_bc(check=None):
     assert check.number_components() == 1
     assert check.parents == {"C": ["A", "B"]}
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 0], "B": [0, 0, 0], "C": [1, 1, 0]})
+        dict_to_adjmat({"A": [0, 0, 0], "B": [0, 0, 0], "C": [1, 1, 0]})
     )
 
     return None
@@ -436,7 +437,7 @@ def ab_cb(check=None):  # A->B<-C
     assert check.number_components() == 1
     assert check.parents == {"B": ["A", "C"]}
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 0], "B": [1, 0, 1], "C": [0, 0, 0]})
+        dict_to_adjmat({"A": [0, 0, 0], "B": [1, 0, 1], "C": [0, 0, 0]})
     )
 
     return None
@@ -465,7 +466,7 @@ def abc_acyclic(check=None):  # A->B->C<-A
     assert check.number_components() == 1
     assert check.parents == {"C": ["A", "B"], "B": ["A"]}
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 0], "B": [1, 0, 0], "C": [1, 1, 0]})
+        dict_to_adjmat({"A": [0, 0, 0], "B": [1, 0, 0], "C": [1, 1, 0]})
     )
 
     return None
@@ -494,7 +495,7 @@ def abc_acyclic2(check=None):  # A --> B --> C, A -- C
     assert check.number_components() == 1
     assert check.parents == {"C": ["B"], "B": ["A"]}
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 0], "B": [1, 0, 0], "C": [2, 1, 0]})
+        dict_to_adjmat({"A": [0, 0, 0], "B": [1, 0, 0], "C": [2, 1, 0]})
     )
 
     return None
@@ -523,7 +524,7 @@ def abc_acyclic3(check=None):  # A -- B -- C, A --> C
     assert check.number_components() == 1
     assert check.parents == {"C": ["A"]}
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 0], "B": [2, 0, 0], "C": [1, 2, 0]})
+        dict_to_adjmat({"A": [0, 0, 0], "B": [2, 0, 0], "C": [1, 2, 0]})
     )
 
     return None
@@ -552,7 +553,7 @@ def abc_acyclic4(check=None):  # A -- B -- C -- A
     assert check.number_components() == 1
     assert check.parents == {}
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 0], "B": [2, 0, 0], "C": [2, 2, 0]})
+        dict_to_adjmat({"A": [0, 0, 0], "B": [2, 0, 0], "C": [2, 2, 0]})
     )
 
     return None
@@ -591,7 +592,7 @@ def cancer1(check=None):  # DAG as a PDAG
         "Xray": ["Cancer"],
     }
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "Cancer": [0, 0, 1, 1, 0],
                 "Dyspnoea": [1, 0, 0, 0, 0],
@@ -631,7 +632,7 @@ def cancer2(check=None):  # 5 node cancer with 2 undirected edges
     assert check.number_components() == 1
     assert check.parents == {"Cancer": ["Pollution", "Smoker"]}
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "Cancer": [0, 0, 1, 1, 0],
                 "Dyspnoea": [2, 0, 0, 0, 0],
@@ -671,7 +672,7 @@ def cancer3(check=None):  # skeleton of 5 node cancer
     assert check.number_components() == 1
     assert check.parents == {}
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "Cancer": [0, 0, 0, 0, 0],
                 "Dyspnoea": [2, 0, 0, 0, 0],
@@ -742,7 +743,7 @@ def asia(check=None):  # Correct PDAG which Asia DAG extends
         "xray": ["either"],
     }
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "asia": [0, 0, 0, 0, 0, 0, 0, 0],
                 "bronc": [0, 0, 0, 0, 0, 0, 0, 0],
@@ -776,7 +777,7 @@ def and4_1(check=None):  # 1  2  3  4
     assert check.number_components() == 4
     assert check.parents == {}
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 0, 0],
                 "X2": [0, 0, 0, 0],
@@ -805,7 +806,7 @@ def and4_2(check=None):  # 1 - 2  3  4
     assert check.number_components() == 3
     assert check.parents == {}
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 0, 0],
                 "X2": [2, 0, 0, 0],
@@ -839,7 +840,7 @@ def and4_3(check=None):  # 1 - 2  3 - 4
     assert check.number_components() == 2
     assert check.parents == {}
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 0, 0],
                 "X2": [2, 0, 0, 0],
@@ -873,7 +874,7 @@ def and4_4(check=None):  # 1 - 2 - 3  4
     assert check.number_components() == 2
     assert check.parents == {}
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 0, 0],
                 "X2": [2, 0, 0, 0],
@@ -907,7 +908,7 @@ def and4_5(check=None):  # 1 -> 2 <- 3  4
     assert check.number_components() == 2
     assert check.parents == {"X2": ["X1", "X3"]}
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 0, 0],
                 "X2": [1, 0, 1, 0],
@@ -943,7 +944,7 @@ def and4_6(check=None):  # 1 - 2 - 3 - 1  4
     assert check.number_components() == 2
     assert check.parents == {}
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 0, 0],
                 "X2": [2, 0, 0, 0],
@@ -979,7 +980,7 @@ def and4_7(check=None):  # 1 - 2 - 3 - 4 (chain)
     assert check.number_components() == 1
     assert check.parents == {}
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 0, 0],
                 "X2": [2, 0, 0, 0],
@@ -1015,7 +1016,7 @@ def and4_8(check=None):  # 1 -> 2 <- 3 - 4
     assert check.number_components() == 1
     assert check.parents == {"X2": ["X1", "X3"]}
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 0, 0],
                 "X2": [1, 0, 1, 0],
@@ -1051,7 +1052,7 @@ def and4_9(check=None):  # 3 - 2 - 1, 2 - 4 (undirected star)
     assert check.number_components() == 1
     assert check.parents == {}
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 0, 0],
                 "X2": [2, 0, 0, 0],
@@ -1087,7 +1088,7 @@ def and4_10(check=None):  # X1 -> X2 -> X4, X3 -> X2
     assert check.number_components() == 1
     assert check.parents == {"X2": ["X1", "X3"], "X4": ["X2"]}
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 0, 0],
                 "X2": [1, 0, 1, 0],
@@ -1123,7 +1124,7 @@ def and4_11(check=None):  # 1 -> 2 <- 4, 3 -> 2 (star collider)
     assert check.number_components() == 1
     assert check.parents == {"X2": ["X1", "X3", "X4"]}
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 0, 0],
                 "X2": [1, 0, 1, 1],
@@ -1165,7 +1166,7 @@ def and4_12(check=None):  # 2 - 3 - 1 - 2 - 4
     assert check.number_components() == 1
     assert check.parents == {}
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 0, 0],
                 "X2": [2, 0, 0, 0],
@@ -1207,7 +1208,7 @@ def and4_13(check=None):  # 2 <- 1 - 3 -> 2 <- 4
     assert check.number_components() == 1
     assert check.parents == {"X2": ["X1", "X3", "X4"]}
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 0, 0],
                 "X2": [1, 0, 1, 1],
@@ -1249,7 +1250,7 @@ def and4_14(check=None):  # 2 <- 1 -> 3 <- 2 <- 4
     assert check.number_components() == 1
     assert check.parents == {"X2": ["X1", "X4"], "X3": ["X1", "X2"]}
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 0, 0],
                 "X2": [1, 0, 0, 1],
@@ -1291,7 +1292,7 @@ def and4_15(check=None):  # 2->4<-3, 2->1<-3 (square, 1 collider)
     assert check.number_components() == 1
     assert check.parents == {"X4": ["X2", "X3"]}
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 0, 0],
                 "X2": [2, 0, 0, 0],
@@ -1333,7 +1334,7 @@ def and4_16(check=None):  # 2->4<-3, 2->1<-3 (square colliders)
     assert check.number_components() == 1
     assert check.parents == {"X1": ["X2", "X3"], "X4": ["X2", "X3"]}
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 1, 1, 0],
                 "X2": [0, 0, 0, 0],
@@ -1377,7 +1378,7 @@ def and4_17(check=None):  # 4 - 3 - 1 - 2 - 4 - 1 (undirected square)
     assert check.number_components() == 1
     assert check.parents == {}
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 0, 0],
                 "X2": [2, 0, 0, 0],
@@ -1423,7 +1424,7 @@ def complete4(check=None):  # complete skeleton
     assert check.number_components() == 1
     assert check.parents == {}
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 0, 0],
                 "X2": [2, 0, 0, 0],
@@ -1465,7 +1466,7 @@ def and4_inv1(check=None):  # 1 - 2 - 3 - 4 - 1 (square) - unextendable
     assert check.number_components() == 1
     assert check.parents == {}
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 0, 0],
                 "X2": [2, 0, 0, 0],

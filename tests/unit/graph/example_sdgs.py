@@ -6,7 +6,8 @@
 #   graph, and ab(graph) validates graph as being A-->B
 #
 
-from causaliq_core.graph import EdgeType, adjmat
+from causaliq_core.graph import EdgeType
+from causaliq_core.graph.convert import dict_to_adjmat
 from causaliq_core.graph.sdg import SDG
 
 
@@ -23,7 +24,7 @@ def ab_undirected(check=None):
     assert check.is_DAG() is False
     assert check.number_components() == 1
     assert check.parents == {}
-    assert check.to_adjmat().equals(adjmat({"A": [0, 0], "B": [2, 0]}))
+    assert check.to_adjmat().equals(dict_to_adjmat({"A": [0, 0], "B": [2, 0]}))
 
     return None
 
@@ -45,7 +46,7 @@ def abc_mixed(check=None):
     assert check.number_components() == 1
     assert check.parents == {}
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 0], "B": [2, 0, 0], "C": [0, 4, 0]})
+        dict_to_adjmat({"A": [0, 0, 0], "B": [2, 0, 0], "C": [0, 4, 0]})
     )
 
     return None
@@ -68,7 +69,7 @@ def abc_mixed_2(check=None):  # same as abc_mixed but specified differently
     assert check.number_components() == 1
     assert check.parents == {}
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 0], "B": [2, 0, 0], "C": [0, 4, 0]})
+        dict_to_adjmat({"A": [0, 0, 0], "B": [2, 0, 0], "C": [0, 4, 0]})
     )
 
     return None
@@ -95,7 +96,7 @@ def abc_cycle(check=None):
     assert check.number_components() == 1
     assert check.parents == {"C": ["B"], "B": ["A"], "A": ["C"]}
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 1], "B": [1, 0, 0], "C": [0, 1, 0]})
+        dict_to_adjmat({"A": [0, 0, 1], "B": [1, 0, 0], "C": [0, 1, 0]})
     )
 
     return None
@@ -113,6 +114,6 @@ def ab(check=None):  # A --> B but just as SDG, not DAG
     assert check.is_DAG() is False
     assert check.number_components() == 1
     assert check.parents == {}
-    assert check.to_adjmat().equals(adjmat({"A": [0, 0], "B": [1, 0]}))
+    assert check.to_adjmat().equals(dict_to_adjmat({"A": [0, 0], "B": [1, 0]}))
 
     return None

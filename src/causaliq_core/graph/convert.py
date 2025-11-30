@@ -2,7 +2,9 @@
 #   Graph conversion operations
 #
 
-from typing import List, Set, Tuple, Union
+from typing import Dict, List, Optional, Set, Tuple, Union
+
+from pandas import DataFrame
 
 from .dag import DAG
 from .enums import EdgeType
@@ -284,3 +286,46 @@ def extend_pdag(pdag: PDAG) -> DAG:
             for e, t in dag.edges.items()
         ],
     )
+
+
+def dict_to_adjmat(
+    columns: Optional[Dict[str, List[int]]] = None,
+) -> DataFrame:
+    """
+    Create an adjacency matrix with specified entries.
+
+    :param dict columns: data for matrix specified by column
+
+    :raises TypeError: if arg types incorrect
+    :raises ValueError: if values specified are invalid
+
+    :returns DataFrame: the adjacency matrix
+    """
+    if (
+        columns is None
+        or not isinstance(columns, dict)
+        or not all([isinstance(c, list) for c in columns.values()])
+        or not all([isinstance(e, int) for c in columns.values() for e in c])
+    ):
+        raise TypeError("dict_to_adjmat called with bad arg type")
+
+    if not all([len(c) == len(columns) for c in columns.values()]):
+        raise ValueError("some columns wrong length for dict_to_adjmat")
+
+    valid = [e.value[0] for e in EdgeType]  # valid edge integer codes
+    if not all([e in valid for c in columns.values() for e in c]):
+        raise ValueError("invalid integer values for dict_to_adjmat")
+
+    adjmat_df = DataFrame(columns, dtype="int8")
+    adjmat_df[""] = list(adjmat_df.columns)
+    return adjmat_df.set_index("")
+
+
+# Export public interface
+__all__ = [
+    "dag_to_pdag",
+    "pdag_to_cpdag",
+    "extend_pdag",
+    "is_cpdag",
+    "dict_to_adjmat",
+]

@@ -6,7 +6,8 @@
 #   graph, and ab(graph) validates graph as being A-->B
 #
 
-from causaliq_core.graph import DAG, EdgeType, adjmat
+from causaliq_core.graph import DAG, EdgeType
+from causaliq_core.graph.convert import dict_to_adjmat
 
 # from core.bn import BN
 BN = None
@@ -25,7 +26,7 @@ def empty(check=None):
     assert check.number_components() == 0
     assert check.parents == {}
     assert check.to_string() == ""
-    assert check.to_adjmat().equals(adjmat({}))
+    assert check.to_adjmat().equals(dict_to_adjmat({}))
 
 
 def a(check=None):
@@ -41,7 +42,7 @@ def a(check=None):
     assert check.number_components() == 1
     assert check.parents == {}
     assert check.to_string() == "[A]"
-    assert check.to_adjmat().equals(adjmat({"A": [0]}))
+    assert check.to_adjmat().equals(dict_to_adjmat({"A": [0]}))
 
     return None
 
@@ -59,7 +60,7 @@ def x(check=None):
     assert check.number_components() == 1
     assert check.parents == {}
     assert check.to_string() == "[X]"
-    assert check.to_adjmat().equals(adjmat({"X": [0]}))
+    assert check.to_adjmat().equals(dict_to_adjmat({"X": [0]}))
 
     return None
 
@@ -79,7 +80,7 @@ def ab(check=None, is_bn=False):
     assert check.number_components() == 1
     assert check.parents == {"B": ["A"]}
     assert check.to_string() == "[A][B|A]"
-    assert check.to_adjmat().equals(adjmat({"A": [0, 0], "B": [1, 0]}))
+    assert check.to_adjmat().equals(dict_to_adjmat({"A": [0, 0], "B": [1, 0]}))
 
     return None
 
@@ -99,7 +100,7 @@ def xy(check=None, is_bn=False):  # X --> Y
     assert check.number_components() == 1
     assert check.parents == {"Y": ["X"]}
     assert check.to_string() == "[X][Y|X]"
-    assert check.to_adjmat().equals(adjmat({"X": [0, 0], "Y": [1, 0]}))
+    assert check.to_adjmat().equals(dict_to_adjmat({"X": [0, 0], "Y": [1, 0]}))
 
     return None
 
@@ -119,7 +120,7 @@ def yx(check=None, is_bn=False):  # X <-- Y
     assert check.number_components() == 1
     assert check.parents == {"X": ["Y"]}
     assert check.to_string() == "[X|Y][Y]"
-    assert check.to_adjmat().equals(adjmat({"X": [0, 1], "Y": [0, 0]}))
+    assert check.to_adjmat().equals(dict_to_adjmat({"X": [0, 1], "Y": [0, 0]}))
 
     return None
 
@@ -137,7 +138,7 @@ def ab_2(check=None):  # same as ab but specified differently
     assert check.number_components() == 1
     assert check.parents == {"B": ["A"]}
     assert check.to_string() == "[A][B|A]"
-    assert check.to_adjmat().equals(adjmat({"A": [0, 0], "B": [1, 0]}))
+    assert check.to_adjmat().equals(dict_to_adjmat({"A": [0, 0], "B": [1, 0]}))
 
     return None
 
@@ -155,7 +156,7 @@ def ba(check=None):
     assert check.number_components() == 1
     assert check.parents == {"A": ["B"]}
     assert check.to_string() == "[A|B][B]"
-    assert check.to_adjmat().equals(adjmat({"A": [0, 1], "B": [0, 0]}))
+    assert check.to_adjmat().equals(dict_to_adjmat({"A": [0, 1], "B": [0, 0]}))
 
     return None
 
@@ -173,7 +174,7 @@ def a_b(check=None):
     assert check.number_components() == 2
     assert check.parents == {}
     assert check.to_string() == "[A][B]"
-    assert check.to_adjmat().equals(adjmat({"A": [0, 0], "B": [0, 0]}))
+    assert check.to_adjmat().equals(dict_to_adjmat({"A": [0, 0], "B": [0, 0]}))
 
     return None
 
@@ -191,7 +192,7 @@ def x_y(check=None):
     assert check.number_components() == 2
     assert check.parents == {}
     assert check.to_string() == "[X][Y]"
-    assert check.to_adjmat().equals(adjmat({"X": [0, 0], "Y": [0, 0]}))
+    assert check.to_adjmat().equals(dict_to_adjmat({"X": [0, 0], "Y": [0, 0]}))
 
     return None
 
@@ -210,7 +211,7 @@ def a_b_c(check=None):
     assert check.parents == {}
     assert check.to_string() == "[A][B][C]"
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 0], "B": [0, 0, 0], "C": [0, 0, 0]})
+        dict_to_adjmat({"A": [0, 0, 0], "B": [0, 0, 0], "C": [0, 0, 0]})
     )
 
     return None
@@ -230,7 +231,7 @@ def ac_b(check=None):  # A -> C  B
     assert check.parents == {"C": ["A"]}
     assert check.to_string() == "[A][B][C|A]"
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 0], "B": [0, 0, 0], "C": [1, 0, 0]})
+        dict_to_adjmat({"A": [0, 0, 0], "B": [0, 0, 0], "C": [1, 0, 0]})
     )
 
     return None
@@ -250,7 +251,7 @@ def ac_b2(check=None):  # C -> A   B
     assert check.parents == {"A": ["C"]}
     assert check.to_string() == "[A|C][B][C]"
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 1], "B": [0, 0, 0], "C": [0, 0, 0]})
+        dict_to_adjmat({"A": [0, 0, 1], "B": [0, 0, 0], "C": [0, 0, 0]})
     )
 
     return None
@@ -279,11 +280,11 @@ def abc(
     assert check.to_string() == compact
     if compact == "[A][B|A][C|B]":
         assert check.to_adjmat().equals(
-            adjmat({"A": [0, 0, 0], "B": [1, 0, 0], "C": [0, 1, 0]})
+            dict_to_adjmat({"A": [0, 0, 0], "B": [1, 0, 0], "C": [0, 1, 0]})
         )
     elif compact == "[A][B|A][C|B][D]":
         assert check.to_adjmat().equals(
-            adjmat(
+            dict_to_adjmat(
                 {
                     "A": [0, 0, 0, 0],
                     "B": [1, 0, 0, 0],
@@ -313,7 +314,7 @@ def abc_2(check=None, nodes=["A", "B", "C"], number_components=1):
     assert check.parents == {"C": ["B"], "B": ["A"]}
     assert check.to_string() == "[A][B|A][C|B]"
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 0], "B": [1, 0, 0], "C": [0, 1, 0]})
+        dict_to_adjmat({"A": [0, 0, 0], "B": [1, 0, 0], "C": [0, 1, 0]})
     )
 
     return None
@@ -337,7 +338,7 @@ def abc3(check=None):  # A <- B <- C
     assert check.parents == {"A": ["B"], "B": ["C"]}
     assert check.to_string() == "[A|B][B|C][C]"
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 1, 0], "B": [0, 0, 1], "C": [0, 0, 0]})
+        dict_to_adjmat({"A": [0, 1, 0], "B": [0, 0, 1], "C": [0, 0, 0]})
     )
 
     return None
@@ -361,7 +362,7 @@ def ab_ac(check=None):
     assert check.parents == {"C": ["A"], "B": ["A"]}
     assert check.to_string() == "[A][B|A][C|A]"
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 0], "B": [1, 0, 0], "C": [1, 0, 0]})
+        dict_to_adjmat({"A": [0, 0, 0], "B": [1, 0, 0], "C": [1, 0, 0]})
     )
     return None
 
@@ -384,7 +385,7 @@ def xyz(check=None):
     assert check.parents == {"Y": ["X"], "Z": ["Y"]}
     assert check.to_string() == "[X][Y|X][Z|Y]"
     assert check.to_adjmat().equals(
-        adjmat({"X": [0, 0, 0], "Y": [1, 0, 0], "Z": [0, 1, 0]})
+        dict_to_adjmat({"X": [0, 0, 0], "Y": [1, 0, 0], "Z": [0, 1, 0]})
     )
     return None
 
@@ -407,7 +408,7 @@ def ba_bc(check=None):  # A<-B->C
     assert check.parents == {"A": ["B"], "C": ["B"]}
     assert check.to_string() == "[A|B][B][C|B]"
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 1, 0], "B": [0, 0, 0], "C": [0, 1, 0]})
+        dict_to_adjmat({"A": [0, 1, 0], "B": [0, 0, 0], "C": [0, 1, 0]})
     )
 
     return None
@@ -431,7 +432,7 @@ def ac_bc(check=None):
     assert check.parents == {"C": ["A", "B"]}
     assert check.to_string() == "[A][B][C|A:B]"
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 0], "B": [0, 0, 0], "C": [1, 1, 0]})
+        dict_to_adjmat({"A": [0, 0, 0], "B": [0, 0, 0], "C": [1, 1, 0]})
     )
     return None
 
@@ -454,7 +455,7 @@ def xy_zy(check=None):
     assert check.parents == {"Y": ["X", "Z"]}
     assert check.to_string() == "[X][Y|X:Z][Z]"
     assert check.to_adjmat().equals(
-        adjmat({"X": [0, 0, 0], "Y": [1, 0, 1], "Z": [0, 0, 0]})
+        dict_to_adjmat({"X": [0, 0, 0], "Y": [1, 0, 1], "Z": [0, 0, 0]})
     )
     return None
 
@@ -482,7 +483,7 @@ def abc_acyclic(check=None):
     assert check.parents == {"C": ["A", "B"], "B": ["A"]}
     assert check.to_string() == "[A][B|A][C|A:B]"
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 0, 0], "B": [1, 0, 0], "C": [1, 1, 0]})
+        dict_to_adjmat({"A": [0, 0, 0], "B": [1, 0, 0], "C": [1, 1, 0]})
     )
 
     return None
@@ -510,7 +511,7 @@ def abc_acyclic4(check=None):  # another acyclic variant
     assert check.parents == {"A": ["B", "C"], "B": ["C"]}
     assert check.to_string() == "[A|B:C][B|C][C]"
     assert check.to_adjmat().equals(
-        adjmat({"A": [0, 1, 1], "B": [0, 0, 1], "C": [0, 0, 0]})
+        dict_to_adjmat({"A": [0, 1, 1], "B": [0, 0, 1], "C": [0, 0, 0]})
     )
 
     return None
@@ -552,7 +553,7 @@ def cancer(check=None):
         + "[Pollution][Smoker][Xray|Cancer]"
     )
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "Cancer": [0, 0, 1, 1, 0],
                 "Dyspnoea": [1, 0, 0, 0, 0],
@@ -601,7 +602,7 @@ def cancer3(check=None):  # variant of Cancer for testing PDAG extension
         + "[Pollution|Cancer][Smoker|Cancer][Xray]"
     )
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "Cancer": [0, 0, 0, 0, 1],
                 "Dyspnoea": [1, 0, 0, 0, 0],
@@ -678,7 +679,7 @@ def asia(check=None):  # Standard Asia DAG
         + "[either|lung:tub][lung|smoke][smoke][tub|asia][xray|either]"
     )
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "asia": [0, 0, 0, 0, 0, 0, 0, 0],
                 "bronc": [0, 0, 0, 0, 0, 1, 0, 0],
@@ -758,7 +759,7 @@ def asia2(check=None):  # DAG extended from Asia PDAG
         + "[either|lung:tub][lung][smoke|lung][tub][xray|either]"
     )
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "asia": [0, 0, 0, 0, 0, 0, 1, 0],
                 "bronc": [0, 0, 0, 0, 0, 1, 0, 0],
@@ -811,7 +812,7 @@ def gauss(check=None):  # Test BNlearn Gaussian DAG
     }
     assert check.to_string() == "[A][B][C|A:B][D|B][E][F|A:D:E:G][G]"
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "A": [0, 0, 0, 0, 0, 0, 0],
                 "B": [0, 0, 0, 0, 0, 0, 0],
@@ -845,7 +846,7 @@ def and4_1(check=None):  # 1  2  3  4
     assert check.parents == {}
     assert check.to_string() == "[X1][X2][X3][X4]"
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 0, 0],
                 "X2": [0, 0, 0, 0],
@@ -875,7 +876,7 @@ def and4_2(check=None):  # 1 <- 2  3  4
     assert check.parents == {"X1": ["X2"]}
     assert check.to_string() == "[X1|X2][X2][X3][X4]"
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 1, 0, 0],
                 "X2": [0, 0, 0, 0],
@@ -910,7 +911,7 @@ def and4_3(check=None):  # 1 <- 2  3 <- 4
     assert check.parents == {"X1": ["X2"], "X3": ["X4"]}
     assert check.to_string() == "[X1|X2][X2][X3|X4][X4]"
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 1, 0, 0],
                 "X2": [0, 0, 0, 0],
@@ -945,7 +946,7 @@ def and4_4(check=None):  # 1 <- 2 <- 3  4
     assert check.parents == {"X1": ["X2"], "X2": ["X3"]}
     assert check.to_string() == "[X1|X2][X2|X3][X3][X4]"
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 1, 0, 0],
                 "X2": [0, 0, 1, 0],
@@ -980,7 +981,7 @@ def and4_5(check=None):  # 1 -> 2 <- 3  4
     assert check.parents == {"X2": ["X1", "X3"]}
     assert check.to_string() == "[X1][X2|X1:X3][X3][X4]"
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 0, 0],
                 "X2": [1, 0, 1, 0],
@@ -1017,7 +1018,7 @@ def and4_6(check=None):  # 1 <- 3 -> 2 -> 1  4
     assert check.parents == {"X1": ["X2", "X3"], "X2": ["X3"]}
     assert check.to_string() == "[X1|X2:X3][X2|X3][X3][X4]"
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 1, 1, 0],
                 "X2": [0, 0, 1, 0],
@@ -1054,7 +1055,7 @@ def and4_7(check=None):  # 1 <- 2 <- 3 <- 4
     assert check.parents == {"X1": ["X2"], "X2": ["X3"], "X3": ["X4"]}
     assert check.to_string() == "[X1|X2][X2|X3][X3|X4][X4]"
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 1, 0, 0],
                 "X2": [0, 0, 1, 0],
@@ -1091,7 +1092,7 @@ def and4_8(check=None):  # 1 -> 2 <- 3 <- 4
     assert check.parents == {"X2": ["X1", "X3"], "X3": ["X4"]}
     assert check.to_string() == "[X1][X2|X1:X3][X3|X4][X4]"
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 0, 0],
                 "X2": [1, 0, 1, 0],
@@ -1128,7 +1129,7 @@ def and4_9(check=None):  # 4 -> 2 -> 1, 2 -> 3
     assert check.parents == {"X1": ["X2"], "X2": ["X4"], "X3": ["X2"]}
     assert check.to_string() == "[X1|X2][X2|X4][X3|X2][X4]"
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 1, 0, 0],
                 "X2": [0, 0, 0, 1],
@@ -1165,7 +1166,7 @@ def and4_10(check=None):  # 1 -> 2 -> 4, 3 -> 2
     assert check.parents == {"X2": ["X1", "X3"], "X4": ["X2"]}
     assert check.to_string() == "[X1][X2|X1:X3][X3][X4|X2]"
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 0, 0],
                 "X2": [1, 0, 1, 0],
@@ -1202,7 +1203,7 @@ def and4_11(check=None):  # 1 -> 2 <- 4, 3 -> 2 (star collider)
     assert check.parents == {"X2": ["X1", "X3", "X4"]}
     assert check.to_string() == "[X1][X2|X1:X3:X4][X3][X4]"
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 0, 0],
                 "X2": [1, 0, 1, 1],
@@ -1245,7 +1246,7 @@ def and4_12(check=None):  # 2 -> 1 <- 3 <- 2 <- 4
     assert check.parents == {"X1": ["X2", "X3"], "X2": ["X4"], "X3": ["X2"]}
     assert check.to_string() == "[X1|X2:X3][X2|X4][X3|X2][X4]"
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 1, 1, 0],
                 "X2": [0, 0, 0, 1],
@@ -1288,7 +1289,7 @@ def and4_13(check=None):  # 2 <- 1 <- 3 -> 2 <- 4
     assert check.parents == {"X1": ["X3"], "X2": ["X1", "X3", "X4"]}
     assert check.to_string() == "[X1|X3][X2|X1:X3:X4][X3][X4]"
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 1, 0],
                 "X2": [1, 0, 1, 1],
@@ -1331,7 +1332,7 @@ def and4_14(check=None):  # 2 <- 1 -> 3 <- 2 <- 4
     assert check.parents == {"X2": ["X1", "X4"], "X3": ["X1", "X2"]}
     assert check.to_string() == "[X1][X2|X1:X4][X3|X1:X2][X4]"
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 0, 0],
                 "X2": [1, 0, 0, 1],
@@ -1374,7 +1375,7 @@ def and4_15(check=None):  # 1->2->4<-3->1 (square, 1 collider)
     assert check.parents == {"X1": ["X3"], "X2": ["X1"], "X4": ["X2", "X3"]}
     assert check.to_string() == "[X1|X3][X2|X1][X3][X4|X2:X3]"
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 1, 0],
                 "X2": [1, 0, 0, 0],
@@ -1417,7 +1418,7 @@ def and4_16(check=None):  # 2->4<-3, 2->1<-3 (square colliders)
     assert check.parents == {"X1": ["X2", "X3"], "X4": ["X2", "X3"]}
     assert check.to_string() == "[X1|X2:X3][X2][X3][X4|X2:X3]"
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 1, 1, 0],
                 "X2": [0, 0, 0, 0],
@@ -1466,7 +1467,7 @@ def and4_17(check=None):  # 4->3->1->2, 4->1, 4->2
     }
     assert check.to_string() == "[X1|X3:X4][X2|X1:X4][X3|X4][X4]"
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 0, 1, 1],
                 "X2": [1, 0, 0, 1],
@@ -1517,7 +1518,7 @@ def complete4(check=None):  # 4 nodes, 6 edges
     }
     assert check.to_string() == "[X1|X2:X3:X4][X2|X3:X4][X3|X4][X4]"
     assert check.to_adjmat().equals(
-        adjmat(
+        dict_to_adjmat(
             {
                 "X1": [0, 1, 1, 1],
                 "X2": [0, 0, 1, 1],
