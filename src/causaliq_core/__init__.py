@@ -2,13 +2,13 @@
 causaliq-core: Core utilities and classes for the CausalIQ ecosystem
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __author__ = "CausalIQ"
 __email__ = "info@causaliq.org"
 
 # Package metadata
 __title__ = "causaliq-core"
-__description__ = "Core utilities and classes for the CausalIQ ecosystem"
+__description__ = "Utility and graph classes for the CausalIQ ecosystem"
 
 __url__ = "https://github.com/causaliq/causaliq-core"
 __license__ = "MIT"

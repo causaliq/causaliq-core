@@ -50,7 +50,16 @@ nav:
     - API Overview: api/overview.md
     - Main Package: api/main.md
     - CLI: api/cli.md
-    - Graph: api/graph.md
+    - Graph:
+      - Overview: api/graph.md
+      - SDG: api/graph_sdg.md
+      - PDAG: api/graph_pdag.md
+      - DAG: api/graph_dag.md
+      - Conversions: api/graph_convert.md
+      - I/O:
+        - Common Interface: api/graph_io_common.md
+        - Bayesys Format: api/graph_io_bayesys.md
+        - Tetrad Format: api/graph_io_tetrad.md
     - Utils:
       - Overview: api/utils.md
       - Mathematical Functions: api/utils_math.md
