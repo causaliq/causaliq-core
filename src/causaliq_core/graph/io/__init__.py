@@ -2,6 +2,6 @@
 Graph I/O module for reading and writing various graph file formats.
 """
 
-from . import bayesys
+from . import bayesys, tetrad
 
-__all__ = ["bayesys"]
+__all__ = ["bayesys", "tetrad"]
