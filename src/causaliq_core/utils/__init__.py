@@ -11,6 +11,7 @@ from .environment import environment
 from .io import FileFormatError, is_valid_path
 from .math import ln, rndsf
 from .random import RandomIntegers
+from .same import dicts_same, dists_same, values_same
 from .timing import Timing
 
 
@@ -92,4 +93,7 @@ __all__ = [
     "is_valid_path",
     "RandomIntegers",
     "Timing",
+    "values_same",
+    "dicts_same",
+    "dists_same",
 ]
