@@ -36,6 +36,7 @@ dependencies = [
     "platformdirs>=3.0.0",
     "py-cpuinfo>=9.0.0",
     "psutil>=5.8.0",
+    "scikit-learn>=1.0.0",
 ]
 
 [project.optional-dependencies]
@@ -154,6 +155,7 @@ profile = "black"
 multi_line_output = 3
 line_length = 79
 known_first_party = ["causaliq_core"]
+skip = [".git", ".tox", "venv", ".venv", ".eggs", "_build", "buck-out", "build", ".bzr", ".direnv", ".hg", ".mypy_cache", ".nox", ".pants.d", ".pytype", ".svn", "node_modules", "__pypackages__"]
 
 [tool.mypy]
 python_version = "3.9"
