@@ -20,24 +20,26 @@ except ImportError:
 
 
 class LinGauss():
+    """Conditional Linear Gaussian Distribution.
+
+    Args:
+        lg: Specification of Linear Gaussian in following form:
+            {'coeffs': {node: coeff}, 'mean': mean, 'sd': sd}.
+
+    Attributes:
+        coeffs: Linear coefficient of parents {parent: coeff}.
+        mean: Mean of Gaussian noise (aka intercept, mu).
+        sd: S.D. of Gaussian noise (aka sigma).
+
+    Raises:
+        TypeError: If called with bad arg types.
+        ValueError: If called with bad arg values.
+    """
 
     MAX_SF = 10  # max no of significant
 
     _model = None
 
-    """
-        Conditional Linear Gaussian Distribution
-
-        :param dict lg: specification of Linear Guassian in following form:
-                        {'coeffs': {node: coeff}, 'mean': mean, 'sd': sd}
-
-        :ivar dict coeffs: linear coeffeicient of parents {parent: coeff}
-        :ivar float mean: mean of Gaussian noise (aka intercept, mu)
-        :ivar float sd: S.D. of Gaussian noise (aka sigma)
-
-        :raises TypeError: if called with bad arg types
-        :raises ValueError: if called with bad arg values
-    """
     def __init__(self, lg: Dict[str, Any]) -> None:
 
         if (not isinstance(lg, dict)
@@ -65,19 +67,20 @@ class LinGauss():
             data: Union["Pandas", "BNFit"],
             autocomplete: bool = True
             ) -> Tuple[Tuple[type, Dict[str, Any]], Optional[int]]:
-        """
-            Fit a Linear Gaussian to data.
+        """Fit a Linear Gaussian to data.
 
-            :param str node: node that Linear Gaussian applies to
-            :param tuple/None parents: parents of node
-            :param BNFit data: data to fit Linear Gaussian to
-            :param bool autocomplete: not used for Linear Gaussian
+        Args:
+            node: Node that Linear Gaussian applies to.
+            parents: Parents of node.
+            data: Data to fit Linear Gaussian to.
+            autocomplete: Not used for Linear Gaussian.
 
-            :raises TypeError: with bad arg types
-            :raises ValueError: with bad arg values
+        Returns:
+            Tuple of (lg_spec, None) where lg is (LinGauss class, lg_spec).
 
-            :returns tuple: (lg_spec, None) where
-                             lg is (LinGauss class, lg_spec)
+        Raises:
+            TypeError: With bad arg types.
+            ValueError: With bad arg values.
         """
         if (not isinstance(node, str)
             or (parents is not None
@@ -126,16 +129,18 @@ class LinGauss():
     def cdist(self,
               parental_values: Optional[Dict[str, float]] = None
               ) -> Tuple[float, float]:
-        """
-            Return conditional distribution for specified parental values.
+        """Return conditional distribution for specified parental values.
 
-            :param dict/None parental_values: parental values for which dist.
-                                              required for non-orphans
+        Args:
+            parental_values: Parental values for which dist. required
+            for non-orphans.
 
-            :raises TypeError: if args are of wrong type
-            :raises ValueError: if args have invalid or conflicting values
+        Returns:
+            Tuple of (mean, sd) of child Gaussian distribution.
 
-            :return tuple: (mean, sd) of child Gaussian distribution
+        Raises:
+            TypeError: If args are of wrong type.
+            ValueError: If args have invalid or conflicting values.
         """
         if ((self.coeffs == {} and parental_values is not None)
             or (len(self.coeffs) > 0 and parental_values is None)
@@ -149,35 +154,38 @@ class LinGauss():
         return mean, self.sd
 
     def random_value(self, pvs: Optional[Dict[str, float]]) -> float:
-        """
-            Generate a random value for a node given the value of its parents.
+        """Generate a random value for a node given the value of its parents.
 
-            :param dict/None pvs: parental values, {parent1: value1, ...}
+        Args:
+            pvs: Parental values, {parent1: value1, ...}.
 
-            :return str/float: random value for node.
+        Returns:
+            Random value for node.
         """
         mean, sd = self.cdist(pvs)
         return mean + random_generator().normal() * sd
 
     def parents(self) -> List[str]:
-        """
-            Return parents of node CND relates to
+        """Return parents of node CND relates to.
 
-            :returns list: parent node names in alphabetical order
+        Returns:
+            Parent node names in alphabetical order.
         """
         return sorted(list(self.coeffs.keys()))
 
     def to_spec(self, name_map: Dict[str, str]) -> Dict[str, Any]:
-        """
-            Returns external specification format of LinGauss, renaming nodes
-            according to a name map.
+        """Returns external specification format of LinGauss,
+        renaming nodes according to a name map.
 
-            :param dict name_map: map of node names {old: new}
+        Args:
+            name_map: Map of node names {old: new}.
 
-            :raise TypeError: if bad arg type
-            :raise ValueError: if bad arg value, e.g. coeff keys not in map
+        Returns:
+            LinGauss specification with renamed nodes.
 
-            :returns dict: LinGauss specification with renamed nodes
+        Raises:
+            TypeError: If bad arg type.
+            ValueError: If bad arg value, e.g. coeff keys not in map.
         """
         if (not isinstance(name_map, dict)
                 or not all([isinstance(k, str) for k in name_map])
@@ -191,8 +199,10 @@ class LinGauss():
         return {'coeffs': coeffs, 'mean': self.mean, 'sd': self.sd}
 
     def __str__(self) -> str:
-        """
-            Human-friendly formula description of the Linear Guassian
+        """Human-friendly formula description of the Linear Gaussian.
+
+        Returns:
+            String representation of the Linear Gaussian formula.
         """
         def _term(node: str, coeff: float) -> str:
             # val = _val(coeff)

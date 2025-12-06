@@ -18,21 +18,23 @@ except ImportError:
 
 
 class CPT(CND):
-    """
-        Base class for conditional probability tables
+    """Base class for conditional probability tables.
 
-        :param dict pmfs: a pmf of {value: prob} for parentless nodes OR
-                          list of tuples ({parent: value}, {value: prob})
-        :param int estimated: how many PMFs were estimated
+    Args:
+        pmfs: A pmf of {value: prob} for parentless nodes OR
+            list of tuples ({parent: value}, {value: prob}).
+        estimated: How many PMFs were estimated.
 
-        :ivar dict cpt: Internal representation of the CPT
-                        ({node_values: prob} for parentless node, otherwise
-                         {parental_vales as frozenset: {node_values: prob}}
-        :ivar int estimated: number of PMFs that were estimated
-        :ivar set values: values which node can take
+    Attributes:
+        cpt: Internal representation of the CPT.
+            {node_values: prob} for parentless node, otherwise
+            {parental_values as frozenset: {node_values: prob}}.
+        estimated: Number of PMFs that were estimated.
+        values: Values which node can take.
 
-        :raises TypeError: if arguments are of wrong type
-        :raises ValueError: if arguments have invalid or conflicting values
+    Raises:
+        TypeError: If arguments are of wrong type.
+        ValueError: If arguments have invalid or conflicting values.
     """
     def __init__(self,
                  pmfs: Union[Dict[str, float],
@@ -123,19 +125,19 @@ class CPT(CND):
             data: Union[BNFit, Any],
             autocomplete: bool = True) -> Tuple[
                 Tuple[type, Dict[str, Any]], Optional[int]]:
-        """
-            Constructs a CPT (Conditional Probability Table) from data.
+        """Constructs a CPT (Conditional Probability Table) from data.
 
-            :param str node: node that CPT applies to
-            :param tuple/None parents: parents of node
-            :param BNFit data: data to fit CPT to
-            :param bool autocomplete: whether to ensure CPT data contains
-                                      entries for combinations of parental
-                                      values that don't occur in the data
+        Args:
+            node: Node that CPT applies to.
+            parents: Parents of node.
+            data: Data to fit CPT to.
+            autocomplete: Whether to ensure CPT data contains entries for
+            combinations of parental values that don't occur in the data.
 
-            :returns tuple: (cnd_spec, estimated_pmfs) where
-                             cnd_spec is (CPT class, cpt_spec for CPT())
-                             estimated_pmfs is int, # estimated pmfs
+        Returns:
+            Tuple of (cnd_spec, estimated_pmfs) where
+            cnd_spec is (CPT class, cpt_spec for CPT())
+            estimated_pmfs is int, # estimated pmfs.
         """
         if not isinstance(data, BNFit if Pandas is None else (Pandas, BNFit)):
             raise TypeError('CPT.fit() bad arg type')
@@ -189,15 +191,16 @@ class CPT(CND):
     def cdist(self,
               parental_values: Optional[Dict[str, str]] = None
               ) -> Dict[str, float]:
-        """
-            Return conditional probabilities of node values for
-            specified parental values.
+        """Return conditional probabilities of node values for specified
+        parental values.
 
-            :param dict/None parental_values: parental values for which pmf
-                                              required for non-orphans
+        Args:
+            parental_values: Parental values for which pmf required
+            for non-orphans.
 
-            :raises TypeError: if args are of wrong type
-            :raises ValueError: if args have invalid or conflicting values
+        Raises:
+            TypeError: If args are of wrong type.
+            ValueError: If args have invalid or conflicting values.
         """
         if ((not self.has_parents and parental_values is not None) or
                 (self.has_parents and not isinstance(parental_values, dict))):
@@ -213,12 +216,13 @@ class CPT(CND):
             return self.cpt[pvs]  # type: ignore
 
     def random_value(self, pvs: Optional[Dict[str, str]]) -> str:
-        """
-            Generate a random value for a node given the value of its parents.
+        """Generate a random value for a node given the value of its parents.
 
-            :param dict/None pvs: parental values, {parent1: value1, ...}
+        Args:
+            pvs: Parental values, {parent1: value1, ...}.
 
-            :return str/float: random value for node.
+        Returns:
+            Random value for node.
         """
         pmf = self.cdist(pvs)
         values = list(pmf.keys())
@@ -231,21 +235,19 @@ class CPT(CND):
         return values[-1]
 
     def node_values(self) -> List[str]:
-        """
-            Return node values (states) of node CPT relates to
+        """Return node values (states) of node CPT relates to.
 
-            :returns: node values in alphabetical order
-            :rtype: list of str
+        Returns:
+            Node values in alphabetical order.
         """
         return sorted(list(self.cpt.keys())) if not self.has_parents else \
             sorted(list(next(iter(self.cpt.values())).keys()))  # type: ignore
 
     def parents(self) -> List[str]:
-        """
-            Return parents of node CPT relates to
+        """Return parents of node CPT relates to.
 
-            :returns: parent node names in alphabetical order
-            :rtype: list of str or None
+        Returns:
+            Parent node names in alphabetical order.
         """
         if not self.has_parents:
             return None  # type: ignore[return-value]
@@ -255,16 +257,18 @@ class CPT(CND):
     def to_spec(self,
                 name_map: Dict[str, str]
                 ) -> Dict[str, Any]:
-        """
-            Returns external specification format of CPT, renaming nodes
-            according to a name map.
+        """Returns external specification format of CPT,
+        renaming nodes according to a name map.
 
-            :param dict name_map: map of node names {old: new}
+        Args:
+            name_map: Map of node names {old: new}.
 
-            :raise TypeError: if bad arg type
-            :raise ValueError: if bad arg value, e.g. coeff keys not in map
+        Returns:
+            CPT specification with renamed nodes.
 
-            :returns dict: CPT specification with renamed nodes
+        Raises:
+            TypeError: If bad arg type.
+            ValueError: If bad arg value, e.g. coeff keys not in map.
         """
         if (not isinstance(name_map, dict)
                 or not all([isinstance(k, str) for k in name_map])
@@ -303,8 +307,10 @@ class CPT(CND):
             print('*** {} --> {}: ratios {}'.format(pvs, pmf, _ratios))
 
     def __str__(self) -> str:
-        """
-            Human-friendly description of the contents of the CPT
+        """Human-friendly description of the contents of the CPT.
+
+        Returns:
+            String representation of the CPT contents.
         """
         if not self.has_parents:
             return '{}'.format({v: round(p, 6) for v, p in self.cpt.items()})
@@ -349,13 +355,17 @@ class CPT(CND):
                          node: str,
                          parents: Dict[str, List[str]],
                          node_values: Dict[str, List[str]]) -> None:
-        """
-            Checks every CPT's parents and parental values are consistent
-            with the other relevant CPTs and the DAG structure.
+        """Checks every CPT's parents and parental values are consistent
+        with other relevant CPTs and the DAG structure.
 
-            :param str node: name of node
-            :param dict parents: parents of all nodes {node: parents}
-            :param dict node_values: values of each cat. node {node: values}
+        Args:
+            node: Name of node.
+            parents: Parents of all nodes {node: parents}.
+            node_values: Values of each cat. node {node: values}.
+
+        Raises:
+            ValueError: If parent mismatch or missing parental
+            value combinations.
         """
 
         # Check parents defined in CPT keys match those defined in parents
