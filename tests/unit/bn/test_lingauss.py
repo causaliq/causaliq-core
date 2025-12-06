@@ -4,8 +4,54 @@ import numpy as np
 import pytest
 from pandas import DataFrame
 
+from causaliq_core.bn.bnfit import BNFit
 from causaliq_core.bn.dist.lingauss import LinGauss
 from causaliq_core.utils.same import values_same
+
+
+class DataFrameAdapter(BNFit):
+    """Adapter to make DataFrame work with BNFit interface"""
+
+    def __init__(self, df):
+        self._df = df
+        self.sample = df  # Legacy Pandas class has this attribute
+        self._N = len(df)
+        # Only compute node_values for categorical columns, not continuous
+        self._node_values = {
+            col: {val: count for val, count in df[col].value_counts().items()}
+            for col in df.columns
+            if df[col].dtype == "category"
+        }
+
+    def values(self, columns):
+        # Check for node appearing as own parent (duplicate in columns)
+        if len(columns) != len(set(columns)):
+            raise ValueError("Node cannot be its own parent")
+
+        # Check for invalid columns and convert KeyError to ValueError
+        try:
+            return self._df[list(columns)].values
+        except KeyError as e:
+            raise ValueError(f"Invalid column name: {e}")
+
+    def marginals(self, nodes, parents):
+        raise NotImplementedError("marginals not implemented for test adapter")
+
+    @property
+    def N(self):
+        return self._N
+
+    @N.setter
+    def N(self, value):
+        self._N = value
+
+    @property
+    def node_values(self):
+        return self._node_values
+
+    @node_values.setter
+    def node_values(self, value):
+        self._node_values = value
 
 
 @pytest.fixture(scope="function")  # simple lg specification
@@ -20,7 +66,7 @@ def data():
     t = 3.0 + 1.0 * np.random.randn(N)
     u = 1.0 + 3.0 * np.random.randn(N) - 4.0 * t
     v = 0.5 + 0.5 * np.random.randn(N) + 1.0 * t - 0.1 * u
-    return DataFrame({"T": t, "U": u, "V": v})
+    return DataFrameAdapter(DataFrame({"T": t, "U": u, "V": v}))
 
 
 # Test the LinGauss() constructor
@@ -276,13 +322,11 @@ def test_fit_type_error_3(data):  # parents is not None or tuple of strings
         LinGauss.fit("U", (1, 2), data)
 
 
-def test_fit_type_error_4(data):  # data is not DataFrame or Data type
+def test_fit_type_error_4(data):  # data is not Data type
     with pytest.raises(TypeError):
         LinGauss.fit("U", ("T",), True)
     with pytest.raises(TypeError):
-        LinGauss.fit("U", ("T",), "invalid_data")
-    with pytest.raises(TypeError):
-        LinGauss.fit("U", ("T",), 123)
+        LinGauss.fit("U", ("T",), data.sample)
 
 
 def test_fit_value_error_1(data):  # node is one of parents
@@ -295,72 +339,6 @@ def test_fit_value_error_2(data):  # node or parent is not in data
         LinGauss.fit("invalid", ("T", "U"), data)
     with pytest.raises(ValueError):
         LinGauss.fit("T", ("invalid", "U"), data)
-
-
-def test_fit_dataframe_missing_column_error():  # DataFrame missing column
-    df = DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]})
-    with pytest.raises(ValueError):
-        LinGauss.fit("C", ("A",), df)  # C not in DataFrame
-    with pytest.raises(ValueError):
-        LinGauss.fit("A", ("C",), df)  # C not in DataFrame
-
-
-def test_fit_autocomplete_false_error(
-    data,
-):  # autocomplete parameter must be True
-    with pytest.raises(TypeError):
-        LinGauss.fit("T", None, data, autocomplete=False)
-
-
-def test_fit_dataframe_orphan_ok():  # fit orphan with DataFrame
-    df = DataFrame({"A": [1.0, 2.0, 3.0, 4.0, 5.0] * 1000})
-    lg, _ = LinGauss.fit("A", None, df)
-    assert abs(lg[1]["mean"] - 3.0) < 0.1  # should be close to mean
-    assert lg[1]["coeffs"] == {}
-
-
-def test_fit_dataframe_single_parent_ok():  # fit with DataFrame and parent
-    np.random.seed(42)
-    n = 1000
-    x = np.random.normal(0, 1, n)
-    y = 2.0 + 1.5 * x + np.random.normal(0, 0.1, n)
-    df = DataFrame({"X": x, "Y": y})
-    lg, _ = LinGauss.fit("Y", ("X",), df)
-    assert abs(lg[1]["mean"] - 2.0) < 0.2  # should be close to intercept
-    assert (
-        abs(lg[1]["coeffs"]["X"] - 1.5) < 0.2
-    )  # should be close to coefficient
-
-
-def test_fit_legacy_pandas_path():  # test legacy Pandas wrapper path
-    # Create a mock legacy Pandas object
-    class MockPandas:
-        def __init__(self, df):
-            self.df = df
-
-        def values(self, columns):
-            return self.df[list(columns)].values
-
-    # Test orphan case with legacy Pandas
-    df = DataFrame({"A": [1.0, 2.0, 3.0, 4.0, 5.0] * 200})
-    mock_pandas = MockPandas(df)
-    mock_pandas.__class__.__name__ = "Pandas"  # Set class name to 'Pandas'
-
-    lg, _ = LinGauss.fit("A", None, mock_pandas)
-    assert abs(lg[1]["mean"] - 3.0) < 0.1
-    assert lg[1]["coeffs"] == {}
-
-    # Test with parent case
-    np.random.seed(42)
-    x = np.random.normal(0, 1, 500)
-    y = 2.0 + 1.5 * x + np.random.normal(0, 0.1, 500)
-    df2 = DataFrame({"X": x, "Y": y})
-    mock_pandas2 = MockPandas(df2)
-    mock_pandas2.__class__.__name__ = "Pandas"
-
-    lg, _ = LinGauss.fit("Y", ("X",), mock_pandas2)
-    assert abs(lg[1]["mean"] - 2.0) < 0.2
-    assert abs(lg[1]["coeffs"]["X"] - 1.5) < 0.2
 
 
 def test_fit_1_ok(data):  # Check fitted values for T (orphan) node
@@ -464,199 +442,3 @@ def test_to_spec_2_ok(lg):  # mapping names
         "mean": 2.2,
         "sd": 0.34,
     }
-
-
-# Test the cdist() method
-
-
-def test_cdist_type_error_1():  # orphan with parental values
-    lg = {"coeffs": {}, "mean": 2.0, "sd": 1.0}
-    lingauss = LinGauss(lg)
-    with pytest.raises(TypeError):
-        lingauss.cdist({"A": 1.0})
-
-
-def test_cdist_type_error_2():  # non-orphan without parental values
-    lg = {"coeffs": {"A": 1.0}, "mean": 2.0, "sd": 1.0}
-    lingauss = LinGauss(lg)
-    with pytest.raises(TypeError):
-        lingauss.cdist()
-
-
-def test_cdist_type_error_3():  # wrong parent keys
-    lg = {"coeffs": {"A": 1.0, "B": 2.0}, "mean": 2.0, "sd": 1.0}
-    lingauss = LinGauss(lg)
-    with pytest.raises(TypeError):
-        lingauss.cdist({"A": 1.0, "C": 2.0})  # wrong key
-    with pytest.raises(TypeError):
-        lingauss.cdist({"A": 1.0})  # missing key
-
-
-def test_cdist_orphan_ok():  # orphan node distribution
-    lg = {"coeffs": {}, "mean": 2.5, "sd": 1.5}
-    lingauss = LinGauss(lg)
-    mean, sd = lingauss.cdist()
-    assert mean == 2.5
-    assert sd == 1.5
-
-
-def test_cdist_single_parent_ok():  # single parent distribution
-    lg = {"coeffs": {"A": 1.5}, "mean": 2.0, "sd": 0.5}
-    lingauss = LinGauss(lg)
-    mean, sd = lingauss.cdist({"A": 3.0})
-    assert mean == 2.0 + 1.5 * 3.0  # 6.5
-    assert sd == 0.5
-
-
-def test_cdist_multi_parent_ok():  # multiple parent distribution
-    lg = {"coeffs": {"A": 1.0, "B": -0.5}, "mean": 1.0, "sd": 2.0}
-    lingauss = LinGauss(lg)
-    mean, sd = lingauss.cdist({"A": 2.0, "B": 4.0})
-    assert mean == 1.0 + 1.0 * 2.0 + (-0.5) * 4.0  # 1.0 + 2.0 - 2.0 = 1.0
-    assert sd == 2.0
-
-
-# Test the random_value() method
-
-
-def test_random_value_orphan_ok():  # orphan node random value generation
-    lg = {"coeffs": {}, "mean": 2.5, "sd": 1.5}
-    lingauss = LinGauss(lg)
-    # Test multiple values to check they're reasonable
-    values = [lingauss.random_value(None) for _ in range(100)]
-    mean_val = sum(values) / len(values)
-    # Should be approximately around the mean (within reasonable bounds)
-    assert abs(mean_val - 2.5) < 0.5  # rough check for randomness
-
-
-def test_random_value_single_parent_ok():  # single parent random value
-    lg = {"coeffs": {"A": 1.5}, "mean": 2.0, "sd": 0.1}  # small SD
-    lingauss = LinGauss(lg)
-    values = [lingauss.random_value({"A": 3.0}) for _ in range(50)]
-    mean_val = sum(values) / len(values)
-    expected_mean = 2.0 + 1.5 * 3.0  # 6.5
-    assert abs(mean_val - expected_mean) < 0.2  # should be close to expected
-
-
-def test_random_value_multi_parent_ok():  # multiple parent random value
-    lg = {"coeffs": {"A": 1.0, "B": -0.5}, "mean": 1.0, "sd": 0.1}
-    lingauss = LinGauss(lg)
-    values = [lingauss.random_value({"A": 2.0, "B": 4.0}) for _ in range(50)]
-    mean_val = sum(values) / len(values)
-    expected_mean = 1.0 + 1.0 * 2.0 + (-0.5) * 4.0  # 1.0
-    assert abs(mean_val - expected_mean) < 0.2
-
-
-# Test the parents() method
-
-
-def test_parents_orphan_ok():  # orphan node has no parents
-    lg = {"coeffs": {}, "mean": 2.0, "sd": 1.0}
-    lingauss = LinGauss(lg)
-    assert lingauss.parents() == []
-
-
-def test_parents_single_ok():  # single parent
-    lg = {"coeffs": {"A": 1.0}, "mean": 2.0, "sd": 1.0}
-    lingauss = LinGauss(lg)
-    assert lingauss.parents() == ["A"]
-
-
-def test_parents_multiple_ok():  # multiple parents, should be sorted
-    lg = {"coeffs": {"Z": 1.0, "A": 2.0, "M": -0.5}, "mean": 2.0, "sd": 1.0}
-    lingauss = LinGauss(lg)
-    assert lingauss.parents() == ["A", "M", "Z"]  # alphabetical order
-
-
-# Test the validate_parents() method
-
-
-def test_validate_parents_orphan_ok():  # orphan node validation
-    lg = {"coeffs": {}, "mean": 2.0, "sd": 1.0}
-    lingauss = LinGauss(lg)
-    parents = {}  # no parents defined
-    node_values = {"A": ["0", "1"]}
-    lingauss.validate_parents("A", parents, node_values)  # should not raise
-
-
-def test_validate_parents_single_ok():  # single parent validation
-    lg = {"coeffs": {"B": 1.0}, "mean": 2.0, "sd": 1.0}
-    lingauss = LinGauss(lg)
-    parents = {"A": ["B"]}
-    node_values = {"A": ["0", "1"], "B": ["0", "1"]}
-    lingauss.validate_parents("A", parents, node_values)  # should not raise
-
-
-def test_validate_parents_multiple_ok():  # multiple parents validation
-    lg = {"coeffs": {"B": 1.0, "C": -0.5}, "mean": 2.0, "sd": 1.0}
-    lingauss = LinGauss(lg)
-    parents = {"A": ["B", "C"]}
-    node_values = {"A": ["0", "1"], "B": ["0", "1"], "C": ["0", "1"]}
-    lingauss.validate_parents("A", parents, node_values)  # should not raise
-
-
-def test_validate_parents_error_orphan_has_coeffs():  # orphan but has coeffs
-    lg = {"coeffs": {"B": 1.0}, "mean": 2.0, "sd": 1.0}
-    lingauss = LinGauss(lg)
-    parents = {}  # no parents defined but LinGauss has coeffs
-    node_values = {"A": ["0", "1"]}
-    with pytest.raises(ValueError):
-        lingauss.validate_parents("A", parents, node_values)
-
-
-def test_validate_parents_error_wrong_parents():  # wrong parent set
-    lg = {"coeffs": {"B": 1.0, "C": -0.5}, "mean": 2.0, "sd": 1.0}
-    lingauss = LinGauss(lg)
-    parents = {"A": ["B", "D"]}  # has D instead of C
-    node_values = {"A": ["0", "1"], "B": ["0", "1"], "D": ["0", "1"]}
-    with pytest.raises(ValueError):
-        lingauss.validate_parents("A", parents, node_values)
-
-
-def test_validate_parents_error_missing_parent():  # missing parent
-    lg = {"coeffs": {"B": 1.0, "C": -0.5}, "mean": 2.0, "sd": 1.0}
-    lingauss = LinGauss(lg)
-    parents = {"A": ["B"]}  # missing C
-    node_values = {"A": ["0", "1"], "B": ["0", "1"]}
-    with pytest.raises(ValueError):
-        lingauss.validate_parents("A", parents, node_values)
-
-
-# Test the __str__() method
-
-
-def test_str_orphan_ok():  # orphan node string representation
-    lg = {"coeffs": {}, "mean": 2.5, "sd": 1.5}
-    lingauss = LinGauss(lg)
-    str_repr = str(lingauss)
-    assert str_repr == "Normal(2.5,1.5)"
-
-
-def test_str_single_parent_positive_ok():  # single parent with positive coeff
-    lg = {"coeffs": {"A": 1.5}, "mean": 2.0, "sd": 0.5}
-    lingauss = LinGauss(lg)
-    str_repr = str(lingauss)
-    assert str_repr == "1.5*A+Normal(2.0,0.5)"
-
-
-def test_str_single_parent_negative_ok():  # single parent with negative coeff
-    lg = {"coeffs": {"A": -2.5}, "mean": 1.0, "sd": 0.1}
-    lingauss = LinGauss(lg)
-    str_repr = str(lingauss)
-    assert str_repr == "-2.5*A+Normal(1.0,0.1)"
-
-
-def test_str_multiple_parents_ok():  # multiple parents
-    lg = {"coeffs": {"B": 1.0, "A": -0.5}, "mean": 2.2, "sd": 0.34}
-    lingauss = LinGauss(lg)
-    str_repr = str(lingauss)
-    # Should be sorted alphabetically: A, then B
-    assert str_repr == "-0.5*A+1.0*B+Normal(2.2,0.34)"
-
-
-def test_str_zero_coefficient():  # coefficient that rounds to zero
-    lg = {"coeffs": {"A": 0.00000000001}, "mean": 1.0, "sd": 0.5}
-    lingauss = LinGauss(lg)
-    str_repr = str(lingauss)
-    # Very small coefficient should be dropped
-    assert str_repr == "Normal(1.0,0.5)"

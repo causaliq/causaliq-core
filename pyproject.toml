@@ -86,6 +86,10 @@ where = ["src"]
 [tool.setuptools.package-dir]
 "" = "src"
 
+
+[tool.setuptools.package-data]
+causaliq_core = ["py.typed"]
+
 [tool.pytest.ini_options]
 minversion = "7.0"
 addopts = "-ra -q --strict-markers --cov=causaliq_core --cov-report=term-missing --cov-report=html"

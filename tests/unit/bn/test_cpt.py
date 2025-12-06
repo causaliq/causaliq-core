@@ -1,7 +1,7 @@
 import example_cpts as cpt
 import pytest
 
-from causaliq_core.bn import CPT
+from causaliq_core.bn.dist.cpt import CPT
 
 
 def test_cpt_type_error_1():  # no arguments
