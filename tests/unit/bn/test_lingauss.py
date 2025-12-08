@@ -38,6 +38,30 @@ class DataFrameAdapter(BNFit):
         raise NotImplementedError("marginals not implemented for test adapter")
 
     @property
+    def nodes(self):
+        """Return the nodes in the dataset."""
+        return tuple(self._df.columns)
+
+    @property
+    def sample(self):
+        """Return the underlying DataFrame."""
+        return self._df
+
+    @sample.setter
+    def sample(self, value):
+        """Set the underlying DataFrame."""
+        self._df = value
+
+    @property
+    def node_types(self):
+        """Return the types of all nodes."""
+        return {col: str(self._df[col].dtype) for col in self._df.columns}
+
+    def write(self, filename):
+        """Write data to file - not implemented for test adapter."""
+        raise NotImplementedError("write not implemented for test adapter")
+
+    @property
     def N(self):
         return self._N
 

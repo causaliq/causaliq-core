@@ -1,16 +1,21 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Tuple
+from typing import Any, Dict, Tuple
 
 import numpy as np
 
 
 class BNFit(ABC):
     """
-    Minimal interface for Bayesian Network parameter estimation.
+    Interface for Bayesian Network parameter estimation and data access.
 
     This interface provides the essential methods required for fitting
     conditional probability tables (CPT) and linear Gaussian models
-    in Bayesian Networks.
+    in Bayesian Networks, as well as data access methods for the BN class.
+
+    Implementing classes should provide:
+    - A constructor that accepts df=DataFrame parameter for BN compatibility
+    - All abstract methods defined below
+    - Properties for data access (.nodes, .sample, .node_types)
     """
 
     @abstractmethod
@@ -86,4 +91,49 @@ class BNFit(ABC):
     @abstractmethod
     def node_values(self, value: Dict[str, Dict]) -> None:
         """Set node value counts."""
+        pass
+
+    @property
+    @abstractmethod
+    def nodes(self) -> Tuple[str, ...]:
+        """Column names in the dataset.
+
+        Returns:
+            Tuple of node names (column names) in the dataset.
+        """
+        pass
+
+    @property
+    @abstractmethod
+    def sample(self) -> Any:
+        """Access to underlying data sample.
+
+        Returns:
+            The underlying DataFrame or data structure for direct access.
+            Used for operations like .unique() on columns.
+        """
+        pass
+
+    @property
+    @abstractmethod
+    def node_types(self) -> Dict[str, str]:
+        """Node type mapping for each variable.
+
+        Returns:
+            Dictionary mapping node names to their types.
+            Format: {node: 'category' | 'continuous'}
+        """
+        pass
+
+    @abstractmethod
+    def write(self, filename: str) -> None:
+        """Write data to file.
+
+        Args:
+            filename: Path to output file.
+
+        Raises:
+            TypeError: If filename is not a string.
+            FileNotFoundError: If output directory doesn't exist.
+        """
         pass
