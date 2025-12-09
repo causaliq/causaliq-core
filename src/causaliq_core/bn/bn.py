@@ -13,7 +13,6 @@ from causaliq_core.utils.random import set_random_seed
 from .bnfit import BNFit
 from .dist import CPT, LinGauss, NodeValueCombinations
 from .dist.cnd import CND
-from .io import dsc, xdsl
 
 
 class BN:
@@ -103,37 +102,6 @@ class BN:
 
         return cls(dag, cnd_specs, estimated_pmfs)
 
-    @classmethod
-    def read(cls, path: str, correct: bool = False) -> "BN":
-        """Instantiate BN from a DSC or XDSL format file specification.
-
-        Args:
-            path: Path to DSC/XDSL file.
-            correct: Whether to correct probabilities that do not sum to 1
-                (XDSL files only).
-
-        Returns:
-            Bayesian Network specified in file.
-
-        Raises:
-            TypeError: If path is not a string.
-            ValueError: If path suffix is not "dsc" or "xdsl".
-            FileNotFoundError: If file does not exist.
-            FileFormatError: If file contents not valid.
-        """
-        if not isinstance(path, str) or not isinstance(correct, bool):
-            raise TypeError("BN.read() bad arg type")
-
-        suffix = path.split(".")[-1]
-        if suffix.lower() == "dsc":
-            nodes, edges, cnd_specs = dsc.read(path)
-        elif suffix.lower() == "xdsl":
-            nodes, edges, cnd_specs = xdsl.read(path, correct)
-        else:
-            raise ValueError("BN.read() invalid file suffix")
-
-        return cls(DAG(nodes, edges), cnd_specs)
-
     def rename(self, name_map: Dict[str, str]) -> None:
         """Rename nodes in place according to name map.
 
@@ -172,24 +140,6 @@ class BN:
         # re-instantiate BN with new DAG and CPT data
 
         self.__init__(self.dag, cnd_specs)  # type: ignore[misc]
-
-    def write(self, path: str) -> None:
-        """Write BN to a DSC or XDSL format file.
-
-        Args:
-            path: Path to file.
-
-        Raises:
-            ValueError: If suffix not ".dsc" or ".xdsl".
-            FileNotFoundError: If file location nonexistent.
-        """
-        suffix = path.split(".")[-1].lower()
-        if suffix == "dsc":
-            dsc.write(self, path)
-        elif suffix == "xdsl":
-            xdsl.write(self, path, genie=True)
-        else:
-            raise ValueError("Unknown file format: {}".format(suffix))
 
     def global_distribution(self) -> DataFrame:
         """Generate the global probability distribution for the BN.

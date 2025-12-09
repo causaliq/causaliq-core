@@ -8,6 +8,7 @@ including conditional node distributions and their implementations.
 from .bn import BN
 from .bnfit import BNFit
 from .dist import CPT, LinGauss, NodeValueCombinations
+from .io.common import read_bn, write_bn
 
 __all__ = [
     "BN",
@@ -15,4 +16,6 @@ __all__ = [
     "CPT",
     "LinGauss",
     "NodeValueCombinations",
+    "read_bn",
+    "write_bn",
 ]
