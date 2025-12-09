@@ -11,7 +11,7 @@ from .dag import DAG, NotDAGError
 
 # Import enums
 from .enums import EdgeMark, EdgeType
-from .io.common import read, write
+from .io.common import read_graph, write_graph
 from .pdag import PDAG, NotPDAGError
 
 # Import graph classes - moved to top to fix E402
@@ -36,6 +36,6 @@ __all__ = [
     "is_cpdag",
     "BAYESYS_VERSIONS",
     "io",
-    "read",
-    "write",
+    "read_graph",
+    "write_graph",
 ]

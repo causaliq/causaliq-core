@@ -8,7 +8,7 @@ from ..pdag import PDAG
 from . import bayesys, tetrad
 
 
-def read(path: str) -> Union[PDAG]:
+def read_graph(path: str) -> Union[PDAG]:
     """Read a graph from a file, automatically detecting format from suffix.
 
     Supports:
@@ -28,7 +28,7 @@ def read(path: str) -> Union[PDAG]:
         FileFormatError: If file format is invalid.
     """
     if not isinstance(path, str):
-        raise TypeError("common.read() bad arg type")
+        raise TypeError("common.read_graph() bad arg type")
 
     # Extract file suffix
     suffix = path.lower().split(".")[-1]
@@ -38,10 +38,12 @@ def read(path: str) -> Union[PDAG]:
     elif suffix == "tetrad":
         return tetrad.read(path)
     else:
-        raise ValueError(f"common.read() unsupported file suffix: .{suffix}")
+        raise ValueError(
+            f"common.read_graph() unsupported file suffix: .{suffix}"
+        )
 
 
-def write(graph: PDAG, path: str) -> None:
+def write_graph(graph: PDAG, path: str) -> None:
     """Write a graph to a file, automatically detecting format from suffix.
 
     Supports:
@@ -58,7 +60,7 @@ def write(graph: PDAG, path: str) -> None:
         FileNotFoundError: If path to file does not exist.
     """
     if not isinstance(graph, PDAG) or not isinstance(path, str):
-        raise TypeError("common.write() bad arg types")
+        raise TypeError("common.write_graph() bad arg types")
 
     # Extract file suffix
     suffix = path.lower().split(".")[-1]
@@ -68,4 +70,6 @@ def write(graph: PDAG, path: str) -> None:
     elif suffix == "tetrad":
         tetrad.write(graph, path)
     else:
-        raise ValueError(f"common.write() unsupported file suffix: .{suffix}")
+        raise ValueError(
+            f"common.write_graph() unsupported file suffix: .{suffix}"
+        )

@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from causaliq_core.graph.dag import DAG
-from causaliq_core.graph.io.common import read, write
+from causaliq_core.graph.io.common import read_graph, write_graph
 from causaliq_core.graph.pdag import PDAG
 
 # Path to test data
@@ -32,7 +32,7 @@ def test_common_read_csv_calls_bayesys():
         "causaliq_core.graph.io.common.bayesys.read"
     ) as mock_bayesys_read:
         mock_bayesys_read.return_value = DAG(["A", "B"], [("A", "->", "B")])
-        result = read(str(TEST_DATA_DIR / "test.csv"))
+        result = read_graph(str(TEST_DATA_DIR / "test.csv"))
         mock_bayesys_read.assert_called_once_with(
             str(TEST_DATA_DIR / "test.csv")
         )
@@ -45,7 +45,7 @@ def test_common_read_tetrad_calls_tetrad():
         "causaliq_core.graph.io.common.tetrad.read"
     ) as mock_tetrad_read:
         mock_tetrad_read.return_value = DAG(["A", "B"], [("A", "->", "B")])
-        result = read(str(TEST_DATA_DIR / "test.tetrad"))
+        result = read_graph(str(TEST_DATA_DIR / "test.tetrad"))
         mock_tetrad_read.assert_called_once_with(
             str(TEST_DATA_DIR / "test.tetrad")
         )
@@ -54,7 +54,7 @@ def test_common_read_tetrad_calls_tetrad():
 
 # Test read actual CSV file
 def test_common_read_csv_actual_file():
-    graph = read(str(TEST_DATA_DIR / "abc.csv"))
+    graph = read_graph(str(TEST_DATA_DIR / "abc.csv"))
     assert graph is not None
     assert len(graph.nodes) == 3
     assert set(graph.nodes) == {"A", "B", "C"}
@@ -62,7 +62,7 @@ def test_common_read_csv_actual_file():
 
 # Test read actual TETRAD file
 def test_common_read_tetrad_actual_file():
-    graph = read(str(TEST_DATA_DIR / "abc.tetrad"))
+    graph = read_graph(str(TEST_DATA_DIR / "abc.tetrad"))
     assert graph is not None
     assert len(graph.nodes) == 3
     assert set(graph.nodes) == {"A", "B", "C"}
@@ -76,7 +76,7 @@ def test_common_write_csv_calls_bayesys(tmp_dir):
     with patch(
         "causaliq_core.graph.io.common.bayesys.write"
     ) as mock_bayesys_write:
-        write(dag, str(test_file))
+        write_graph(dag, str(test_file))
         mock_bayesys_write.assert_called_once_with(dag, str(test_file))
 
 
@@ -88,7 +88,7 @@ def test_common_write_tetrad_calls_tetrad(tmp_dir):
     with patch(
         "causaliq_core.graph.io.common.tetrad.write"
     ) as mock_tetrad_write:
-        write(dag, str(test_file))
+        write_graph(dag, str(test_file))
         mock_tetrad_write.assert_called_once_with(dag, str(test_file))
 
 
@@ -99,10 +99,10 @@ def test_common_roundtrip_csv(tmp_dir):
     test_file = tmp_dir / "test_roundtrip.csv"
 
     # Write using common interface
-    write(original_dag, str(test_file))
+    write_graph(original_dag, str(test_file))
 
     # Read back using common interface
-    read_dag = read(str(test_file))
+    read_dag = read_graph(str(test_file))
 
     # Compare
     assert set(original_dag.nodes) == set(read_dag.nodes)
@@ -116,10 +116,10 @@ def test_common_roundtrip_tetrad(tmp_dir):
     test_file = tmp_dir / "test_roundtrip.tetrad"
 
     # Write using common interface
-    write(original_dag, str(test_file))
+    write_graph(original_dag, str(test_file))
 
     # Read back using common interface
-    read_dag = read(str(test_file))
+    read_dag = read_graph(str(test_file))
 
     # Compare
     assert set(original_dag.nodes) == set(read_dag.nodes)
@@ -133,10 +133,10 @@ def test_common_roundtrip_pdag_csv(tmp_dir):
     test_file = tmp_dir / "test_pdag_roundtrip.csv"
 
     # Write using common interface
-    write(original_pdag, str(test_file))
+    write_graph(original_pdag, str(test_file))
 
     # Read back using common interface
-    read_pdag = read(str(test_file))
+    read_pdag = read_graph(str(test_file))
 
     # Compare
     assert set(original_pdag.nodes) == set(read_pdag.nodes)
@@ -150,10 +150,10 @@ def test_common_roundtrip_pdag_tetrad(tmp_dir):
     test_file = tmp_dir / "test_pdag_roundtrip.tetrad"
 
     # Write using common interface
-    write(original_pdag, str(test_file))
+    write_graph(original_pdag, str(test_file))
 
     # Read back using common interface
-    read_pdag = read(str(test_file))
+    read_pdag = read_graph(str(test_file))
 
     # Compare
     assert set(original_pdag.nodes) == set(read_pdag.nodes)
