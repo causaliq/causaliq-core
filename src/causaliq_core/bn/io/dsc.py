@@ -5,8 +5,9 @@
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
-from causaliq_core.bn import CPT
 from causaliq_core.utils import FileFormatError, is_valid_path, values_same
+
+from ..dist import CPT
 
 # Patterns matching different types of line in DSC file
 

@@ -5,8 +5,9 @@ from re import compile, findall, sub
 from typing import Any, Dict, Optional, Tuple
 from xml.dom import minidom
 
-from causaliq_core.bn import CPT, LinGauss, NodeValueCombinations
 from causaliq_core.utils import FileFormatError, is_valid_path
+
+from ..dist import CPT, LinGauss, NodeValueCombinations
 
 XDSL_HDR = (
     '<?xml version="1.0" encoding="UTF-8"?>\n'

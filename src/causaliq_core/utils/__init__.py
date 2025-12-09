@@ -8,7 +8,7 @@ from enum import Enum
 from typing import Any
 
 from .environment import environment
-from .io import FileFormatError, is_valid_path
+from .io import FileFormatError, is_valid_path, write_dataframe
 from .math import ln, rndsf
 from .random import RandomIntegers
 from .same import dicts_same, dists_same, values_same
@@ -96,4 +96,5 @@ __all__ = [
     "values_same",
     "dicts_same",
     "dists_same",
+    "write_dataframe",
 ]
