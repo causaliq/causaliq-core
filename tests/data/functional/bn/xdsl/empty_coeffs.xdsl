@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<smile version="1.0" id="empty_coeffs" numsamples="10000">
+    <nodes>
+        <equation id="Y">
+            <definition>Y = Normal(0,1)</definition>
+            <parents>X</parents>
+        </equation>
+    </nodes>
+</smile>

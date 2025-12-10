@@ -593,7 +593,10 @@ def write(bn: Any, filename: Any, genie: Any = False) -> Any:
     # Ensure all node names are Genie-friendly if required
 
     if genie is True:
+        from copy import deepcopy
+
         name_map = {n: genie_str(n, "N") for n in bn.dag.nodes}
+        bn = deepcopy(bn)  # Work on a copy to avoid modifying the original
         bn.rename(name_map)
 
     # node_values has each node's allowed values ordered alphabetically.
