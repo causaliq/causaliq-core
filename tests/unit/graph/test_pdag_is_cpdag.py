@@ -1,10 +1,10 @@
 # Test PDAG.is_cpdag() method
 
-import example_dags as dag
-import example_pdags as pdag
 import pytest
 
 from causaliq_core.graph import is_cpdag
+from tests.functional.fixtures import example_dags as dag
+from tests.functional.fixtures import example_pdags as pdag
 
 
 # Test empty graph

@@ -1,8 +1,9 @@
 #   Check edge_reversible method of PDAG class.
 #   Note that analysis/test/test_bn_analysis.py also tests this method.
 
-import example_pdags as ex_pdag
 import pytest
+
+from tests.functional.fixtures import example_pdags as ex_pdag
 
 
 # no args specified

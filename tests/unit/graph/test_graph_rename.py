@@ -1,12 +1,12 @@
 # Test graph rename function
 
-import example_dags as ex_dag
-import example_pdags as ex_pdag
-import example_sdgs as ex_sdg
 import pytest
 
 from causaliq_core.graph import DAG, PDAG, SDG, EdgeType
 from causaliq_core.graph.convert import dict_to_adjmat
+from tests.functional.fixtures import example_dags as ex_dag
+from tests.functional.fixtures import example_pdags as ex_pdag
+from tests.functional.fixtures import example_sdgs as ex_sdg
 
 
 # bad argument types

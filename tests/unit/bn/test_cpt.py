@@ -1,7 +1,7 @@
-import example_cpts as cpt
 import pytest
 
 from causaliq_core.bn.dist.cpt import CPT
+from tests.functional.fixtures import example_cpts as cpt
 
 
 # Test CPT constructor with no arguments

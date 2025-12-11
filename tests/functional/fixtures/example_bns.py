@@ -9,7 +9,7 @@
 from causaliq_core.bn import BN
 from causaliq_core.bn.dist.cpt import CPT
 from causaliq_core.bn.dist.lingauss import LinGauss
-from tests.unit.graph import example_dags as dag
+from tests.functional.fixtures import example_dags as dag
 
 # Some simple discrete BNs
 

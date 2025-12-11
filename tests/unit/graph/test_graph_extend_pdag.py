@@ -1,8 +1,8 @@
-import example_dags as ex_dag
-import example_pdags as ex_pdag
 import pytest
 
 from causaliq_core.graph import extend_pdag
+from tests.functional.fixtures import example_dags as ex_dag
+from tests.functional.fixtures import example_pdags as ex_pdag
 
 
 # bad argument types

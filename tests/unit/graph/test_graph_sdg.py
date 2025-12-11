@@ -1,8 +1,8 @@
-import example_sdgs as ex
 import pytest
 
 from causaliq_core.graph import EdgeType
 from causaliq_core.graph.sdg import SDG
+from tests.functional.fixtures import example_sdgs as ex
 
 
 # bad argument types

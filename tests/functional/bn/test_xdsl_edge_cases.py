@@ -92,7 +92,7 @@ def test_write_bn_bad_argument_types():
     """Test TypeError for invalid argument types in write_bn."""
     from causaliq_core.bn import BN
     from causaliq_core.bn.dist.cpt import CPT
-    from tests.unit.graph.example_dags import ab
+    from tests.functional.fixtures.example_dags import ab
 
     # Create a valid BN
     bn = BN(
@@ -272,7 +272,7 @@ def test_genie_write_functionality_lines_596_597_626():
     from causaliq_core.bn import BN
     from causaliq_core.bn.dist.cpt import CPT
     from causaliq_core.bn.io import xdsl
-    from tests.unit.graph.example_dags import ab
+    from tests.functional.fixtures.example_dags import ab
 
     # Create a BN
     bn = BN(

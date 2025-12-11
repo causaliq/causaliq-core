@@ -9,7 +9,7 @@ from random import random
 import pytest
 
 from causaliq_core.bn import read_bn, write_bn
-from tests.data.functional.bn import example_bns as ex_bn
+from tests.functional.fixtures import example_bns as ex_bn
 
 TESTDATA_DIR = Path("tests/data/functional/bn")
 TMP_DIR = TESTDATA_DIR / "tmp"

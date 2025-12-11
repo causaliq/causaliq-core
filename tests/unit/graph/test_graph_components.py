@@ -1,6 +1,6 @@
 #   Test function to list undirected trees
 
-import example_dags as ex_dag
+from tests.functional.fixtures import example_dags as ex_dag
 
 
 # Test components() method on empty graph returns empty list

@@ -1,9 +1,9 @@
-import example_dags as dag
-import example_pdags as pdag
-import example_sdgs as sdg
 import pytest
 
 from causaliq_core.graph import PDAG, NotPDAGError
+from tests.functional.fixtures import example_dags as dag
+from tests.functional.fixtures import example_pdags as pdag
+from tests.functional.fixtures import example_sdgs as sdg
 
 
 # bad argument types
