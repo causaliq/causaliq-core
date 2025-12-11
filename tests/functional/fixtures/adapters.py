@@ -46,10 +46,18 @@ class DataFrameAdapter(BNFit):
             )
 
             if values_reqd:
-                rowval = tuple(crosstab.index)
-                colval = tuple(
-                    dict(zip(parent_list, col)) for col in crosstab.columns
-                )
+                rowval = tuple(str(val) for val in crosstab.index)
+                # Handle case where there's only one parent
+                #  (columns are scalars, not tuples)
+                if len(parent_list) == 1:
+                    colval = tuple(
+                        {parent_list[0]: str(col)} for col in crosstab.columns
+                    )
+                else:
+                    colval = tuple(
+                        dict(zip(parent_list, [str(v) for v in col]))
+                        for col in crosstab.columns
+                    )
                 return crosstab.values, crosstab.shape[1], rowval, colval
             else:
                 return crosstab.values, crosstab.shape[1]

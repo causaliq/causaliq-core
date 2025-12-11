@@ -40,6 +40,22 @@ def test_bn_fit_value_error_1(data):
         BN.fit(dag.a(), data)
 
 
+# Test error when variable has only one value
+def test_bn_fit_value_error_2():
+    # Create data where a variable has only one value
+    df = pd.DataFrame(
+        {
+            "A": ["0", "0", "0", "0"],  # Only one value
+            "B": ["0", "1", "0", "1"],  # Multiple values
+        },
+        dtype="category",
+    )
+    data = DataFrameAdapter(df)
+
+    with pytest.raises(ValueError, match="Some variables have only one value"):
+        BN.fit(dag.ab(), data)
+
+
 # Test creating an empty BN with no nodes or edges
 def test_bn_empty_ok():
     bn = BN(dag.empty(), {})
@@ -276,3 +292,15 @@ def test_bn_fit_covid_c_ok():
 
     # ref = read_bn(EXPTS_DIR + '/bn/xdsl/covid_c.xdsl')
     # assert ref == fitted
+
+
+# Test BN __str__ method for cache stats
+def test_bn_cache_str():
+    # Test that BN cached_marginals object has __str__ method
+    bn_test = bn.ab()
+    cache_str = str(bn_test.cached_marginals)
+
+    # Should return string representation of cache stats
+    assert isinstance(cache_str, str)
+    # Should contain some cache statistics
+    assert "get" in cache_str or "put" in cache_str

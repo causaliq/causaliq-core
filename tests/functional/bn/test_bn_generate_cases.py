@@ -62,7 +62,7 @@ def test_bn_generate_cases_value_error2(bn):  # non-existent directory
 def test_bn_generate_cases_heckerman_demo_1(bn):  # OK with heckerman N1 --> N2
     data = bn.generate_cases(10000)
     summary = (
-        data.groupby(["N1", "N2"])
+        data.groupby(["N1", "N2"], observed=False)
         .size()
         .reset_index()
         .rename(columns={0: "count"})
@@ -87,7 +87,7 @@ def test_bn_generate_cases_heckerman_demo_2():  # OK with unconnected graph?
     bn = BN.fit(DAG(["N1", "N2"], []), data)
     data = bn.generate_cases(10000)
     summary = (
-        data.groupby(["N1", "N2"])
+        data.groupby(["N1", "N2"], observed=False)
         .size()
         .reset_index()
         .rename(columns={0: "count"})
@@ -110,7 +110,7 @@ def test_bn_generate_cases_cancer_demo():  # OK Cancer BN
     bn = read_bn(str(TESTDATA_DIR / "cancer" / "cancer.dsc"))
     data = bn.generate_cases(10000)
     summary = (
-        data.groupby(bn.dag.nodes)
+        data.groupby(bn.dag.nodes, observed=False)
         .size()
         .reset_index()
         .rename(columns={0: "count"})
