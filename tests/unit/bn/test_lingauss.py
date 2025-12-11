@@ -96,12 +96,14 @@ def data():
 # Test the LinGauss() constructor
 
 
-def test_lingauss_type_error_1():  # no aruments
+# no aruments
+def test_lingauss_type_error_1():
     with pytest.raises(TypeError):
         LinGauss()
 
 
-def test_lingauss_type_error_2(lg):  # argument is not a dictionary
+# argument is not a dictionary
+def test_lingauss_type_error_2(lg):
     with pytest.raises(TypeError):
         LinGauss(12)
     with pytest.raises(TypeError):
@@ -110,7 +112,8 @@ def test_lingauss_type_error_2(lg):  # argument is not a dictionary
         LinGauss([lg])
 
 
-def test_lingauss_type_error_3(lg):  # lg has missing/extra keys
+# lg has missing/extra keys
+def test_lingauss_type_error_3(lg):
     lg.update({"extra": 23.2})
     with pytest.raises(TypeError):
         LinGauss(lg)
@@ -123,7 +126,8 @@ def test_lingauss_type_error_3(lg):  # lg has missing/extra keys
         LinGauss(lg)
 
 
-def test_lingauss_type_error_4(lg):  # lg values have incorrect types
+# lg values have incorrect types
+def test_lingauss_type_error_4(lg):
     lg.update({"coeffs": 23.1})
     with pytest.raises(TypeError):
         LinGauss(lg)
@@ -135,7 +139,8 @@ def test_lingauss_type_error_4(lg):  # lg values have incorrect types
         LinGauss(lg)
 
 
-def test_lingauss_type_error_5(lg):  # coeffs have wrong key types
+# coeffs have wrong key types
+def test_lingauss_type_error_5(lg):
     lg.update({"coeffs": {1: 2.5}})
     with pytest.raises(TypeError):
         LinGauss(lg)
@@ -144,7 +149,8 @@ def test_lingauss_type_error_5(lg):  # coeffs have wrong key types
         LinGauss(lg)
 
 
-def test_lingauss_type_error_6(lg):  # coeffs have wrong value types
+# coeffs have wrong value types
+def test_lingauss_type_error_6(lg):
     lg.update({"coeffs": {"ok": 2.5, "invalid": 3}})
     with pytest.raises(TypeError):
         LinGauss(lg)
@@ -162,7 +168,8 @@ def test_lingauss_type_error_6(lg):  # coeffs have wrong value types
         LinGauss(lg)
 
 
-def test_lingauss_value_error_1(lg):  # SD is negative
+# SD is negative
+def test_lingauss_value_error_1(lg):
     lg.update({"sd": -0.1})
     with pytest.raises(ValueError):
         LinGauss(lg)
@@ -171,7 +178,8 @@ def test_lingauss_value_error_1(lg):  # SD is negative
         LinGauss(lg)
 
 
-def test_lingauss_lg_1_ok(lg):  # lg fixture OK
+# lg fixture OK
+def test_lingauss_lg_1_ok(lg):
     cnd = LinGauss(lg)
     assert isinstance(cnd, LinGauss)
     assert cnd.coeffs == {"A": 1.1, "B": -0.25}
@@ -181,7 +189,8 @@ def test_lingauss_lg_1_ok(lg):  # lg fixture OK
     print("\nLinGauss: {}".format(cnd))
 
 
-def test_lingauss_lg_2_ok(lg):  # leading negative coefficient
+# leading negative coefficient
+def test_lingauss_lg_2_ok(lg):
     lg.update({"coeffs": {"A": -0.02, "B": -0.25}})
     cnd = LinGauss(lg)
     assert isinstance(cnd, LinGauss)
@@ -192,7 +201,8 @@ def test_lingauss_lg_2_ok(lg):  # leading negative coefficient
     print("\nLinGauss: {}".format(cnd))
 
 
-def test_lingauss_lg_3_ok(lg):  # v small coeffs dropped in string
+# v small coeffs dropped in string
+def test_lingauss_lg_3_ok(lg):
     lg.update({"coeffs": {"A": -1e-11, "B": -0.25}})
     cnd = LinGauss(lg)
     assert isinstance(cnd, LinGauss)
@@ -203,7 +213,8 @@ def test_lingauss_lg_3_ok(lg):  # v small coeffs dropped in string
     print("\nLinGauss: {}".format(cnd))
 
 
-def test_lingauss_lg_4_ok(lg):  # rounding to 10 s.f.. string
+# rounding to 10 s.f.. string
+def test_lingauss_lg_4_ok(lg):
     lg.update({"coeffs": {"A": 1.0123456789, "B": -0.00987654321}})
     cnd = LinGauss(lg)
     assert isinstance(cnd, LinGauss)
@@ -214,7 +225,8 @@ def test_lingauss_lg_4_ok(lg):  # rounding to 10 s.f.. string
     print("\nLinGauss: {}".format(cnd))
 
 
-def test_lingauss_lg_5_ok(lg):  # orphan node OK
+# orphan node OK
+def test_lingauss_lg_5_ok(lg):
     lg.update({"coeffs": {}})
     cnd = LinGauss(lg)
     assert isinstance(cnd, LinGauss)
@@ -228,19 +240,22 @@ def test_lingauss_lg_5_ok(lg):  # orphan node OK
 # Test equality
 
 
-def test_eq_1_ok(lg):  # LinGauss equals itself
+# LinGauss equals itself
+def test_eq_1_ok(lg):
     lg = LinGauss(lg)
     assert lg == lg
 
 
-def test_eq_2_ok(lg):  # LinGauss equals identical LinGauss
+# LinGauss equals identical LinGauss
+def test_eq_2_ok(lg):
     lg1 = LinGauss(lg)
     lg2 = LinGauss(lg)
     assert id(lg1) != id(lg2)
     assert lg1 == lg2
 
 
-def test_eq_3_ok(lg):  # LinGauss equals very similar LinGauss
+# LinGauss equals very similar LinGauss
+def test_eq_3_ok(lg):
     lg1 = LinGauss(lg)
     lg.update({"mean": 2.2000000001})
     lg2 = LinGauss(lg)
@@ -259,7 +274,8 @@ def test_eq_3_ok(lg):  # LinGauss equals very similar LinGauss
 # Test inequality
 
 
-def test_ne_ok_1(lg):  # not equal to non LinGauss objects
+# not equal to non LinGauss objects
+def test_ne_ok_1(lg):
     lg = LinGauss(lg)
     assert lg != 1
     assert lg != {"mean": 0.0, "sd": 1.0, "coeffs": {}}
@@ -268,7 +284,8 @@ def test_ne_ok_1(lg):  # not equal to non LinGauss objects
     assert lg is not False
 
 
-def test_ne_ok_2(lg):  # not equal if mean different
+# not equal if mean different
+def test_ne_ok_2(lg):
     lg1 = LinGauss(lg)
     lg.update({"mean": 2.199999999})
     lg2 = LinGauss(lg)
@@ -276,7 +293,8 @@ def test_ne_ok_2(lg):  # not equal if mean different
     assert lg1 != lg2
 
 
-def test_ne_ok_3(lg):  # not equal if sd different
+# not equal if sd different
+def test_ne_ok_3(lg):
     lg1 = LinGauss(lg)
     lg.update({"sd": 0.3400000001})
     lg2 = LinGauss(lg)
@@ -284,7 +302,8 @@ def test_ne_ok_3(lg):  # not equal if sd different
     assert lg1 != lg2
 
 
-def test_ne_ok_4(lg):  # not equal if coeff key different
+# not equal if coeff key different
+def test_ne_ok_4(lg):
     lg1 = LinGauss(lg)
     lg.update({"coeffs": {"AA": 1.1, "B": -0.25}})
     lg2 = LinGauss(lg)
@@ -292,7 +311,8 @@ def test_ne_ok_4(lg):  # not equal if coeff key different
     assert lg1 != lg2
 
 
-def test_ne_ok_5(lg):  # not equal if missing coeff
+# not equal if missing coeff
+def test_ne_ok_5(lg):
     lg1 = LinGauss(lg)
     lg.update({"coeffs": {"B": -0.25}})
     lg2 = LinGauss(lg)
@@ -300,7 +320,8 @@ def test_ne_ok_5(lg):  # not equal if missing coeff
     assert lg1 != lg2
 
 
-def test_ne_ok_6(lg):  # not equal if extra coeff
+# not equal if extra coeff
+def test_ne_ok_6(lg):
     lg1 = LinGauss(lg)
     lg.update({"coeffs": {"A": 1.1, "B": -0.25, "C": 3.9}})
     lg2 = LinGauss(lg)
@@ -308,7 +329,8 @@ def test_ne_ok_6(lg):  # not equal if extra coeff
     assert lg1 != lg2
 
 
-def test_ne_ok_7(lg):  # not equal if coeff value different
+# not equal if coeff value different
+def test_ne_ok_7(lg):
     lg1 = LinGauss(lg)
     lg.update({"coeffs": {"A": 1.1, "B": -0.2499999999}})
     lg2 = LinGauss(lg)
@@ -319,12 +341,14 @@ def test_ne_ok_7(lg):  # not equal if coeff value different
 # Test Data fitting
 
 
-def test_fit_type_error_1():  # no parameters specified
+# no parameters specified
+def test_fit_type_error_1():
     with pytest.raises(TypeError):
         LinGauss.fit()
 
 
-def test_fit_type_error_2(data):  # node is not a string
+# node is not a string
+def test_fit_type_error_2(data):
     with pytest.raises(TypeError):
         LinGauss.fit(None, None, data)
     with pytest.raises(TypeError):
@@ -333,7 +357,8 @@ def test_fit_type_error_2(data):  # node is not a string
         LinGauss.fit(["T"], None, data)
 
 
-def test_fit_type_error_3(data):  # parents is not None or tuple of strings
+# parents is not None or tuple of strings
+def test_fit_type_error_3(data):
     with pytest.raises(TypeError):
         LinGauss.fit("T", False, data)
     with pytest.raises(TypeError):
@@ -346,26 +371,30 @@ def test_fit_type_error_3(data):  # parents is not None or tuple of strings
         LinGauss.fit("U", (1, 2), data)
 
 
-def test_fit_type_error_4(data):  # data is not Data type
+# data is not Data type
+def test_fit_type_error_4(data):
     with pytest.raises(TypeError):
         LinGauss.fit("U", ("T",), True)
     with pytest.raises(TypeError):
         LinGauss.fit("U", ("T",), data.sample)
 
 
-def test_fit_value_error_1(data):  # node is one of parents
+# node is one of parents
+def test_fit_value_error_1(data):
     with pytest.raises(ValueError):
         LinGauss.fit("U", ("T", "U"), data)
 
 
-def test_fit_value_error_2(data):  # node or parent is not in data
+# node or parent is not in data
+def test_fit_value_error_2(data):
     with pytest.raises(ValueError):
         LinGauss.fit("invalid", ("T", "U"), data)
     with pytest.raises(ValueError):
         LinGauss.fit("T", ("invalid", "U"), data)
 
 
-def test_fit_1_ok(data):  # Check fitted values for T (orphan) node
+# Check fitted values for T (orphan) node
+def test_fit_1_ok(data):
     lg, _ = LinGauss.fit("T", None, data)
 
     # t = 3.0 + 1.0 * np.random.randn(N)
@@ -376,7 +405,8 @@ def test_fit_1_ok(data):  # Check fitted values for T (orphan) node
     print("\nT: mean: {:.4f}, s.d.: {:.4f}".format(lg[1]["mean"], lg[1]["sd"]))
 
 
-def test_fit_2_ok(data):  # Check fitted values for U with parent T
+# Check fitted values for U with parent T
+def test_fit_2_ok(data):
     lg, _ = LinGauss.fit("U", ("T",), data)
 
     # u = 1.0 + 3.0 * np.random.randn(N) - 4.0 * t
@@ -392,7 +422,8 @@ def test_fit_2_ok(data):  # Check fitted values for U with parent T
     )
 
 
-def test_fit_3_ok(data):  # Check fitted values for V with parents T & U
+# Check fitted values for V with parents T & U
+def test_fit_3_ok(data):
     lg, _ = LinGauss.fit("V", ("T", "U"), data)
 
     # v = 0.5 + 0.5 * np.random.randn(N) + 1.0 * t - 0.1 * u
@@ -415,12 +446,14 @@ def test_fit_3_ok(data):  # Check fitted values for V with parents T & U
 # test to_spec function including name mapping
 
 
-def test_to_spec_type_error_1(lg):  # no arguments
+# no arguments
+def test_to_spec_type_error_1(lg):
     with pytest.raises(TypeError):
         LinGauss(lg).to_spec()
 
 
-def test_to_spec_type_error_2(lg):  # name_map not a dictionary
+# name_map not a dictionary
+def test_to_spec_type_error_2(lg):
     with pytest.raises(TypeError):
         LinGauss(lg).to_spec(False)
     with pytest.raises(TypeError):
@@ -433,22 +466,26 @@ def test_to_spec_type_error_2(lg):  # name_map not a dictionary
         LinGauss(lg).to_spec(["A"])
 
 
-def test_to_spec_type_error_3(lg):  # name_map keys not strings
+# name_map keys not strings
+def test_to_spec_type_error_3(lg):
     with pytest.raises(TypeError):
         LinGauss(lg).to_spec({1: "A", "B": "S"})
 
 
-def test_to_spec_type_error_4(lg):  # name_map values not strings
+# name_map values not strings
+def test_to_spec_type_error_4(lg):
     with pytest.raises(TypeError):
         LinGauss(lg).to_spec({"A": "A", "B": 0.05})
 
 
-def test_to_spec_value_error_1(lg):  # name_map doesn't include all coeff keys
+# name_map doesn't include all coeff keys
+def test_to_spec_value_error_1(lg):
     with pytest.raises(ValueError):
         LinGauss(lg).to_spec({"A": "X", "C": "Y"})
 
 
-def test_to_spec_1_ok(lg):  # names remaining the same
+# names remaining the same
+def test_to_spec_1_ok(lg):
     lg1 = LinGauss(lg)
     name_map = {n: n for n in lg1.coeffs}
     spec = lg1.to_spec(name_map)
@@ -456,7 +493,8 @@ def test_to_spec_1_ok(lg):  # names remaining the same
     assert spec == {"coeffs": {"A": 1.1, "B": -0.25}, "mean": 2.2, "sd": 0.34}
 
 
-def test_to_spec_2_ok(lg):  # mapping names
+# mapping names
+def test_to_spec_2_ok(lg):
     lg1 = LinGauss(lg)
     name_map = {"A": "AA", "B": "BB"}
     spec = lg1.to_spec(name_map)
@@ -466,3 +504,68 @@ def test_to_spec_2_ok(lg):  # mapping names
         "mean": 2.2,
         "sd": 0.34,
     }
+
+
+# parents method with empty coeffs
+def test_lingauss_parents_empty():
+    """Test parents method with empty coeffs returns empty list."""
+    lg = LinGauss({"mean": 1.0, "sd": 0.5, "coeffs": {}})
+    assert lg.parents() == []
+
+
+# to_spec raises ValueError when key missing
+def test_lingauss_to_spec_missing_key():
+    """Test to_spec raises ValueError when coefficient key not in name_map."""
+    lg = LinGauss({"mean": 1.0, "sd": 0.5, "coeffs": {"A": 0.5, "B": 0.3}})
+
+    # Test with missing key in name_map
+    with pytest.raises(ValueError, match="bad arg value"):
+        lg.to_spec({"A": "A_new"})  # Missing 'B' in name_map
+
+
+# cdist raises TypeError for coeff/parent mismatch
+def test_lingauss_cdist_type_error():
+    """Test cdist raises TypeError for coefficient/parent mismatch."""
+    # Test case 1: has coeffs but parental_values is None
+    lg = LinGauss({"mean": 0.0, "sd": 1.0, "coeffs": {"A": 0.5}})
+    with pytest.raises(TypeError, match="coeffs/parent values mismatch"):
+        lg.cdist(None)
+
+    # Test case 2: no coeffs but parental_values provided
+    lg = LinGauss({"mean": 0.0, "sd": 1.0, "coeffs": {}})
+    with pytest.raises(TypeError, match="coeffs/parent values mismatch"):
+        lg.cdist({"A": 1.0})
+
+    # Test case 3: coeffs and parental_values keys don't match
+    lg = LinGauss({"mean": 0.0, "sd": 1.0, "coeffs": {"A": 0.5}})
+    with pytest.raises(TypeError, match="coeffs/parent values mismatch"):
+        lg.cdist({"B": 1.0})
+
+
+# random_value method with/without parents
+def test_lingauss_random_value():
+    """Test random_value method."""
+    lg = LinGauss({"mean": 10.0, "sd": 2.0, "coeffs": {"A": 0.5}})
+
+    # Test with parental values
+    value = lg.random_value({"A": 2.0})
+    assert isinstance(value, float)
+
+    # Test with no parents
+    lg_no_parents = LinGauss({"mean": 5.0, "sd": 1.0, "coeffs": {}})
+    value = lg_no_parents.random_value(None)
+    assert isinstance(value, float)
+
+
+# validate_parents raises ValueError for mismatch
+def test_lingauss_validate_parents_error():
+    """Test validate_parents raises ValueError for parent mismatch."""
+    lg = LinGauss({"mean": 0.0, "sd": 1.0, "coeffs": {"A": 0.5, "B": 0.3}})
+
+    # Test case 1: node not in parents but has coeffs
+    with pytest.raises(ValueError, match="parent mismatch"):
+        lg.validate_parents("X", {}, {})
+
+    # Test case 2: node in parents but coefficient keys don't match
+    with pytest.raises(ValueError, match="parent mismatch"):
+        lg.validate_parents("Y", {"Y": ["A", "C"]}, {})
