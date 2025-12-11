@@ -59,13 +59,14 @@ def test_read_bn_bad_argument_types():
         read_bn(123)  # type: ignore[arg-type]
 
     with pytest.raises(TypeError, match="bad arg type"):
-        read_bn("valid_path.xdsl", correct="not_bool")  # type: ignore[arg-type]
+        read_bn("valid_path.xdsl", correct="not_bool")  # type: ignore
 
 
 # Test invalid XML parsing to cover lines 413-414
 def test_read_bn_invalid_xml():
     """Test error when file contains invalid XML."""
-    # Use existing file with parsing issues - bad coefficient files often have XML issues
+    # Use existing file with parsing issues - bad coefficient files
+    # often have XML issues
     bad_xml_file = TESTDATA_DIR / "xdsl" / "xy_definition_bad_coeff_1.xdsl"
 
     # This should raise a FileFormatError during parsing
@@ -76,7 +77,8 @@ def test_read_bn_invalid_xml():
 # Test invalid equation characters to cover line 165
 def test_invalid_equation_characters():
     """Test error with invalid characters in continuous definition."""
-    # Use existing bad coefficient file that contains invalid equation characters
+    # Use existing bad coefficient file that contains
+    # invalid equation characters
     invalid_chars_file = (
         TESTDATA_DIR / "xdsl" / "xy_definition_bad_coeff_3.xdsl"
     )
@@ -141,7 +143,8 @@ def test_coefficient_parent_mismatch_line_138():
     """Test coefficient/parent mismatch to cover line 138 exactly."""
     from causaliq_core.bn.io.xdsl import _parse_equation_coeffs
 
-    # Test to hit line 138: elif len(string) > 0 or len(parents) > 0: coeffs = None
+    # Test to hit line 138: elif len(string) > 0
+    # or len(parents) > 0: coeffs = None
     # We need len(string) == 0 and len(parents) > 0 to trigger this branch
     with pytest.raises(TypeError, match="NoneType.*not iterable"):
         _parse_equation_coeffs(
@@ -153,7 +156,6 @@ def test_probability_sum_error_line_339():
     """Test probability sum != 1 error to cover line 339 exactly."""
     import os
     import tempfile
-    from pathlib import Path
 
     # Create XDSL file with probabilities that don't sum to 1
     xdsl_content = """<?xml version="1.0" encoding="UTF-8"?>
@@ -174,7 +176,8 @@ def test_probability_sum_error_line_339():
         tmp_name = tmp.name
 
     try:
-        # This should hit line 339: raise ValueError("xdsl.read() sum " + node + " probs not 1")
+        # This should hit line 339: raise ValueError("xdsl.read() sum "
+        # + node + " probs not 1")
         with pytest.raises(ValueError, match="sum.*probs not 1"):
             read_bn(tmp_name)  # correct=False by default
     finally:
@@ -222,7 +225,8 @@ def test_type_error_line_406():
 
     from causaliq_core.bn.io.xdsl import read
 
-    # Test the isinstance check on line 406: not isinstance(path, str) or not isinstance(correct, bool)
+    # Test the isinstance check on line 406: not isinstance(path, str)
+    # or not isinstance(correct, bool)
     with pytest.raises(TypeError, match="bad arg type"):
         read(123, True)  # path is not string
 
@@ -242,7 +246,6 @@ def test_mixed_network_detection_line_339():
 def test_invalid_xml_parsing_line_413():
     """Test invalid XML parsing to cover lines 413-414."""
     import os
-    from pathlib import Path
     from tempfile import NamedTemporaryFile
 
     # Create a file with invalid XML to trigger the parsing exception
@@ -292,7 +295,8 @@ def test_genie_write_functionality_lines_596_597_626():
     ) as tmp:
         tmp.close()
         try:
-            # This will hit lines 596-597 (genie name mapping) and 626 (genie extension)
+            # This will hit lines 596-597 (genie name mapping)
+            # and 626 (genie extension)
             xdsl.write(bn, tmp.name, genie=True)
 
             # Verify the file was written with genie content

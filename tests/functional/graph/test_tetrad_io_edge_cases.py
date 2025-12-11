@@ -9,7 +9,7 @@ from causaliq_core.graph.io.tetrad import read
 from causaliq_core.utils import FileFormatError
 
 # Path to test data
-TEST_DATA_DIR = Path(__file__).parent.parent / "data" / "functional" / "graphs"
+TEST_DATA_DIR = Path("tests/data/functional/graphs")
 
 
 # Test read fails on empty file

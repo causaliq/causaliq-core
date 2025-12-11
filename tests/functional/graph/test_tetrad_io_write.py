@@ -9,7 +9,7 @@ from causaliq_core.graph.io.tetrad import read, write
 from causaliq_core.graph.pdag import PDAG
 
 # Path to test data
-TEST_DATA_DIR = Path(__file__).parent.parent / "data" / "functional" / "graphs"
+TEST_DATA_DIR = Path("tests/data/functional/graphs")
 TMP_DIR = TEST_DATA_DIR / "tmp"
 
 

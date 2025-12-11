@@ -12,7 +12,7 @@ from causaliq_core.bn import read_bn, write_bn
 from tests.data.functional.bn import example_bns as ex_bn
 
 TESTDATA_DIR = Path("tests/data/functional/bn")
-TMP_DIR = Path(__file__).parent.parent / "data" / "functional" / "bn" / "tmp"
+TMP_DIR = TESTDATA_DIR / "tmp"
 
 
 @pytest.fixture(scope="function")

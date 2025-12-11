@@ -11,8 +11,8 @@ from causaliq_core.bn import BN, read_bn, write_bn
 from causaliq_core.utils import FileFormatError
 
 # Use proper testdata directory structure
-TESTDATA_DIR = Path(__file__).parent.parent / "data" / "functional" / "bn"
-TMP_DIR = Path(__file__).parent.parent / "data" / "functional" / "bn" / "tmp"
+TESTDATA_DIR = Path("tests/data/functional/bn")
+TMP_DIR = TESTDATA_DIR / "tmp"
 
 
 @pytest.fixture(scope="function")
