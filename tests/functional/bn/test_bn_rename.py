@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from causaliq_core.bn import read_bn
+from causaliq_core.bn.io import read_bn
 from causaliq_core.graph import DAG, EdgeType
 
 TESTDATA_DIR = Path("tests/data/functional/bn")

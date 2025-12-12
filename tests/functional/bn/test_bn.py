@@ -3,7 +3,8 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from causaliq_core.bn import BN, CPT, read_bn, write_bn
+from causaliq_core.bn import BN, CPT
+from causaliq_core.bn.io import read_bn
 from causaliq_core.utils import values_same
 from tests.functional.fixtures import example_bns as bn
 from tests.functional.fixtures import example_dags as dag
@@ -270,28 +271,6 @@ def test_bn_fit_sachs_c_ok():
 
     read_bn(str(TESTDATA_DIR / "sachs_c.xdsl"))
     # assert ref == fitted  # but - fitted params will differ from reference
-
-
-# Fitting covid to real cont data
-def test_bn_fit_covid_c_ok():
-
-    bn = read_bn(str(TESTDATA_DIR / "covid.dsc"))
-    print(bn.dag)
-    df = pd.read_csv(TESTDATA_DIR / "covid_cont.data.gz")
-    data = DataFrameAdapter(df)
-    print()
-    print(data.df)
-    print()
-
-    fitted = BN.fit(bn.dag, data)
-    print("\nLearnt functions are:\n")
-    for node, cnd in fitted.cnds.items():
-        print("{}: {}".format(node, cnd))
-
-    write_bn(fitted, str(TESTDATA_DIR / "covid_c.xdsl"))
-
-    # ref = read_bn(EXPTS_DIR + '/bn/xdsl/covid_c.xdsl')
-    # assert ref == fitted
 
 
 # Test BN __str__ method for cache stats

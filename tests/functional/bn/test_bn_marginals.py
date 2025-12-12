@@ -5,7 +5,8 @@ import pandas as pd
 import pytest
 from pandas import DataFrame
 
-from causaliq_core.bn import BN, NodeValueCombinations, read_bn
+from causaliq_core.bn import BN, NodeValueCombinations
+from causaliq_core.bn.io import read_bn
 from causaliq_core.graph import DAG
 from causaliq_core.utils import dists_same
 from tests.functional.fixtures.adapters import DataFrameAdapter

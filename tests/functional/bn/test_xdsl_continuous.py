@@ -8,7 +8,7 @@ from random import random
 
 import pytest
 
-from causaliq_core.bn import read_bn, write_bn
+from causaliq_core.bn.io import read_bn, write_bn
 from tests.functional.fixtures import example_bns as ex_bn
 
 TESTDATA_DIR = Path("tests/data/functional/bn")

@@ -4,7 +4,8 @@ import pandas as pd
 import pytest
 from pandas import DataFrame
 
-from causaliq_core.bn import BN, read_bn
+from causaliq_core.bn import BN
+from causaliq_core.bn.io import read_bn
 from causaliq_core.graph import DAG
 from causaliq_core.utils import dicts_same, values_same
 from tests.functional.fixtures import example_dags as dag

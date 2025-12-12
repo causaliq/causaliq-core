@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from causaliq_core.bn import read_bn
+from causaliq_core.bn.io import read_bn
 from causaliq_core.bn.io.xdsl import genie_str, write_genie_extension
 from causaliq_core.utils import FileFormatError
 

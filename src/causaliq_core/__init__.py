@@ -17,8 +17,8 @@ __license__ = "MIT"
 # Version tuple for programmatic access
 VERSION = tuple(map(int, __version__.split(".")))
 
-# Legacy software version constant (migrated from legacy.py)
-SOFTWARE_VERSION: int = 250
+# Legacy software version constant
+SOFTWARE_VERSION: int = 252
 
 __all__ = [
     "__version__",

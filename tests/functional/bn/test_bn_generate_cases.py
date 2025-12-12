@@ -5,7 +5,8 @@ from random import random
 import pandas as pd
 import pytest
 
-from causaliq_core.bn import BN, read_bn
+from causaliq_core.bn import BN
+from causaliq_core.bn.io import read_bn
 from causaliq_core.graph import DAG
 from causaliq_core.utils import values_same
 from tests.functional.fixtures import example_bns as ex_bn
