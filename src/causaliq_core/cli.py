@@ -4,7 +4,7 @@ import click
 
 
 @click.command(name="causaliq-core")
-@click.version_option(version="0.1.0")
+@click.version_option(version="0.3.0")
 @click.argument(
     "name",
     metavar="NAME",
