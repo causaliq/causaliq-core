@@ -29,10 +29,10 @@ Currently implemented:
 
 - **Release v0.1.0 - Foundation and utilities**: CausalIQ compliant development environment and utility functions (timing, random numbers, environment detection, etc.)
 - **Release v0.2.0 - Graph classes**: Graph types for causal discovery including Summary Dependence Graphs (SDG), Partially Directed Acyclic Graphs (PDAG), Directed Acyclic Graphs (DAG), with conversion utilities and I/O support for Tetrad/Bayesys formats
+- **Release v0.3.0 - Bayesian Networks**: support for Bayesian Networks and their parameterised distributions and I/O support for DSC and XDSL formats
 
 Upcoming releases:
 
-- **Release v0.3.0 - Bayesian Networks**: support for Bayesian Networks and their parameterised distributions
 - **Release v0.4.0 - Graph ML**: support for GraphML formats
 
 ## Quick Start

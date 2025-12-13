@@ -50,6 +50,20 @@ nav:
     - API Overview: api/overview.md
     - Main Package: api/main.md
     - CLI: api/cli.md
+    - Bayesian Networks:
+      - Overview: api/bn.md
+      - BN Class: api/bn_bn.md
+      - BNFit Class: api/bn_bnfit.md
+      - Distributions:
+        - Overview: api/bn_dist.md
+        - CPT: api/bn_dist_cpt.md
+        - Linear Gaussian: api/bn_dist_lingauss.md
+        - CND Base Class: api/bn_dist_cnd.md
+      - I/O:
+        - Overview: api/bn_io.md
+        - DSC Format: api/bn_io_dsc.md
+        - XDSL Format: api/bn_io_xdsl.md
+        - Common Interface: api/bn_io_common.md
     - Graph:
       - Overview: api/graph.md
       - SDG: api/graph_sdg.md
@@ -63,6 +77,7 @@ nav:
     - Utils:
       - Overview: api/utils.md
       - Mathematical Functions: api/utils_math.md
+      - I/O Operations: api/utils_io.md
       - Environment: api/utils_environment.md
       - Random Numbers: api/utils_random.md
       - Timing: api/utils_timing.md

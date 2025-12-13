@@ -12,6 +12,10 @@ The main `causaliq_core` package exports:
 
 ## Modules
 
+### [Bayesian Networks](bn.md)
+
+Bayesian Networks functionality including network structures, conditional distributions, and I/O operations.
+
 ### [CLI](cli.md)
 
 Command-line interface functionality for CausalIQ Core.

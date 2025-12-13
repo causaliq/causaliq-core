@@ -79,12 +79,27 @@ env = environment()  # Returns cached data instantly
 causaliq_core/
 ├── __init__.py          # Package metadata and constants
 ├── cli.py              # Command-line interface
+├── bn/                 # Bayesian Networks
+│   ├── dist/           # Conditional distributions (CPT, LinGauss)
+│   └── io/             # BN file I/O (DSC, XDSL formats)
 ├── graph/              # Graph structures and enums
 ├── utils/              # Core utilities
 │   ├── __init__.py     # Math functions, enums, environment
+│   ├── io.py           # File and DataFrame I/O utilities
 │   ├── random.py       # Stable random generation
 │   └── timing.py       # Performance measurement
 ```
+
+### Bayesian Networks Architecture
+
+**Design Goal:** Modular probabilistic modeling with multiple distribution types and file format support.
+
+**Implementation:**
+
+ - **BN Core**: Main BN and BNFit classes for network representation
+ - **Distribution Module**: Pluggable conditional distributions (CPT for discrete, LinGauss for continuous)  
+ - **I/O Layer**: Format-agnostic interface with DSC and XDSL backend support
+ - **Graph Integration**: Built on causaliq_core.graph DAG foundation
 
 ### Package Reorganization Rationale
 

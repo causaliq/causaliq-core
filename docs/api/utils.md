@@ -10,6 +10,12 @@ Number formatting and logarithm calculations including:
 - `rndsf()` - Round to significant figures with precise formatting
 - `ln()` - Logarithm with configurable base (2, 10, or 'e')
 
+### I/O Operations
+File and path handling utilities:
+
+- `is_valid_path()` - Path validation and existence checking
+- `write_dataframe()` - Enhanced DataFrame writing with compression and formatting
+
 ### [Environment Detection](utils_environment.md) 
 System environment detection with intelligent caching:
 
