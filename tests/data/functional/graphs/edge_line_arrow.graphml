@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- LINE -> ARROW: directed (->) -->
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <key id="se" for="edge" attr.name="sourceEndpoint" attr.type="string"/>
+  <key id="te" for="edge" attr.name="targetEndpoint" attr.type="string"/>
+  <graph id="G" edgedefault="directed">
+    <node id="A"/>
+    <node id="B"/>
+    <edge source="A" target="B">
+      <data key="se">line</data>
+      <data key="te">arrow</data>
+    </edge>
+  </graph>
+</graphml>

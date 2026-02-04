@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- All 9 edge endpoint combinations using sourceEndpoint/targetEndpoint -->
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <key id="se" for="edge" attr.name="sourceEndpoint" attr.type="string"/>
+  <key id="te" for="edge" attr.name="targetEndpoint" attr.type="string"/>
+  <graph id="G" edgedefault="directed">
+    <node id="A"/>
+    <node id="B"/>
+    <node id="C"/>
+    <node id="D"/>
+    <node id="E"/>
+    <node id="F"/>
+    <node id="G"/>
+    <node id="H"/>
+    <node id="I"/>
+    <node id="J"/>
+    <!-- LINE -> ARROW: directed (->) -->
+    <edge source="A" target="B">
+      <data key="se">line</data>
+      <data key="te">arrow</data>
+    </edge>
+    <!-- LINE -> LINE: undirected (-) -->
+    <edge source="B" target="C">
+      <data key="se">line</data>
+      <data key="te">line</data>
+    </edge>
+    <!-- LINE -> CIRCLE: reverse of semiundirected -->
+    <edge source="C" target="D">
+      <data key="se">line</data>
+      <data key="te">circle</data>
+    </edge>
+    <!-- ARROW -> ARROW: bidirected (<->) -->
+    <edge source="D" target="E">
+      <data key="se">arrow</data>
+      <data key="te">arrow</data>
+    </edge>
+    <!-- ARROW -> LINE: reverse of directed -->
+    <edge source="E" target="F">
+      <data key="se">arrow</data>
+      <data key="te">line</data>
+    </edge>
+    <!-- ARROW -> CIRCLE: reverse of semidirected -->
+    <edge source="F" target="G">
+      <data key="se">arrow</data>
+      <data key="te">circle</data>
+    </edge>
+    <!-- CIRCLE -> ARROW: semidirected (o->) -->
+    <edge source="G" target="H">
+      <data key="se">circle</data>
+      <data key="te">arrow</data>
+    </edge>
+    <!-- CIRCLE -> LINE: semiundirected (o-) -->
+    <edge source="H" target="I">
+      <data key="se">circle</data>
+      <data key="te">line</data>
+    </edge>
+    <!-- CIRCLE -> CIRCLE: nondirected (o-o) -->
+    <edge source="I" target="J">
+      <data key="se">circle</data>
+      <data key="te">circle</data>
+    </edge>
+  </graph>
+</graphml>

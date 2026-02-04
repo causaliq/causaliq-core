@@ -14,9 +14,10 @@ class DataFrameAdapter(BNFit):
     def __init__(self, df):
         self.df = df
         self._N = len(df)
-        # Convert categorical columns if dstype was categorical
+        # Convert string/object columns to categorical
         for col in df.columns:
-            if df[col].dtype == "object":
+            dtype_name = str(df[col].dtype)
+            if dtype_name in ("object", "string", "str"):
                 df[col] = df[col].astype("category")
         # Compute node_values for categorical columns
         self._node_values = {

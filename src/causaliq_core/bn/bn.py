@@ -167,7 +167,7 @@ class BN:
         # return DataFrame with correct dtypes and sorted by descending
         # probability, and then ascending value order
 
-        return (
+        result: DataFrame = (
             DataFrame(values, dtype="category")
             .join(DataFrame({"": probs}, dtype="float64"))
             .sort_values(
@@ -176,6 +176,7 @@ class BN:
                 ascending=[False] + [True] * len(self.dag.nodes),
             )
         )
+        return result
 
     def marginal_distribution(
         self, node: str, parents: Optional[List[str]] = None
@@ -236,10 +237,12 @@ class BN:
         # produced by Pandas crosstab so compatible with rest of code base
 
         if parents is None:
-            return DataFrame(
+            df: DataFrame = DataFrame(
                 [[v, marginals[node][v]] for v in node_values[node]],
                 columns=[node, ""],
-            ).set_index(node)
+            )
+            indexed: DataFrame = df.set_index(node)  # type: ignore[assignment]
+            return indexed
 
         columns = []  # list of tuples of each parental value combo
         probs = []  # marg. probs for each pvs for each node value
@@ -247,11 +250,15 @@ class BN:
             pvs_dict = {t[0]: t[1] for t in pvs}
             columns.append(tuple([pvs_dict[p] for p in parents]))
             probs.append([pmf[v] for v in node_values[node]])
-        return DataFrame(
+        result: DataFrame = DataFrame(
             data=[list(i) for i in zip(*probs)],  # transpose
             columns=MultiIndex.from_tuples(columns, names=parents),
             index=node_values[node],
-        ).rename_axis(node)
+        )
+        renamed: DataFrame = result.rename_axis(  # type: ignore[assignment]
+            node
+        )
+        return renamed
 
     def _dist(
         self,
@@ -421,12 +428,13 @@ class BN:
                 matrix[values][row_index[entry[0][index_node]]] = entry[1]
             columns = [k for k in matrix.keys()]
             probs = [matrix[k] for k in matrix.keys()]
-            dist = DataFrame(
+            dist_df: DataFrame = DataFrame(
                 data=[list(i) for i in zip(*probs)],  # transpose
                 columns=MultiIndex.from_tuples(columns, names=nodes),
                 index=node_values,
-            ).rename_axis(index_node)
-        return dist
+            )
+            dist = dist_df.rename_axis(index_node)  # type: ignore[assignment]
+        return dist  # type: ignore[no-any-return]
 
     def lnprob_case(
         self, case_values: Dict[str, Any], base: Union[int, str] = 10
@@ -520,7 +528,7 @@ class BN:
             n: "category" if isinstance(cnd, CPT) else "float32"
             for n, cnd in self.cnds.items()
         }
-        cases_df = DataFrame(cases).astype(dtype=dtype)
+        cases_df: DataFrame = DataFrame(cases).astype(dtype=dtype)
 
         if outfile is not None:
             write_dataframe(cases_df, outfile)

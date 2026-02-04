@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Tests edgeType attribute with symbol values (alternative to endpoint attrs) -->
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <key id="et" for="edge" attr.name="edgeType" attr.type="string"/>
+  <graph id="G" edgedefault="directed">
+    <node id="A"/>
+    <node id="B"/>
+    <node id="C"/>
+    <edge source="A" target="B">
+      <data key="et">-></data>
+    </edge>
+    <edge source="B" target="C">
+      <data key="et">-</data>
+    </edge>
+  </graph>
+</graphml>

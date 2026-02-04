@@ -380,10 +380,11 @@ class SDG:
             Adjacency matrix as a pandas DataFrame.
         """
         size = len(self.nodes)
-        adjmat = zeros(shape=(size, size), dtype="int8")
-        adjmat = DataFrame(adjmat, columns=self.nodes)
+        adjmat: DataFrame = DataFrame(
+            zeros(shape=(size, size), dtype="int8"), columns=self.nodes
+        )
         adjmat[""] = self.nodes
-        adjmat.set_index("", inplace=True)
+        adjmat = adjmat.set_index("")
         for nodes, type in self.edges.items():
             # print('{}: {}'.format(nodes, type.value[0]))
             adjmat.loc[nodes[0], nodes[1]] = type.value[0]

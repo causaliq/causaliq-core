@@ -68,6 +68,27 @@ def test_common_read_tetrad_actual_file():
     assert set(graph.nodes) == {"A", "B", "C"}
 
 
+# Test read GraphML file calls graphml.read
+def test_common_read_graphml_calls_graphml():
+    with patch(
+        "causaliq_core.graph.io.common.graphml.read"
+    ) as mock_graphml_read:
+        mock_graphml_read.return_value = DAG(["A", "B"], [("A", "->", "B")])
+        result = read_graph(str(TEST_DATA_DIR / "test.graphml"))
+        mock_graphml_read.assert_called_once_with(
+            str(TEST_DATA_DIR / "test.graphml")
+        )
+        assert result is not None
+
+
+# Test read actual GraphML file
+def test_common_read_graphml_actual_file():
+    graph = read_graph(str(TEST_DATA_DIR / "abc.graphml"))
+    assert graph is not None
+    assert len(graph.nodes) == 3
+    assert set(graph.nodes) == {"A", "B", "C"}
+
+
 # Test write CSV file calls bayesys.write
 def test_common_write_csv_calls_bayesys(tmp_dir):
     dag = DAG(["A", "B"], [("A", "->", "B")])

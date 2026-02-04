@@ -5,21 +5,23 @@
 from typing import Union
 
 from ..pdag import PDAG
-from . import bayesys, tetrad
+from ..sdg import SDG
+from . import bayesys, graphml, tetrad
 
 
-def read_graph(path: str) -> Union[PDAG]:
+def read_graph(path: str) -> Union[SDG, PDAG]:
     """Read a graph from a file, automatically detecting format from suffix.
 
     Supports:
     - .csv files (Bayesys format)
+    - .graphml files (GraphML format)
     - .tetrad files (Tetrad format)
 
     Args:
         path: Full path name of file to read.
 
     Returns:
-        Graph read from file (PDAG or DAG).
+        Graph read from file (SDG, PDAG or DAG).
 
     Raises:
         TypeError: If path is not a string.
@@ -35,6 +37,8 @@ def read_graph(path: str) -> Union[PDAG]:
 
     if suffix == "csv":
         return bayesys.read(path)
+    elif suffix == "graphml":
+        return graphml.read(path)
     elif suffix == "tetrad":
         return tetrad.read(path)
     else:

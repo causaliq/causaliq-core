@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <graph id="G" edgedefault="directed">
+    <node id="asia"/>
+    <node id="tub"/>
+    <node id="smoke"/>
+    <node id="lung"/>
+    <node id="bronc"/>
+    <node id="either"/>
+    <node id="xray"/>
+    <node id="dysp"/>
+    <edge source="asia" target="tub"/>
+    <edge source="smoke" target="lung"/>
+    <edge source="smoke" target="bronc"/>
+    <edge source="tub" target="either"/>
+    <edge source="lung" target="either"/>
+    <edge source="either" target="xray"/>
+    <edge source="either" target="dysp"/>
+    <edge source="bronc" target="dysp"/>
+  </graph>
+</graphml>

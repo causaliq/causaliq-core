@@ -316,9 +316,10 @@ def dict_to_adjmat(
     if not all([e in valid for c in columns.values() for e in c]):
         raise ValueError("invalid integer values for dict_to_adjmat")
 
-    adjmat_df = DataFrame(columns, dtype="int8")
+    adjmat_df: DataFrame = DataFrame(columns, dtype="int8")
     adjmat_df[""] = list(adjmat_df.columns)
-    return adjmat_df.set_index("")
+    result: DataFrame = adjmat_df.set_index("")
+    return result
 
 
 # Export public interface

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Edge with invalid edgeType symbol - should raise FileFormatError -->
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <key id="et" for="edge" attr.name="edgeType" attr.type="string"/>
+  <graph id="G" edgedefault="directed">
+    <node id="A"/>
+    <node id="B"/>
+    <edge source="A" target="B">
+      <data key="et">***</data>
+    </edge>
+  </graph>
+</graphml>
