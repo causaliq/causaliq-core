@@ -1,8 +1,17 @@
 """
-Placeholder for cache entry encoders.
+Cache entry encoders for CausalIQ.
 
-Full encoder implementation will be migrated from causaliq-knowledge
-in Commit 6 of v0.4.0.
+Provides pluggable encoders for type-specific compression:
+- EntryEncoder: Abstract base class for encoders
+- JsonEncoder: Tokenised JSON compression (50-70% reduction)
+
+Migrated from causaliq-knowledge for shared use across the ecosystem.
 """
 
-__all__: list[str] = []
+from causaliq_core.cache.encoders.base import EntryEncoder
+from causaliq_core.cache.encoders.json_encoder import JsonEncoder
+
+__all__ = [
+    "EntryEncoder",
+    "JsonEncoder",
+]
