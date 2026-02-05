@@ -48,6 +48,8 @@ def test_cache_entries_table_has_correct_columns() -> None:
         expected = {
             "hash",
             "entry_type",
+            "seq",
+            "key_json",
             "data",
             "created_at",
             "metadata",
@@ -664,3 +666,261 @@ def test_get_encoder_returns_none() -> None:
     """Verify get_encoder returns None for unregistered types."""
     with TokenCache(":memory:") as cache:
         assert cache.get_encoder("unregistered") is None
+
+
+# ============================================================================
+# Hash collision handling tests
+# ============================================================================
+
+
+# Test put with key_json stores the key
+def test_put_stores_key_json() -> None:
+    """Verify put stores key_json correctly."""
+    with TokenCache(":memory:") as cache:
+        cache.put("hash1", "test", b"data1", key_json='{"key": "value1"}')
+
+        cursor = cache.conn.execute(
+            "SELECT key_json FROM cache_entries WHERE hash = ?", ("hash1",)
+        )
+        row = cursor.fetchone()
+        assert row[0] == '{"key": "value1"}'
+
+
+# Test put without key_json defaults to empty string
+def test_put_without_key_json_defaults_to_empty() -> None:
+    """Verify put defaults key_json to empty string."""
+    with TokenCache(":memory:") as cache:
+        cache.put("hash1", "test", b"data1")
+
+        cursor = cache.conn.execute(
+            "SELECT key_json FROM cache_entries WHERE hash = ?", ("hash1",)
+        )
+        row = cursor.fetchone()
+        assert row[0] == ""
+
+
+# Test put with same key_json updates existing entry
+def test_put_same_key_json_updates() -> None:
+    """Verify put with same key_json updates the entry."""
+    with TokenCache(":memory:") as cache:
+        cache.put("hash1", "test", b"data1", key_json='{"key": "v1"}')
+        cache.put("hash1", "test", b"data2", key_json='{"key": "v1"}')
+
+        # Should have only one entry
+        assert cache.entry_count() == 1
+
+        # Data should be updated
+        data = cache.get("hash1", "test", key_json='{"key": "v1"}')
+        assert data == b"data2"
+
+
+# Test collision detection creates new entry with incremented seq
+def test_collision_creates_new_seq() -> None:
+    """Verify hash collision creates new entry with seq > 0."""
+    with TokenCache(":memory:") as cache:
+        # First entry with key_json A
+        cache.put("hash1", "test", b"data_a", key_json='{"key": "a"}')
+        # Second entry with same hash but different key_json (collision)
+        cache.put("hash1", "test", b"data_b", key_json='{"key": "b"}')
+
+        # Should have two entries
+        assert cache.entry_count() == 2
+
+        # Check seq values
+        cursor = cache.conn.execute(
+            "SELECT seq, key_json, data FROM cache_entries "
+            "WHERE hash = ? ORDER BY seq",
+            ("hash1",),
+        )
+        rows = cursor.fetchall()
+        assert len(rows) == 2
+        assert rows[0][0] == 0  # seq=0
+        assert rows[0][1] == '{"key": "a"}'
+        assert rows[0][2] == b"data_a"
+        assert rows[1][0] == 1  # seq=1
+        assert rows[1][1] == '{"key": "b"}'
+        assert rows[1][2] == b"data_b"
+
+
+# Test get with key_json returns correct collision entry
+def test_get_with_key_json_returns_correct_entry() -> None:
+    """Verify get with key_json returns the correct collision entry."""
+    with TokenCache(":memory:") as cache:
+        cache.put("hash1", "test", b"data_a", key_json='{"key": "a"}')
+        cache.put("hash1", "test", b"data_b", key_json='{"key": "b"}')
+
+        # Get each entry by key_json
+        data_a = cache.get("hash1", "test", key_json='{"key": "a"}')
+        data_b = cache.get("hash1", "test", key_json='{"key": "b"}')
+
+        assert data_a == b"data_a"
+        assert data_b == b"data_b"
+
+
+# Test get without key_json returns first entry (legacy mode)
+def test_get_without_key_json_returns_first() -> None:
+    """Verify get without key_json returns first entry (seq=0)."""
+    with TokenCache(":memory:") as cache:
+        cache.put("hash1", "test", b"data_a", key_json='{"key": "a"}')
+        cache.put("hash1", "test", b"data_b", key_json='{"key": "b"}')
+
+        # Get without key_json should return first entry
+        data = cache.get("hash1", "test")
+        assert data == b"data_a"
+
+
+# Test get with non-matching key_json returns None
+def test_get_with_wrong_key_json_returns_none() -> None:
+    """Verify get returns None if key_json doesn't match."""
+    with TokenCache(":memory:") as cache:
+        cache.put("hash1", "test", b"data", key_json='{"key": "a"}')
+
+        result = cache.get("hash1", "test", key_json='{"key": "wrong"}')
+        assert result is None
+
+
+# Test get_with_metadata supports key_json
+def test_get_with_metadata_key_json() -> None:
+    """Verify get_with_metadata works with key_json."""
+    with TokenCache(":memory:") as cache:
+        cache.put("hash1", "test", b"data_a", b"meta_a", '{"key": "a"}')
+        cache.put("hash1", "test", b"data_b", b"meta_b", '{"key": "b"}')
+
+        result = cache.get_with_metadata("hash1", "test", '{"key": "b"}')
+        assert result == (b"data_b", b"meta_b")
+
+
+# Test get_with_metadata without key_json returns first
+def test_get_with_metadata_legacy_mode() -> None:
+    """Verify get_with_metadata without key_json returns first entry."""
+    with TokenCache(":memory:") as cache:
+        cache.put("hash1", "test", b"data_a", b"meta_a", '{"key": "a"}')
+        cache.put("hash1", "test", b"data_b", b"meta_b", '{"key": "b"}')
+
+        result = cache.get_with_metadata("hash1", "test")
+        assert result == (b"data_a", b"meta_a")
+
+
+# Test exists with key_json
+def test_exists_with_key_json() -> None:
+    """Verify exists works with key_json parameter."""
+    with TokenCache(":memory:") as cache:
+        cache.put("hash1", "test", b"data", key_json='{"key": "a"}')
+
+        assert cache.exists("hash1", "test", '{"key": "a"}')
+        assert not cache.exists("hash1", "test", '{"key": "b"}')
+
+
+# Test exists without key_json checks any entry
+def test_exists_without_key_json() -> None:
+    """Verify exists without key_json checks for any matching hash."""
+    with TokenCache(":memory:") as cache:
+        cache.put("hash1", "test", b"data", key_json='{"key": "a"}')
+
+        assert cache.exists("hash1", "test")
+        assert not cache.exists("hash2", "test")
+
+
+# Test delete with key_json deletes specific entry
+def test_delete_with_key_json() -> None:
+    """Verify delete with key_json removes specific collision entry."""
+    with TokenCache(":memory:") as cache:
+        cache.put("hash1", "test", b"data_a", key_json='{"key": "a"}')
+        cache.put("hash1", "test", b"data_b", key_json='{"key": "b"}')
+
+        # Delete only key_json 'a'
+        result = cache.delete("hash1", "test", '{"key": "a"}')
+        assert result is True
+
+        # Only one entry should remain
+        assert cache.entry_count() == 1
+        assert cache.get("hash1", "test", '{"key": "b"}') == b"data_b"
+        assert cache.get("hash1", "test", '{"key": "a"}') is None
+
+
+# Test delete without key_json deletes all entries with hash
+def test_delete_without_key_json() -> None:
+    """Verify delete without key_json removes all entries with hash."""
+    with TokenCache(":memory:") as cache:
+        cache.put("hash1", "test", b"data_a", key_json='{"key": "a"}')
+        cache.put("hash1", "test", b"data_b", key_json='{"key": "b"}')
+
+        # Delete all entries with this hash
+        result = cache.delete("hash1", "test")
+        assert result is True
+
+        # No entries should remain
+        assert cache.entry_count() == 0
+
+
+# Test multiple collisions increment seq correctly
+def test_multiple_collisions() -> None:
+    """Verify multiple collisions increment seq sequentially."""
+    with TokenCache(":memory:") as cache:
+        cache.put("hash1", "test", b"data_a", key_json='{"k": "a"}')
+        cache.put("hash1", "test", b"data_b", key_json='{"k": "b"}')
+        cache.put("hash1", "test", b"data_c", key_json='{"k": "c"}')
+
+        assert cache.entry_count() == 3
+
+        # Verify seq values
+        cursor = cache.conn.execute(
+            "SELECT seq FROM cache_entries WHERE hash = ? ORDER BY seq",
+            ("hash1",),
+        )
+        seqs = [row[0] for row in cursor.fetchall()]
+        assert seqs == [0, 1, 2]
+
+
+# Test update after collision uses correct seq
+def test_update_collision_entry() -> None:
+    """Verify updating a collision entry works correctly."""
+    with TokenCache(":memory:") as cache:
+        cache.put("hash1", "test", b"data_a", key_json='{"k": "a"}')
+        cache.put("hash1", "test", b"data_b", key_json='{"k": "b"}')
+
+        # Update the second entry
+        cache.put("hash1", "test", b"data_b_updated", key_json='{"k": "b"}')
+
+        # Should still have two entries
+        assert cache.entry_count() == 2
+
+        # Second entry should be updated
+        data = cache.get("hash1", "test", key_json='{"k": "b"}')
+        assert data == b"data_b_updated"
+
+
+# Test put_data with key_json
+def test_put_data_with_key_json() -> None:
+    """Verify put_data passes key_json through."""
+    from causaliq_core.cache.encoders import JsonEncoder
+
+    with TokenCache(":memory:") as cache:
+        cache.register_encoder("json", JsonEncoder())
+        cache.put_data("h1", "json", {"a": 1}, key_json='{"key": "a"}')
+        cache.put_data("h1", "json", {"b": 2}, key_json='{"key": "b"}')
+
+        assert cache.entry_count() == 2
+
+        result_a = cache.get_data("h1", "json", key_json='{"key": "a"}')
+        result_b = cache.get_data("h1", "json", key_json='{"key": "b"}')
+
+        assert result_a == {"a": 1}
+        assert result_b == {"b": 2}
+
+
+# Test get_data_with_metadata with key_json
+def test_get_data_with_metadata_key_json() -> None:
+    """Verify get_data_with_metadata passes key_json through."""
+    from causaliq_core.cache.encoders import JsonEncoder
+
+    with TokenCache(":memory:") as cache:
+        cache.register_encoder("json", JsonEncoder())
+        cache.put_data("h1", "json", {"d": 1}, {"m": 1}, '{"key": "a"}')
+        cache.put_data("h1", "json", {"d": 2}, {"m": 2}, '{"key": "b"}')
+
+        result = cache.get_data_with_metadata("h1", "json", '{"key": "b"}')
+        assert result == ({"d": 2}, {"m": 2})
+
+        result_legacy = cache.get_data_with_metadata("h1", "json")
+        assert result_legacy == ({"d": 1}, {"m": 1})

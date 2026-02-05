@@ -133,7 +133,7 @@ class LinGauss():
 
         Args:
             parental_values: Parental values for which dist. required
-            for non-orphans.
+                for non-orphans.
 
         Returns:
             Tuple of (mean, sd) of child Gaussian distribution.

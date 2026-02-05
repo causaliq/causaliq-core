@@ -44,16 +44,18 @@ class TokenCache:
             frequency INTEGER DEFAULT 1
         );
 
-        -- Generic cache entries
+        -- Generic cache entries with collision handling
         CREATE TABLE IF NOT EXISTS cache_entries (
             hash TEXT NOT NULL,
             entry_type TEXT NOT NULL,
+            seq INTEGER DEFAULT 0,
+            key_json TEXT NOT NULL,
             data BLOB NOT NULL,
             created_at TEXT NOT NULL,
             metadata BLOB,
             hit_count INTEGER DEFAULT 0,
             last_accessed_at TEXT,
-            PRIMARY KEY (hash, entry_type)
+            PRIMARY KEY (hash, entry_type, seq)
         );
 
         -- Indexes for common queries
@@ -325,101 +327,221 @@ class TokenCache:
         entry_type: str,
         data: bytes,
         metadata: bytes | None = None,
+        key_json: str = "",
     ) -> None:
-        """Store a cache entry.
+        """Store a cache entry with collision handling.
+
+        If an entry with the same hash and entry_type exists but different
+        key_json, a new entry is created with incremented seq (collision).
+        If key_json matches, the existing entry is updated.
 
         Args:
             hash: Unique identifier for the entry (e.g. SHA-256 truncated).
             entry_type: Type of entry (e.g. 'llm', 'graph', 'score').
             data: Binary data to store.
             metadata: Optional binary metadata.
+            key_json: Original unhashed key as JSON string for collision
+                detection. Empty string if not provided.
         """
-        self.conn.execute(
-            "INSERT OR REPLACE INTO cache_entries "
-            "(hash, entry_type, data, created_at, metadata) "
-            "VALUES (?, ?, ?, ?, ?)",
-            (hash, entry_type, data, self._utcnow_iso(), metadata),
+        # Check for existing entries with this hash and entry_type
+        cursor = self.conn.execute(
+            "SELECT seq, key_json FROM cache_entries "
+            "WHERE hash = ? AND entry_type = ? ORDER BY seq",
+            (hash, entry_type),
         )
+        rows = cursor.fetchall()
+
+        if not rows:
+            # No existing entry - insert with seq=0
+            self.conn.execute(
+                "INSERT INTO cache_entries "
+                "(hash, entry_type, seq, key_json, data, created_at, metadata)"
+                " VALUES (?, ?, 0, ?, ?, ?, ?)",
+                (
+                    hash,
+                    entry_type,
+                    key_json,
+                    data,
+                    self._utcnow_iso(),
+                    metadata,
+                ),
+            )
+        else:
+            # Check if key_json matches any existing entry
+            for seq, existing_key_json in rows:
+                if existing_key_json == key_json:
+                    # Same key - update existing entry
+                    self.conn.execute(
+                        "UPDATE cache_entries SET data = ?, metadata = ?, "
+                        "created_at = ? "
+                        "WHERE hash = ? AND entry_type = ? AND seq = ?",
+                        (
+                            data,
+                            metadata,
+                            self._utcnow_iso(),
+                            hash,
+                            entry_type,
+                            seq,
+                        ),
+                    )
+                    self.conn.commit()
+                    return
+
+            # Collision: key_json doesn't match any existing - insert new seq
+            max_seq = max(row[0] for row in rows)
+            self.conn.execute(
+                "INSERT INTO cache_entries "
+                "(hash, entry_type, seq, key_json, data, created_at, metadata)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (
+                    hash,
+                    entry_type,
+                    max_seq + 1,
+                    key_json,
+                    data,
+                    self._utcnow_iso(),
+                    metadata,
+                ),
+            )
+
         self.conn.commit()
 
-    def get(self, hash: str, entry_type: str) -> bytes | None:
+    def get(
+        self,
+        hash: str,
+        entry_type: str,
+        key_json: str = "",
+    ) -> bytes | None:
         """Retrieve a cache entry and increment hit count.
+
+        If key_json is provided, only returns data if key_json matches.
+        This prevents returning wrong data in case of hash collisions.
 
         Args:
             hash: Unique identifier for the entry.
             entry_type: Type of entry to retrieve.
+            key_json: Original unhashed key for collision verification.
+                If empty string, returns first matching entry (legacy mode).
 
         Returns:
             Binary data if found, None otherwise.
         """
-        cursor = self.conn.execute(
-            "SELECT data FROM cache_entries "
-            "WHERE hash = ? AND entry_type = ?",
-            (hash, entry_type),
-        )
+        if key_json:
+            # Exact match required for collision safety
+            cursor = self.conn.execute(
+                "SELECT seq, data FROM cache_entries "
+                "WHERE hash = ? AND entry_type = ? AND key_json = ?",
+                (hash, entry_type, key_json),
+            )
+        else:
+            # Legacy mode: return first match (seq=0)
+            cursor = self.conn.execute(
+                "SELECT seq, data FROM cache_entries "
+                "WHERE hash = ? AND entry_type = ? ORDER BY seq LIMIT 1",
+                (hash, entry_type),
+            )
+
         row = cursor.fetchone()
         if row:
+            seq, data = row
             # Increment hit count and update last accessed time
             self.conn.execute(
                 "UPDATE cache_entries SET hit_count = hit_count + 1, "
-                "last_accessed_at = ? WHERE hash = ? AND entry_type = ?",
-                (self._utcnow_iso(), hash, entry_type),
+                "last_accessed_at = ? "
+                "WHERE hash = ? AND entry_type = ? AND seq = ?",
+                (self._utcnow_iso(), hash, entry_type, seq),
             )
             self.conn.commit()
-            result: bytes = row[0]
+            result: bytes = data
             return result
         return None
 
     def get_with_metadata(
-        self, hash: str, entry_type: str
+        self,
+        hash: str,
+        entry_type: str,
+        key_json: str = "",
     ) -> tuple[bytes, bytes | None] | None:
         """Retrieve a cache entry with its metadata.
 
         Args:
             hash: Unique identifier for the entry.
             entry_type: Type of entry to retrieve.
+            key_json: Original unhashed key for collision verification.
+                If empty string, returns first matching entry (legacy mode).
 
         Returns:
             Tuple of (data, metadata) if found, None otherwise.
         """
-        cursor = self.conn.execute(
-            "SELECT data, metadata FROM cache_entries "
-            "WHERE hash = ? AND entry_type = ?",
-            (hash, entry_type),
-        )
+        if key_json:
+            cursor = self.conn.execute(
+                "SELECT data, metadata FROM cache_entries "
+                "WHERE hash = ? AND entry_type = ? AND key_json = ?",
+                (hash, entry_type, key_json),
+            )
+        else:
+            cursor = self.conn.execute(
+                "SELECT data, metadata FROM cache_entries "
+                "WHERE hash = ? AND entry_type = ? ORDER BY seq LIMIT 1",
+                (hash, entry_type),
+            )
         row = cursor.fetchone()
         return (row[0], row[1]) if row else None
 
-    def exists(self, hash: str, entry_type: str) -> bool:
+    def exists(self, hash: str, entry_type: str, key_json: str = "") -> bool:
         """Check if a cache entry exists.
 
         Args:
             hash: Unique identifier for the entry.
             entry_type: Type of entry to check.
+            key_json: Original unhashed key for collision verification.
+                If empty string, checks for any entry with this hash.
 
         Returns:
             True if entry exists, False otherwise.
         """
-        cursor = self.conn.execute(
-            "SELECT 1 FROM cache_entries " "WHERE hash = ? AND entry_type = ?",
-            (hash, entry_type),
-        )
+        if key_json:
+            cursor = self.conn.execute(
+                "SELECT 1 FROM cache_entries "
+                "WHERE hash = ? AND entry_type = ? AND key_json = ?",
+                (hash, entry_type, key_json),
+            )
+        else:
+            cursor = self.conn.execute(
+                "SELECT 1 FROM cache_entries "
+                "WHERE hash = ? AND entry_type = ?",
+                (hash, entry_type),
+            )
         return cursor.fetchone() is not None
 
-    def delete(self, hash: str, entry_type: str) -> bool:
+    def delete(
+        self,
+        hash: str,
+        entry_type: str,
+        key_json: str = "",
+    ) -> bool:
         """Delete a cache entry.
 
         Args:
             hash: Unique identifier for the entry.
             entry_type: Type of entry to delete.
+            key_json: Original unhashed key for collision verification.
+                If empty string, deletes all entries with this hash.
 
         Returns:
             True if entry was deleted, False if it didn't exist.
         """
-        cursor = self.conn.execute(
-            "DELETE FROM cache_entries WHERE hash = ? AND entry_type = ?",
-            (hash, entry_type),
-        )
+        if key_json:
+            cursor = self.conn.execute(
+                "DELETE FROM cache_entries "
+                "WHERE hash = ? AND entry_type = ? AND key_json = ?",
+                (hash, entry_type, key_json),
+            )
+        else:
+            cursor = self.conn.execute(
+                "DELETE FROM cache_entries WHERE hash = ? AND entry_type = ?",
+                (hash, entry_type),
+            )
         self.conn.commit()
         return cursor.rowcount > 0
 
@@ -473,6 +595,7 @@ class TokenCache:
         entry_type: str,
         data: Any,
         metadata: Any | None = None,
+        key_json: str = "",
     ) -> None:
         """Store data using the registered encoder for the entry type.
 
@@ -484,6 +607,8 @@ class TokenCache:
             entry_type: Type of entry (must have registered encoder).
             data: Data to encode and store.
             metadata: Optional metadata to encode and store.
+            key_json: Original unhashed key as JSON string for collision
+                detection. Empty string if not provided.
 
         Raises:
             KeyError: If no encoder is registered for entry_type.
@@ -498,9 +623,14 @@ class TokenCache:
         meta_blob = (
             encoder.encode(metadata, self) if metadata is not None else None
         )
-        self.put(hash, entry_type, blob, meta_blob)
+        self.put(hash, entry_type, blob, meta_blob, key_json)
 
-    def get_data(self, hash: str, entry_type: str) -> Any | None:
+    def get_data(
+        self,
+        hash: str,
+        entry_type: str,
+        key_json: str = "",
+    ) -> Any | None:
         """Retrieve and decode data using the registered encoder.
 
         This method automatically decodes the data using the encoder
@@ -509,6 +639,8 @@ class TokenCache:
         Args:
             hash: Unique identifier for the entry.
             entry_type: Type of entry (must have registered encoder).
+            key_json: Original unhashed key for collision verification.
+                If empty string, returns first matching entry (legacy mode).
 
         Returns:
             Decoded data if found, None otherwise.
@@ -522,20 +654,25 @@ class TokenCache:
             ...     cache.put_data("abc", "json", {"key": "value"})
             ...     data = cache.get_data("abc", "json")
         """
-        blob = self.get(hash, entry_type)
+        blob = self.get(hash, entry_type, key_json)
         if blob is None:
             return None
         encoder = self._encoders[entry_type]
         return encoder.decode(blob, self)
 
     def get_data_with_metadata(
-        self, hash: str, entry_type: str
+        self,
+        hash: str,
+        entry_type: str,
+        key_json: str = "",
     ) -> tuple[Any, Any | None] | None:
         """Retrieve and decode data with metadata using registered encoder.
 
         Args:
             hash: Unique identifier for the entry.
             entry_type: Type of entry (must have registered encoder).
+            key_json: Original unhashed key for collision verification.
+                If empty string, returns first matching entry (legacy mode).
 
         Returns:
             Tuple of (decoded_data, decoded_metadata) if found, None otherwise.
@@ -544,7 +681,7 @@ class TokenCache:
         Raises:
             KeyError: If no encoder is registered for entry_type.
         """
-        result = self.get_with_metadata(hash, entry_type)
+        result = self.get_with_metadata(hash, entry_type, key_json)
         if result is None:
             return None
         data_blob, meta_blob = result

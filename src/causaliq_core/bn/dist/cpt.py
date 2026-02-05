@@ -132,7 +132,7 @@ class CPT(CND):
             parents: Parents of node.
             data: Data to fit CPT to.
             autocomplete: Whether to ensure CPT data contains entries for
-            combinations of parental values that don't occur in the data.
+                combinations of parental values that don't occur in the data.
 
         Returns:
             Tuple of (cnd_spec, estimated_pmfs) where
@@ -196,7 +196,7 @@ class CPT(CND):
 
         Args:
             parental_values: Parental values for which pmf required
-            for non-orphans.
+                for non-orphans.
 
         Raises:
             TypeError: If args are of wrong type.
@@ -365,7 +365,7 @@ class CPT(CND):
 
         Raises:
             ValueError: If parent mismatch or missing parental
-            value combinations.
+                value combinations.
         """
 
         # Check parents defined in CPT keys match those defined in parents
