@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <key id="sourceEndpoint" for="edge" attr.name="sourceEndpoint" attr.type="string" />
+  <key id="targetEndpoint" for="edge" attr.name="targetEndpoint" attr.type="string" />
+  <graph id="G" edgedefault="directed">
+    <node id="A" />
+    <node id="B" />
+    <edge id="e1" source="A" target="B">
+      <data key="sourceEndpoint">circle</data>
+      <data key="targetEndpoint">none</data>
+    </edge>
+  </graph>
+</graphml>

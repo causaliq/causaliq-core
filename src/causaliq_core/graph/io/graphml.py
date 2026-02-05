@@ -302,3 +302,81 @@ def _validate_edge_symbol(symbol: str, path: str) -> str:
     if symbol not in VALID_EDGE_SYMBOLS:
         raise FileFormatError(f"file {path} has invalid edge type: {symbol}")
     return symbol
+
+
+# Map EdgeMark to GraphML endpoint value
+_MARK_TO_ENDPOINT = {
+    EdgeMark.LINE: "none",
+    EdgeMark.ARROW: "arrow",
+    EdgeMark.CIRCLE: "circle",
+}
+
+
+def write(graph: Union[SDG, PDAG, DAG], path: str) -> None:
+    """Write a graph to a GraphML format file.
+
+    Exports the graph with node ordering preserved and edge types encoded
+    using sourceEndpoint/targetEndpoint data attributes.
+
+    Args:
+        graph: SDG, PDAG or DAG to write.
+        path: Full path name of file to write.
+
+    Raises:
+        TypeError: If argument types incorrect.
+        ValueError: If file suffix not '.graphml'.
+    """
+    if not isinstance(graph, SDG):
+        raise TypeError("graphml.write() graph arg must be SDG, PDAG or DAG")
+
+    if not isinstance(path, str):
+        raise TypeError("graphml.write() path arg must be str")
+
+    if path.lower().split(".")[-1] != "graphml":
+        raise ValueError("graphml.write() bad file suffix")
+
+    # Build XML document
+    root = ET.Element("graphml", xmlns=GRAPHML_NS)
+
+    # Add key definitions for edge endpoint attributes
+    source_key = ET.SubElement(root, "key", id="sourceEndpoint")
+    source_key.set("for", "edge")
+    source_key.set("attr.name", "sourceEndpoint")
+    source_key.set("attr.type", "string")
+
+    target_key = ET.SubElement(root, "key", id="targetEndpoint")
+    target_key.set("for", "edge")
+    target_key.set("attr.name", "targetEndpoint")
+    target_key.set("attr.type", "string")
+
+    # Create graph element (edgedefault doesn't matter as we specify per-edge)
+    graph_elem = ET.SubElement(root, "graph", id="G", edgedefault="directed")
+
+    # Add nodes in order
+    for node in graph.nodes:
+        ET.SubElement(graph_elem, "node", id=node)
+
+    # Add edges with endpoint attributes
+    edge_id = 0
+    for (source, target), edge_type in graph.edges.items():
+        edge_id += 1
+        edge_elem = ET.SubElement(
+            graph_elem, "edge", id=f"e{edge_id}", source=source, target=target
+        )
+
+        # Get endpoint marks from EdgeType
+        source_mark = edge_type.value[1]
+        target_mark = edge_type.value[2]
+
+        # Add endpoint data elements
+        source_data = ET.SubElement(edge_elem, "data", key="sourceEndpoint")
+        source_data.text = _MARK_TO_ENDPOINT[source_mark]
+
+        target_data = ET.SubElement(edge_elem, "data", key="targetEndpoint")
+        target_data.text = _MARK_TO_ENDPOINT[target_mark]
+
+    # Write to file with XML declaration and proper formatting
+    tree = ET.ElementTree(root)
+    ET.indent(tree, space="  ")
+    with open(path, "wb") as f:
+        tree.write(f, encoding="utf-8", xml_declaration=True)

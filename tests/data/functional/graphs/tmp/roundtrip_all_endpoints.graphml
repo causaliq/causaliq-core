@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <key id="sourceEndpoint" for="edge" attr.name="sourceEndpoint" attr.type="string" />
+  <key id="targetEndpoint" for="edge" attr.name="targetEndpoint" attr.type="string" />
+  <graph id="G" edgedefault="directed">
+    <node id="A" />
+    <node id="B" />
+    <node id="C" />
+    <node id="D" />
+    <node id="E" />
+    <node id="F" />
+    <node id="G" />
+    <node id="H" />
+    <node id="I" />
+    <node id="J" />
+    <edge id="e1" source="A" target="B">
+      <data key="sourceEndpoint">none</data>
+      <data key="targetEndpoint">arrow</data>
+    </edge>
+    <edge id="e2" source="B" target="C">
+      <data key="sourceEndpoint">none</data>
+      <data key="targetEndpoint">none</data>
+    </edge>
+    <edge id="e3" source="C" target="D">
+      <data key="sourceEndpoint">circle</data>
+      <data key="targetEndpoint">none</data>
+    </edge>
+    <edge id="e4" source="D" target="E">
+      <data key="sourceEndpoint">arrow</data>
+      <data key="targetEndpoint">arrow</data>
+    </edge>
+    <edge id="e5" source="E" target="F">
+      <data key="sourceEndpoint">none</data>
+      <data key="targetEndpoint">arrow</data>
+    </edge>
+    <edge id="e6" source="F" target="G">
+      <data key="sourceEndpoint">circle</data>
+      <data key="targetEndpoint">arrow</data>
+    </edge>
+    <edge id="e7" source="G" target="H">
+      <data key="sourceEndpoint">circle</data>
+      <data key="targetEndpoint">arrow</data>
+    </edge>
+    <edge id="e8" source="H" target="I">
+      <data key="sourceEndpoint">circle</data>
+      <data key="targetEndpoint">none</data>
+    </edge>
+    <edge id="e9" source="I" target="J">
+      <data key="sourceEndpoint">circle</data>
+      <data key="targetEndpoint">circle</data>
+    </edge>
+  </graph>
+</graphml>

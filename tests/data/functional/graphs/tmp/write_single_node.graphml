@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <key id="sourceEndpoint" for="edge" attr.name="sourceEndpoint" attr.type="string" />
+  <key id="targetEndpoint" for="edge" attr.name="targetEndpoint" attr.type="string" />
+  <graph id="G" edgedefault="directed">
+    <node id="A" />
+  </graph>
+</graphml>
