@@ -243,6 +243,55 @@ class TokenCache:
         row = cursor.fetchone()
         return int(row[0]) if row else 0
 
+    def list_entries(
+        self,
+        entry_type: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """List all cache entries with metadata.
+
+        Returns a list of dictionaries containing entry details including
+        hash, entry_type, key_json, created_at, and metadata blob.
+
+        Args:
+            entry_type: If provided, list only entries of this type.
+
+        Returns:
+            List of entry dictionaries with keys: hash, entry_type,
+            key_json, created_at, metadata (raw bytes or None).
+
+        Example:
+            >>> with TokenCache(":memory:") as cache:
+            ...     cache.register_encoder("json", JsonEncoder())
+            ...     cache.put_data("h1", "json", {"test": 1})
+            ...     entries = cache.list_entries("json")
+            ...     len(entries)
+            1
+        """
+        if entry_type is None:
+            cursor = self.conn.execute(
+                "SELECT hash, entry_type, key_json, created_at, metadata "
+                "FROM cache_entries ORDER BY created_at"
+            )
+        else:
+            cursor = self.conn.execute(
+                "SELECT hash, entry_type, key_json, created_at, metadata "
+                "FROM cache_entries WHERE entry_type = ? ORDER BY created_at",
+                (entry_type,),
+            )
+
+        entries = []
+        for row in cursor:
+            entries.append(
+                {
+                    "hash": row[0],
+                    "entry_type": row[1],
+                    "key_json": row[2],
+                    "created_at": row[3],
+                    "metadata": row[4],
+                }
+            )
+        return entries
+
     def total_hits(self, entry_type: str | None = None) -> int:
         """Get total cache hits across all entries.
 

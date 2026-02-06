@@ -924,3 +924,99 @@ def test_get_data_with_metadata_key_json() -> None:
 
         result_legacy = cache.get_data_with_metadata("h1", "json")
         assert result_legacy == ({"d": 1}, {"m": 1})
+
+
+# ============================================================================
+# list_entries tests
+# ============================================================================
+
+
+# Test list_entries returns empty list for empty cache.
+def test_list_entries_empty_cache() -> None:
+    with TokenCache(":memory:") as cache:
+        entries = cache.list_entries()
+        assert entries == []
+
+
+# Test list_entries returns all entries.
+def test_list_entries_returns_all_entries() -> None:
+    with TokenCache(":memory:") as cache:
+        cache.put("h1", "type_a", b"data1", key_json='{"k": "1"}')
+        cache.put("h2", "type_b", b"data2", key_json='{"k": "2"}')
+        cache.put("h3", "type_a", b"data3", key_json='{"k": "3"}')
+
+        entries = cache.list_entries()
+        assert len(entries) == 3
+
+        # Check all required keys are present
+        for entry in entries:
+            assert "hash" in entry
+            assert "entry_type" in entry
+            assert "key_json" in entry
+            assert "created_at" in entry
+            assert "metadata" in entry
+
+
+# Test list_entries filters by entry_type.
+def test_list_entries_filters_by_entry_type() -> None:
+    with TokenCache(":memory:") as cache:
+        cache.put("h1", "type_a", b"data1")
+        cache.put("h2", "type_b", b"data2")
+        cache.put("h3", "type_a", b"data3")
+
+        entries_a = cache.list_entries("type_a")
+        assert len(entries_a) == 2
+        assert all(e["entry_type"] == "type_a" for e in entries_a)
+
+        entries_b = cache.list_entries("type_b")
+        assert len(entries_b) == 1
+        assert entries_b[0]["entry_type"] == "type_b"
+
+
+# Test list_entries returns entries in creation order.
+def test_list_entries_ordered_by_created_at() -> None:
+    with TokenCache(":memory:") as cache:
+        cache.put("h1", "test", b"first")
+        cache.put("h2", "test", b"second")
+        cache.put("h3", "test", b"third")
+
+        entries = cache.list_entries()
+        assert len(entries) == 3
+
+        # Entries should be ordered by created_at
+        assert entries[0]["hash"] == "h1"
+        assert entries[1]["hash"] == "h2"
+        assert entries[2]["hash"] == "h3"
+
+
+# Test list_entries includes metadata.
+def test_list_entries_includes_metadata() -> None:
+    from causaliq_core.cache.encoders import JsonEncoder
+
+    with TokenCache(":memory:") as cache:
+        cache.register_encoder("json", JsonEncoder())
+        cache.put_data("h1", "json", {"v": 1}, metadata={"source": "test"})
+
+        entries = cache.list_entries("json")
+        assert len(entries) == 1
+        # Metadata is stored as encoded bytes
+        assert entries[0]["metadata"] is not None
+
+
+# Test list_entries returns correct key_json values.
+def test_list_entries_returns_key_json() -> None:
+    with TokenCache(":memory:") as cache:
+        cache.put("h1", "test", b"data", key_json='{"a": "1", "b": "2"}')
+
+        entries = cache.list_entries()
+        assert len(entries) == 1
+        assert entries[0]["key_json"] == '{"a": "1", "b": "2"}'
+
+
+# Test list_entries with nonexistent entry_type returns empty.
+def test_list_entries_nonexistent_type_returns_empty() -> None:
+    with TokenCache(":memory:") as cache:
+        cache.put("h1", "existing", b"data")
+
+        entries = cache.list_entries("nonexistent")
+        assert entries == []
