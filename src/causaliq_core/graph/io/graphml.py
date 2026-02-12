@@ -4,11 +4,15 @@
 #   GraphML is an XML-based format for graphs. This module supports reading
 #   and writing SDG, PDAG, and DAG graphs in GraphML format.
 #
+#   Supports both filesystem paths and file-like objects (e.g., StringIO)
+#   for interoperability with workflow caches and in-memory processing.
+#
 #   Reference: http://graphml.graphdrawing.org/
 #
 
 import xml.etree.ElementTree as ET
-from typing import Dict, Optional, Union
+from pathlib import Path
+from typing import Dict, Optional, TextIO, Union
 
 from causaliq_core.utils import FileFormatError, is_valid_path
 
@@ -16,6 +20,9 @@ from ..dag import DAG
 from ..enums import EdgeMark, EdgeType
 from ..pdag import PDAG
 from ..sdg import SDG
+
+# Type alias for file path or file-like object
+FileLike = Union[str, Path, TextIO]
 
 # GraphML namespace
 GRAPHML_NS = "http://graphml.graphdrawing.org/xmlns"
@@ -43,38 +50,57 @@ for et in EdgeType:
 VALID_EDGE_SYMBOLS = {et.value[3] for et in EdgeType if et != EdgeType.NONE}
 
 
-def read(path: str) -> Union[SDG, PDAG, DAG]:
-    """Read a graph from a GraphML format file.
+def read(file: FileLike) -> Union[SDG, PDAG, DAG]:
+    """Read a graph from a GraphML file or file-like object.
 
     Supports standard GraphML files with optional edge endpoint attributes
     to represent different edge types (directed, undirected, bidirected,
     etc.). Without endpoint attributes, edges default to directed.
 
     Args:
-        path: Full path name of file.
+        file: File path (str or Path) or file-like object (e.g., StringIO).
+            For file paths, suffix must be '.graphml'.
 
     Returns:
         SDG, PDAG or DAG depending on edge types in the graph.
 
     Raises:
         TypeError: If argument types incorrect.
-        ValueError: If file suffix not '.graphml'.
+        ValueError: If file path suffix not '.graphml'.
         FileNotFoundError: If specified file does not exist.
         FileFormatError: If file contents are not valid GraphML.
+
+    Example:
+        >>> from io import StringIO
+        >>> xml = '<graphml><graph><node id="A"/></graph></graphml>'
+        >>> graph = read(StringIO(xml))
     """
-    if not isinstance(path, str):
-        raise TypeError("graphml.read() bad arg type")
+    # Validate file argument type
+    is_path = isinstance(file, (str, Path))
+    is_file_like = hasattr(file, "read")
 
-    if path.lower().split(".")[-1] != "graphml":
-        raise ValueError("graphml.read() bad file suffix")
+    if not is_path and not is_file_like:
+        raise TypeError(
+            "graphml.read() file arg must be str, Path, or file-like object"
+        )
 
-    is_valid_path(path)
+    source_desc = str(file) if is_path else "<file-like object>"
+
+    if is_path:
+        path_str = str(file)
+        if path_str.lower().split(".")[-1] != "graphml":
+            raise ValueError("graphml.read() bad file suffix")
+        is_valid_path(path_str)
 
     try:
-        tree = ET.parse(path)
+        if is_path:
+            tree = ET.parse(str(file))
+        else:
+            # File-like object - read content and parse
+            tree = ET.parse(file)  # type: ignore[arg-type]
         root = tree.getroot()
     except ET.ParseError as e:
-        raise FileFormatError(f"file {path} invalid XML: {e}")
+        raise FileFormatError(f"file {source_desc} invalid XML: {e}")
 
     # Handle namespaced and non-namespaced GraphML
     if root.tag == f"{{{GRAPHML_NS}}}graphml":
@@ -83,25 +109,26 @@ def read(path: str) -> Union[SDG, PDAG, DAG]:
         ns = {}
     else:
         raise FileFormatError(
-            f"file {path} not a GraphML file (root element: {root.tag})"
+            f"file {source_desc} not a GraphML file "
+            f"(root element: {root.tag})"
         )
 
     # Find the graph element
     graph_elem = root.find("g:graph", ns) if ns else root.find("graph")
     if graph_elem is None:
-        raise FileFormatError(f"file {path} has no graph element")
+        raise FileFormatError(f"file {source_desc} has no graph element")
 
     # Collect key definitions for edge attributes
     edge_keys = _parse_key_definitions(root, ns)
 
     # Parse nodes
-    nodes = _parse_nodes(graph_elem, ns, path)
+    nodes = _parse_nodes(graph_elem, ns, source_desc)
     if not nodes:
-        raise FileFormatError(f"file {path} has no nodes")
+        raise FileFormatError(f"file {source_desc} has no nodes")
 
     # Parse edges
     edges, has_undirected, has_non_pdag = _parse_edges(
-        graph_elem, ns, edge_keys, path
+        graph_elem, ns, edge_keys, source_desc
     )
 
     # Determine graph type and return appropriate class
@@ -136,13 +163,15 @@ def _parse_key_definitions(
     return keys
 
 
-def _parse_nodes(graph_elem: ET.Element, ns: dict, path: str) -> list[str]:
+def _parse_nodes(
+    graph_elem: ET.Element, ns: dict, source_desc: str
+) -> list[str]:
     """Parse node elements from the graph.
 
     Args:
         graph_elem: The graph element.
         ns: Namespace dictionary.
-        path: File path for error messages.
+        source_desc: Source description for error messages.
 
     Returns:
         List of node names.
@@ -152,10 +181,10 @@ def _parse_nodes(graph_elem: ET.Element, ns: dict, path: str) -> list[str]:
     for node_elem in graph_elem.findall(node_tag, ns):
         node_id = node_elem.get("id")
         if node_id is None:
-            raise FileFormatError(f"file {path} has node without id")
+            raise FileFormatError(f"file {source_desc} has node without id")
         if node_id in nodes:
             raise FileFormatError(
-                f"file {path} has duplicate node id: {node_id}"
+                f"file {source_desc} has duplicate node id: {node_id}"
             )
         nodes.append(node_id)
     return nodes
@@ -165,7 +194,7 @@ def _parse_edges(
     graph_elem: ET.Element,
     ns: dict,
     edge_keys: Dict[str, Dict[str, Optional[str]]],
-    path: str,
+    source_desc: str,
 ) -> tuple[list[tuple[str, str, str]], bool, bool]:
     """Parse edge elements from the graph.
 
@@ -173,7 +202,7 @@ def _parse_edges(
         graph_elem: The graph element.
         ns: Namespace dictionary.
         edge_keys: Key definitions for edge attributes.
-        path: File path for error messages.
+        source_desc: Source description for error messages.
 
     Returns:
         Tuple of (edges list, has_undirected, has_non_pdag edges).
@@ -191,7 +220,7 @@ def _parse_edges(
 
         if source is None or target is None:
             raise FileFormatError(
-                f"file {path} has edge without source or target"
+                f"file {source_desc} has edge without source or target"
             )
 
         # Check for directed attribute (GraphML standard)
@@ -214,7 +243,7 @@ def _parse_edges(
                     target_mark = _endpoint_to_mark(value)
                 elif attr_name == "edgeType":
                     # Direct edge type symbol (e.g., "->", "-", "<->")
-                    edge_symbol = _validate_edge_symbol(value, path)
+                    edge_symbol = _validate_edge_symbol(value, source_desc)
                     edges.append((source, edge_symbol, target))
                     if edge_symbol == EdgeType.UNDIRECTED.value[3]:
                         has_undirected = True
@@ -285,12 +314,12 @@ def _marks_to_symbol(source_mark: EdgeMark, target_mark: EdgeMark) -> str:
     return EdgeType.DIRECTED.value[3]
 
 
-def _validate_edge_symbol(symbol: str, path: str) -> str:
+def _validate_edge_symbol(symbol: str, source_desc: str) -> str:
     """Validate an edge type symbol against EdgeType enum.
 
     Args:
         symbol: Edge type symbol to validate.
-        path: File path for error messages.
+        source_desc: Source description for error messages.
 
     Returns:
         Validated symbol.
@@ -300,7 +329,9 @@ def _validate_edge_symbol(symbol: str, path: str) -> str:
     """
     symbol = symbol.strip()
     if symbol not in VALID_EDGE_SYMBOLS:
-        raise FileFormatError(f"file {path} has invalid edge type: {symbol}")
+        raise FileFormatError(
+            f"file {source_desc} has invalid edge type: {symbol}"
+        )
     return symbol
 
 
@@ -312,28 +343,43 @@ _MARK_TO_ENDPOINT = {
 }
 
 
-def write(graph: Union[SDG, PDAG, DAG], path: str) -> None:
-    """Write a graph to a GraphML format file.
+def write(graph: Union[SDG, PDAG, DAG], file: FileLike) -> None:
+    """Write a graph to a GraphML file or file-like object.
 
     Exports the graph with node ordering preserved and edge types encoded
     using sourceEndpoint/targetEndpoint data attributes.
 
     Args:
         graph: SDG, PDAG or DAG to write.
-        path: Full path name of file to write.
+        file: File path (str or Path) or file-like object (e.g., StringIO).
+            For file paths, suffix must be '.graphml'.
 
     Raises:
         TypeError: If argument types incorrect.
-        ValueError: If file suffix not '.graphml'.
+        ValueError: If file path suffix not '.graphml'.
+
+    Example:
+        >>> from io import StringIO
+        >>> buffer = StringIO()
+        >>> write(graph, buffer)
+        >>> xml_content = buffer.getvalue()
     """
     if not isinstance(graph, SDG):
         raise TypeError("graphml.write() graph arg must be SDG, PDAG or DAG")
 
-    if not isinstance(path, str):
-        raise TypeError("graphml.write() path arg must be str")
+    # Validate file argument type
+    is_path = isinstance(file, (str, Path))
+    is_file_like = hasattr(file, "write")
 
-    if path.lower().split(".")[-1] != "graphml":
-        raise ValueError("graphml.write() bad file suffix")
+    if not is_path and not is_file_like:
+        raise TypeError(
+            "graphml.write() file arg must be str, Path, or file-like object"
+        )
+
+    if is_path:
+        path_str = str(file)
+        if path_str.lower().split(".")[-1] != "graphml":
+            raise ValueError("graphml.write() bad file suffix")
 
     # Build XML document
     root = ET.Element("graphml", xmlns=GRAPHML_NS)
@@ -378,5 +424,13 @@ def write(graph: Union[SDG, PDAG, DAG], path: str) -> None:
     # Write to file with XML declaration and proper formatting
     tree = ET.ElementTree(root)
     ET.indent(tree, space="  ")
-    with open(path, "wb") as f:
-        tree.write(f, encoding="utf-8", xml_declaration=True)
+
+    if is_path:
+        with open(str(file), "wb") as f:
+            tree.write(f, encoding="utf-8", xml_declaration=True)
+    else:
+        # File-like object - write as string
+        # ET.write() doesn't support StringIO directly, so we convert
+        xml_str = ET.tostring(root, encoding="unicode")
+        xml_declaration = '<?xml version="1.0" encoding="utf-8"?>\n'
+        file.write(xml_declaration + xml_str)  # type: ignore[union-attr]

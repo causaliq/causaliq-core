@@ -1,5 +1,7 @@
 """Unit tests for graphml module - parameter validation and type checking."""
 
+from io import StringIO
+
 import pytest
 
 from causaliq_core.graph import DAG
@@ -108,3 +110,53 @@ def test_graphml_write_value_error_bad_suffix() -> None:
         write(dag, "test.xml")
     with pytest.raises(ValueError):
         write(dag, "test.csv")
+
+
+# =============================================================================
+# Tests for StringIO support
+# =============================================================================
+
+
+# Test write to StringIO produces valid XML.
+def test_graphml_write_stringio_produces_xml() -> None:
+    dag = DAG(["A", "B"], [("A", "->", "B")])
+    buffer = StringIO()
+    write(dag, buffer)
+    xml_content = buffer.getvalue()
+    assert "<?xml" in xml_content
+    assert "<graphml" in xml_content
+    assert 'id="A"' in xml_content
+    assert 'id="B"' in xml_content
+
+
+# Test read from StringIO parses valid XML.
+def test_graphml_read_stringio_parses_xml() -> None:
+    xml_content = """<?xml version="1.0" encoding="utf-8"?>
+    <graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+        <graph id="G" edgedefault="directed">
+            <node id="A"/>
+            <node id="B"/>
+            <edge source="A" target="B"/>
+        </graph>
+    </graphml>"""
+    buffer = StringIO(xml_content)
+    graph = read(buffer)
+    assert "A" in graph.nodes
+    assert "B" in graph.nodes
+    assert len(graph.edges) == 1
+
+
+# Test roundtrip write then read via StringIO.
+def test_graphml_stringio_roundtrip() -> None:
+    original = DAG(["X", "Y", "Z"], [("X", "->", "Y"), ("Y", "->", "Z")])
+
+    # Write to StringIO
+    buffer = StringIO()
+    write(original, buffer)
+
+    # Read from StringIO (must seek to start)
+    buffer.seek(0)
+    restored = read(buffer)
+
+    assert list(restored.nodes) == list(original.nodes)
+    assert len(restored.edges) == len(original.edges)
