@@ -2,6 +2,16 @@
 causaliq-core: Core utilities and classes for the CausalIQ ecosystem
 """
 
+from causaliq_core.action import (
+    ActionExecutionError,
+    ActionInput,
+    ActionOutput,
+    ActionResult,
+    ActionValidationError,
+    BaseActionProvider,
+    CausalIQActionProvider,
+    CoreActionProvider,
+)
 from causaliq_core.cache import TokenCache
 
 __version__ = "0.4.0.dev3"
@@ -32,4 +42,13 @@ __all__ = [
     "VERSION",
     "SOFTWARE_VERSION",
     "TokenCache",
+    # Action provider framework
+    "ActionExecutionError",
+    "ActionInput",
+    "ActionOutput",
+    "ActionResult",
+    "ActionValidationError",
+    "BaseActionProvider",
+    "CausalIQActionProvider",
+    "CoreActionProvider",
 ]
