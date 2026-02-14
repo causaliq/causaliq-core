@@ -8,13 +8,12 @@ from causaliq_core.action import (
     ActionOutput,
     ActionResult,
     ActionValidationError,
-    BaseActionProvider,
     CausalIQActionProvider,
     CoreActionProvider,
 )
 from causaliq_core.cache import TokenCache
 
-__version__ = "0.4.0.dev3"
+__version__ = "0.4.0.dev4"
 __author__ = "CausalIQ"
 __email__ = "info@causaliq.org"
 
@@ -48,7 +47,6 @@ __all__ = [
     "ActionOutput",
     "ActionResult",
     "ActionValidationError",
-    "BaseActionProvider",
     "CausalIQActionProvider",
     "CoreActionProvider",
 ]

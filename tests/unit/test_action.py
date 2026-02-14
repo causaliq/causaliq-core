@@ -11,7 +11,6 @@ from causaliq_core import (
     ActionOutput,
     ActionResult,
     ActionValidationError,
-    BaseActionProvider,
     CausalIQActionProvider,
     CoreActionProvider,
     TokenCache,
@@ -85,11 +84,6 @@ def test_causaliq_action_provider_is_abstract() -> None:
         CausalIQActionProvider()  # type: ignore
 
 
-# Test BaseActionProvider is alias for CausalIQActionProvider.
-def test_base_action_provider_alias() -> None:
-    assert BaseActionProvider is CausalIQActionProvider
-
-
 # Test subclass can implement required methods.
 def test_provider_subclass_implementation() -> None:
     class TestProvider(CausalIQActionProvider):
@@ -113,73 +107,6 @@ def test_provider_subclass_implementation() -> None:
     assert status == "success"
     assert metadata == {"action": "test"}
     assert objects == []
-
-
-# Test validate_parameters raises on unsupported action.
-def test_validate_parameters_unsupported_action() -> None:
-    class TestProvider(CausalIQActionProvider):
-        supported_actions = {"action_a", "action_b"}
-
-        def run(
-            self, action, parameters, mode="dry-run", context=None, logger=None
-        ) -> ActionResult:
-            return ("success", {}, [])
-
-    provider = TestProvider()
-    with pytest.raises(ActionValidationError, match="Unsupported action"):
-        provider.validate_parameters("unknown_action", {})
-
-
-# Test validate_parameters accepts supported action.
-def test_validate_parameters_supported_action() -> None:
-    class TestProvider(CausalIQActionProvider):
-        supported_actions = {"action_a"}
-
-        def run(
-            self, action, parameters, mode="dry-run", context=None, logger=None
-        ) -> ActionResult:
-            return ("success", {}, [])
-
-    provider = TestProvider()
-    result = provider.validate_parameters("action_a", {})
-    assert result is True
-
-
-# Test get_action_metadata returns base metadata.
-def test_get_action_metadata_returns_base() -> None:
-    class TestProvider(CausalIQActionProvider):
-        name = "test"
-        version = "2.0.0"
-
-        def run(
-            self, action, parameters, mode="dry-run", context=None, logger=None
-        ) -> ActionResult:
-            return ("success", {}, [])
-
-    provider = TestProvider()
-    metadata = provider.get_action_metadata()
-    assert metadata["action_name"] == "test"
-    assert metadata["action_version"] == "2.0.0"
-
-
-# Test get_action_metadata includes execution metadata.
-def test_get_action_metadata_includes_execution() -> None:
-    class TestProvider(CausalIQActionProvider):
-        name = "test"
-        version = "1.0.0"
-
-        def run(
-            self, action, parameters, mode="dry-run", context=None, logger=None
-        ) -> ActionResult:
-            self._execution_metadata = {"custom": "value", "count": 42}
-            return ("success", {}, [])
-
-    provider = TestProvider()
-    provider.run("action", {})
-    metadata = provider.get_action_metadata()
-    assert metadata["action_name"] == "test"
-    assert metadata["custom"] == "value"
-    assert metadata["count"] == 42
 
 
 # Test compress raises NotImplementedError for unsupported type.

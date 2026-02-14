@@ -78,13 +78,9 @@ class CausalIQActionProvider(ABC):
     declare which actions it supports via the supported_actions attribute.
     The 'action' input parameter selects which action to execute.
 
-    Providers can also declare supported_types for compress/expand
+    Providers can also declare supported_types for compress/decompress
     operations. Workflow uses these to build a registry of which provider
     handles compression for each data type.
-
-    Providers can capture execution metadata during run() which can be
-    retrieved via get_action_metadata() after execution completes.
-    This supports workflow caching and auditing use cases.
 
     Attributes:
         name: Provider identifier for workflow 'uses' field.
@@ -92,10 +88,9 @@ class CausalIQActionProvider(ABC):
         description: Human-readable description.
         author: Provider author/maintainer.
         supported_actions: Set of action names this provider supports.
-        supported_types: Set of data types this provider can compress/expand.
+        supported_types: Set of data types this provider can compress.
         inputs: Input parameter specifications.
         outputs: Output name to description mapping.
-        _execution_metadata: Internal storage for execution metadata.
     """
 
     # Provider metadata
@@ -114,10 +109,6 @@ class CausalIQActionProvider(ABC):
     inputs: Dict[str, ActionInput] = {}
     outputs: Dict[str, str] = {}  # name -> description mapping
 
-    def __init__(self) -> None:
-        """Initialise provider with empty execution metadata."""
-        self._execution_metadata: Dict[str, Any] = {}
-
     @abstractmethod
     def run(
         self,
@@ -132,10 +123,6 @@ class CausalIQActionProvider(ABC):
         The action parameter specifies which action to execute.
         Implementations should validate that action is in supported_actions.
 
-        Implementations should populate self._execution_metadata with
-        relevant metadata during execution for later retrieval via
-        get_action_metadata().
-
         Args:
             action: Name of the action to execute (must be in
                 supported_actions)
@@ -148,64 +135,16 @@ class CausalIQActionProvider(ABC):
             Tuple of (status, metadata, objects) where:
             - status: "success", "skipped", or "error"
             - metadata: Dictionary of execution metadata
-            - objects: List of serialised object dicts with keys:
+            - objects: List of object dicts with keys:
                 - type: Data type (e.g., "graphml", "json")
                 - name: Object name identifier
-                - content: Serialised string content
+                - content: String content
 
         Raises:
             ActionExecutionError: If action execution fails
             ActionValidationError: If action is not supported
         """
         pass
-
-    def validate_parameters(
-        self, action: str, parameters: Dict[str, Any]
-    ) -> bool:
-        """Validate action and parameters against specifications.
-
-        Validates that:
-        1. The action is in supported_actions (if specified)
-        2. All required parameters are provided
-
-        Args:
-            action: Name of the action to validate
-            parameters: Dictionary of parameter values to validate
-
-        Returns:
-            True if action and parameters are valid
-
-        Raises:
-            ActionValidationError: If validation fails
-        """
-        # Validate action is supported if supported_actions is defined
-        if self.supported_actions:
-            if action not in self.supported_actions:
-                raise ActionValidationError(
-                    f"Unsupported action '{action}'. "
-                    f"Supported: {self.supported_actions}"
-                )
-        return True  # Default: accept all parameters
-
-    def get_action_metadata(self) -> Dict[str, Any]:
-        """Return metadata about the provider execution.
-
-        Called after run() completes to retrieve execution metadata
-        for workflow caching and auditing purposes. Subclasses should
-        populate self._execution_metadata during run() execution.
-
-        The base implementation returns _execution_metadata with
-        standard fields (action_name, action_version) added.
-
-        Returns:
-            Dictionary of metadata relevant to this provider.
-            Always includes 'action_name' and 'action_version'.
-        """
-        base_metadata = {
-            "action_name": self.name,
-            "action_version": self.version,
-        }
-        return {**base_metadata, **self._execution_metadata}
 
     def compress(
         self,
@@ -505,9 +444,6 @@ class CoreActionProvider(CausalIQActionProvider):
         data = JsonEncoder().decode(blob, cache)
         return json.dumps(data, indent=2)
 
-
-# Convenience alias for backward compatibility
-BaseActionProvider = CausalIQActionProvider
 
 # Export ActionProvider for auto-discovery by causaliq-workflow
 ActionProvider = CoreActionProvider
