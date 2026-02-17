@@ -230,7 +230,7 @@ class CoreActionProvider(CausalIQActionProvider):
     GraphML compression uses tokenised node names (2 bytes per node via
     TokenCache) plus compact binary edge list (5 bytes per edge).
 
-    JSON compression uses tokenised JSON encoding via JsonEncoder.
+    JSON compression uses tokenised JSON encoding via JsonCompressor.
 
     It has no supported actions (run() returns skipped).
 

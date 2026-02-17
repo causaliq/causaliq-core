@@ -439,8 +439,8 @@ class SDG:
             and self.edges == other.edges
         )
 
-    def encode(self) -> bytes:
-        """Encode graph to compact binary representation.
+    def compress(self) -> bytes:
+        """Compress graph to compact binary representation.
 
         Format:
         - 2 bytes: number of nodes (uint16, big-endian)
@@ -456,28 +456,28 @@ class SDG:
             ValueError: If graph has more than 65535 nodes or edges.
         """
         if len(self.nodes) > 65535:
-            raise ValueError("SDG.encode() graph has too many nodes")
+            raise ValueError("SDG.compress() graph has too many nodes")
         if len(self.edges) > 65535:
-            raise ValueError("SDG.encode() graph has too many edges")
+            raise ValueError("SDG.compress() graph has too many edges")
 
-        # Build node index for edge encoding
+        # Build node index for edge compression
         node_index = {node: i for i, node in enumerate(self.nodes)}
 
-        # Encode number of nodes
+        # Compress number of nodes
         data = len(self.nodes).to_bytes(2, "big")
 
-        # Encode each node name
+        # Compress each node name
         for node in self.nodes:
             name_bytes = node.encode("utf-8")
             if len(name_bytes) > 65535:
-                raise ValueError("SDG.encode() node name too long")
+                raise ValueError("SDG.compress() node name too long")
             data += len(name_bytes).to_bytes(2, "big")
             data += name_bytes
 
-        # Encode number of edges
+        # Compress number of edges
         data += len(self.edges).to_bytes(2, "big")
 
-        # Encode each edge (source index, target index, edge type)
+        # Compress each edge (source index, target index, edge type)
         for (source, target), edge_type in self.edges.items():
             data += node_index[source].to_bytes(2, "big")
             data += node_index[target].to_bytes(2, "big")
@@ -486,11 +486,11 @@ class SDG:
         return data
 
     @classmethod
-    def decode(cls, data: bytes) -> "SDG":
-        """Decode graph from compact binary representation.
+    def decompress(cls, data: bytes) -> "SDG":
+        """Decompress graph from compact binary representation.
 
         Args:
-            data: Binary data from SDG.encode().
+            data: Binary data from SDG.compress().
 
         Returns:
             Reconstructed SDG instance.
@@ -502,44 +502,44 @@ class SDG:
         from causaliq_core.graph import EdgeType
 
         if not isinstance(data, bytes):
-            raise TypeError("SDG.decode() data must be bytes")
+            raise TypeError("SDG.decompress() data must be bytes")
 
         if len(data) < 2:
-            raise ValueError("SDG.decode() data too short")
+            raise ValueError("SDG.decompress() data too short")
 
         pos = 0
 
-        # Decode number of nodes
+        # Decompress number of nodes
         num_nodes = int.from_bytes(data[pos : pos + 2], "big")
         pos += 2
 
-        # Decode node names
+        # Decompress node names
         nodes = []
         for _ in range(num_nodes):
             if pos + 2 > len(data):
-                raise ValueError("SDG.decode() data truncated")
+                raise ValueError("SDG.decompress() data truncated")
             name_len = int.from_bytes(data[pos : pos + 2], "big")
             pos += 2
             if pos + name_len > len(data):
-                raise ValueError("SDG.decode() data truncated")
+                raise ValueError("SDG.decompress() data truncated")
             node = data[pos : pos + name_len].decode("utf-8")
             pos += name_len
             nodes.append(node)
 
-        # Decode number of edges
+        # Decompress number of edges
         if pos + 2 > len(data):
-            raise ValueError("SDG.decode() data truncated")
+            raise ValueError("SDG.decompress() data truncated")
         num_edges = int.from_bytes(data[pos : pos + 2], "big")
         pos += 2
 
         # Build edge type lookup
         edge_type_lookup = {et.value[0]: et for et in EdgeType}
 
-        # Decode edges
+        # Decompress edges
         edges = []
         for _ in range(num_edges):
             if pos + 5 > len(data):
-                raise ValueError("SDG.decode() data truncated")
+                raise ValueError("SDG.decompress() data truncated")
             source_idx = int.from_bytes(data[pos : pos + 2], "big")
             pos += 2
             target_idx = int.from_bytes(data[pos : pos + 2], "big")
@@ -548,9 +548,9 @@ class SDG:
             pos += 1
 
             if source_idx >= len(nodes) or target_idx >= len(nodes):
-                raise ValueError("SDG.decode() invalid node index")
+                raise ValueError("SDG.decompress() invalid node index")
             if edge_type_id not in edge_type_lookup:
-                raise ValueError("SDG.decode() invalid edge type")
+                raise ValueError("SDG.decompress() invalid edge type")
 
             edge_type = edge_type_lookup[edge_type_id]
             edges.append(
