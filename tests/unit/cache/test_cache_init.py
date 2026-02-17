@@ -1,17 +1,15 @@
 """Unit tests for cache module initialisation."""
 
 
-# Verify cache module can be imported
+# Verify cache module can be imported.
 def test_cache_module_imports() -> None:
-    """Cache module should import without errors."""
     import causaliq_core.cache
 
     assert hasattr(causaliq_core.cache, "__all__")
 
 
-# Verify encoders submodule can be imported
-def test_encoders_module_imports() -> None:
-    """Encoders submodule should import without errors."""
-    import causaliq_core.cache.encoders
+# Verify compressors submodule can be imported.
+def test_compressors_module_imports() -> None:
+    import causaliq_core.cache.compressors
 
-    assert hasattr(causaliq_core.cache.encoders, "__all__")
+    assert hasattr(causaliq_core.cache.compressors, "__all__")

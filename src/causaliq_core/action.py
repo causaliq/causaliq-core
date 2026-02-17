@@ -335,10 +335,10 @@ class CoreActionProvider(CausalIQActionProvider):
 
     def _compress_json(self, content: str, cache: TokenCache) -> bytes:
         """Compress JSON to tokenised binary format."""
-        from causaliq_core.cache.encoders.json_encoder import JsonEncoder
+        from causaliq_core.cache.compressors import JsonCompressor
 
         data = json.loads(content)
-        return JsonEncoder().encode(data, cache)
+        return JsonCompressor().compress(data, cache)
 
     def decompress(
         self,
@@ -439,9 +439,9 @@ class CoreActionProvider(CausalIQActionProvider):
 
     def _decompress_json(self, blob: bytes, cache: TokenCache) -> str:
         """Decompress tokenised binary to JSON string."""
-        from causaliq_core.cache.encoders.json_encoder import JsonEncoder
+        from causaliq_core.cache.compressors import JsonCompressor
 
-        data = JsonEncoder().decode(blob, cache)
+        data = JsonCompressor().decompress(blob, cache)
         return json.dumps(data, indent=2)
 
 

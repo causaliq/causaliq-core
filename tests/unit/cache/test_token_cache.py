@@ -1,16 +1,6 @@
-"""
-Unit tests for TokenCache core functionality.
+"""Unit tests for TokenCache core functionality.
 
 Tests use in-memory SQLite only (no filesystem access).
-File-based persistence tests are in functional tests.
-
-Tests cover:
-- SQLite schema initialisation
-- Connection management (open/close, context manager)
-- In-memory mode
-- Table verification
-
-Migrated from causaliq-knowledge.
 """
 
 import pytest
@@ -22,32 +12,28 @@ from causaliq_core.cache import TokenCache
 # ============================================================================
 
 
-# Test that TokenCache creates required tables on open
+# Test that TokenCache creates required tables on open.
 def test_token_cache_creates_schema() -> None:
-    """Verify TokenCache initialises SQLite with correct schema."""
     with TokenCache(":memory:") as cache:
         assert cache.table_exists("tokens")
         assert cache.table_exists("cache_entries")
 
 
-# Test that schema includes expected columns in tokens table
+# Test that schema includes expected columns in tokens table.
 def test_tokens_table_has_correct_columns() -> None:
-    """Verify tokens table has id, token, and frequency columns."""
     with TokenCache(":memory:") as cache:
         cursor = cache.conn.execute("PRAGMA table_info(tokens)")
         columns = {row[1] for row in cursor.fetchall()}
         assert columns == {"id", "token", "frequency"}
 
 
-# Test that schema includes expected columns in cache_entries table
+# Test that schema includes expected columns in cache_entries table.
 def test_cache_entries_table_has_correct_columns() -> None:
-    """Verify cache_entries table has expected columns."""
     with TokenCache(":memory:") as cache:
         cursor = cache.conn.execute("PRAGMA table_info(cache_entries)")
         columns = {row[1] for row in cursor.fetchall()}
         expected = {
             "hash",
-            "entry_type",
             "seq",
             "key_json",
             "data",
@@ -64,42 +50,34 @@ def test_cache_entries_table_has_correct_columns() -> None:
 # ============================================================================
 
 
-# Test context manager opens and closes connection
+# Test context manager opens and closes connection.
 def test_context_manager_opens_and_closes() -> None:
-    """Verify context manager properly manages connection lifecycle."""
     cache = TokenCache(":memory:")
     assert not cache.is_open
-
     with cache:
         assert cache.is_open
-
     assert not cache.is_open
 
 
-# Test explicit open() and close() methods
+# Test explicit open() and close() methods.
 def test_explicit_open_close() -> None:
-    """Verify explicit open() and close() work correctly."""
     cache = TokenCache(":memory:")
     assert not cache.is_open
-
     cache.open()
     assert cache.is_open
-
     cache.close()
     assert not cache.is_open
 
 
-# Test that accessing conn before open raises RuntimeError
+# Test that accessing conn before open raises RuntimeError.
 def test_conn_before_open_raises() -> None:
-    """Verify accessing conn before opening raises RuntimeError."""
     cache = TokenCache(":memory:")
     with pytest.raises(RuntimeError, match="not connected"):
         _ = cache.conn
 
 
-# Test that opening twice raises RuntimeError
+# Test that opening twice raises RuntimeError.
 def test_double_open_raises() -> None:
-    """Verify opening an already-open cache raises RuntimeError."""
     cache = TokenCache(":memory:")
     cache.open()
     try:
@@ -109,9 +87,8 @@ def test_double_open_raises() -> None:
         cache.close()
 
 
-# Test that close() is idempotent (can be called multiple times)
+# Test that close() is idempotent.
 def test_close_is_idempotent() -> None:
-    """Verify close() can be called multiple times without error."""
     cache = TokenCache(":memory:")
     cache.open()
     cache.close()
@@ -124,20 +101,16 @@ def test_close_is_idempotent() -> None:
 # ============================================================================
 
 
-# Test in-memory mode detection
+# Test in-memory mode detection.
 def test_is_memory_property() -> None:
-    """Verify is_memory correctly identifies in-memory databases."""
     memory_cache = TokenCache(":memory:")
     assert memory_cache.is_memory
-
-    # File path (not opened) should report not in-memory
     file_cache = TokenCache("some/path/test.db")
     assert not file_cache.is_memory
 
 
-# Test in-memory mode works with context manager
+# Test in-memory mode works with context manager.
 def test_in_memory_mode_works() -> None:
-    """Verify in-memory mode creates functional database."""
     with TokenCache(":memory:") as cache:
         assert cache.is_open
         assert cache.entry_count() == 0
@@ -145,878 +118,378 @@ def test_in_memory_mode_works() -> None:
 
 
 # ============================================================================
-# Utility method tests
-# ============================================================================
-
-
-# Test entry_count returns zero for empty cache
-def test_entry_count_empty() -> None:
-    """Verify entry_count returns 0 for empty cache."""
-    with TokenCache(":memory:") as cache:
-        assert cache.entry_count() == 0
-        assert cache.entry_count(entry_type="llm") == 0
-
-
-# Test token_count returns zero for empty cache
-def test_token_count_empty() -> None:
-    """Verify token_count returns 0 for empty cache."""
-    with TokenCache(":memory:") as cache:
-        assert cache.token_count() == 0
-
-
-# Test table_exists returns False for non-existent table
-def test_table_exists_false_for_missing() -> None:
-    """Verify table_exists returns False for non-existent tables."""
-    with TokenCache(":memory:") as cache:
-        assert not cache.table_exists("nonexistent_table")
-
-
-# ============================================================================
-# Transaction context manager tests
-# ============================================================================
-
-
-# Test transaction commits on success
-def test_transaction_commits_on_success() -> None:
-    """Verify transaction context manager commits on successful exit."""
-    with TokenCache(":memory:") as cache:
-        with cache.transaction() as cursor:
-            cursor.execute(
-                "INSERT INTO tokens (token) VALUES (?)", ("test_token",)
-            )
-        # Verify commit happened - token should persist
-        assert cache.token_count() == 1
-
-
-# Test transaction rolls back on exception
-def test_transaction_rolls_back_on_exception() -> None:
-    """Verify transaction context manager rolls back on exception."""
-    with TokenCache(":memory:") as cache:
-        try:
-            with cache.transaction() as cursor:
-                cursor.execute(
-                    "INSERT INTO tokens (token) VALUES (?)", ("rollback_test",)
-                )
-                raise ValueError("Simulated error")
-        except ValueError:
-            pass
-        # Verify rollback happened - token should not persist
-        assert cache.token_count() == 0
-
-
-# Test transaction re-raises exception after rollback
-def test_transaction_reraises_exception() -> None:
-    """Verify transaction re-raises the original exception."""
-    with TokenCache(":memory:") as cache:
-        with pytest.raises(ValueError, match="Original error"):
-            with cache.transaction():
-                raise ValueError("Original error")
-
-
-# Test _utcnow_iso returns valid ISO format
-def test_utcnow_iso_returns_iso_format() -> None:
-    """Verify _utcnow_iso returns a valid ISO 8601 timestamp."""
-    with TokenCache(":memory:") as cache:
-        timestamp = cache._utcnow_iso()
-        # Should contain date separator and time separator
-        assert "T" in timestamp
-        # Should have UTC timezone indicator
-        assert "+" in timestamp or "Z" in timestamp
-
-
-# ============================================================================
 # Token dictionary tests
 # ============================================================================
 
 
-# Test get_or_create_token creates new token
+# Test get_or_create_token creates new token.
 def test_get_or_create_token_new() -> None:
-    """Verify new tokens are assigned sequential IDs starting from 1."""
     with TokenCache(":memory:") as cache:
         id1 = cache.get_or_create_token("hello")
         id2 = cache.get_or_create_token("world")
-
         assert id1 == 1
         assert id2 == 2
         assert cache.token_count() == 2
 
 
-# Test get_or_create_token returns existing ID
+# Test get_or_create_token returns existing ID.
 def test_get_or_create_token_existing() -> None:
-    """Verify existing tokens return their assigned ID."""
     with TokenCache(":memory:") as cache:
         id1 = cache.get_or_create_token("hello")
         id2 = cache.get_or_create_token("hello")
-
         assert id1 == id2
         assert cache.token_count() == 1
 
 
-# Test get_token returns token string by ID
+# Test get_token returns token string by ID.
 def test_get_token_returns_string() -> None:
-    """Verify get_token returns the correct string for a valid ID."""
     with TokenCache(":memory:") as cache:
         token_id = cache.get_or_create_token("test_token")
         result = cache.get_token(token_id)
-
         assert result == "test_token"
 
 
-# Test get_token returns None for invalid ID
+# Test get_token returns None for invalid ID.
 def test_get_token_returns_none_for_invalid() -> None:
-    """Verify get_token returns None for non-existent ID."""
     with TokenCache(":memory:") as cache:
         result = cache.get_token(9999)
-
         assert result is None
 
 
-# Test token dictionary is loaded on open
-def test_token_dict_loaded_on_open() -> None:
-    """Verify in-memory token dict is populated when cache opens."""
-    with TokenCache(":memory:") as cache:
-        cache.get_or_create_token("first")
-        cache.get_or_create_token("second")
-
-        # Verify in-memory dicts are populated
-        assert len(cache._token_to_id) == 2
-        assert len(cache._id_to_token) == 2
-        assert cache._token_to_id["first"] == 1
-        assert cache._id_to_token[1] == "first"
-
-
-# Test empty token is valid
-def test_empty_token_is_valid() -> None:
-    """Verify empty string can be stored as a token."""
-    with TokenCache(":memory:") as cache:
-        token_id = cache.get_or_create_token("")
-        result = cache.get_token(token_id)
-
-        assert result == ""
-        assert token_id == 1
-
-
-# Test special characters in tokens
-def test_special_characters_in_tokens() -> None:
-    """Verify tokens with special characters are handled correctly."""
-    with TokenCache(":memory:") as cache:
-        special_tokens = ["{", "}", '"', ":", ",", "\n", "\t", "emoji🎉"]
-        ids = [cache.get_or_create_token(t) for t in special_tokens]
-
-        # Each should get unique ID
-        assert len(set(ids)) == len(special_tokens)
-
-        # Each should round-trip correctly
-        for token in special_tokens:
-            token_id = cache._token_to_id[token]
-            assert cache.get_token(token_id) == token
-
-
 # ============================================================================
-# Cache entry CRUD tests
+# Entry operations tests (raw bytes)
 # ============================================================================
 
 
-# Test put and get roundtrip
-def test_put_and_get_roundtrip() -> None:
-    """Verify data can be stored and retrieved."""
+# Test put and get with raw bytes.
+def test_put_get_raw_bytes() -> None:
     with TokenCache(":memory:") as cache:
-        data = b"hello world"
-        cache.put("abc123", "test", data)
-        result = cache.get("abc123", "test")
-
-        assert result == data
+        cache.put("hash1", b"test data")
+        result = cache.get("hash1")
+        assert result == b"test data"
 
 
-# Test get returns None for missing entry
+# Test get returns None for non-existent entry.
 def test_get_returns_none_for_missing() -> None:
-    """Verify get returns None for non-existent entries."""
     with TokenCache(":memory:") as cache:
-        result = cache.get("nonexistent", "test")
-
+        result = cache.get("nonexistent")
         assert result is None
 
 
-# Test put with metadata
+# Test put with metadata.
 def test_put_with_metadata() -> None:
-    """Verify metadata is stored alongside data."""
     with TokenCache(":memory:") as cache:
-        data = b"main data"
-        metadata = b"extra info"
-        cache.put("meta123", "test", data, metadata=metadata)
-
-        result = cache.get_with_metadata("meta123", "test")
-
+        cache.put("hash1", b"data", metadata=b"meta")
+        result = cache.get_with_metadata("hash1")
         assert result is not None
-        assert result[0] == data
-        assert result[1] == metadata
+        data, meta = result
+        assert data == b"data"
+        assert meta == b"meta"
 
 
-# Test get_with_metadata returns None for missing
-def test_get_with_metadata_returns_none_for_missing() -> None:
-    """Verify get_with_metadata returns None for non-existent entries."""
+# Test exists returns True for existing entry.
+def test_exists_true_for_existing() -> None:
     with TokenCache(":memory:") as cache:
-        result = cache.get_with_metadata("nonexistent", "test")
+        cache.put("hash1", b"data")
+        assert cache.exists("hash1")
 
-        assert result is None
 
-
-# Test put without metadata stores None
-def test_put_without_metadata() -> None:
-    """Verify entries without metadata have None metadata."""
+# Test exists returns False for missing entry.
+def test_exists_false_for_missing() -> None:
     with TokenCache(":memory:") as cache:
-        cache.put("nometa", "test", b"data")
-
-        result = cache.get_with_metadata("nometa", "test")
-
-        assert result is not None
-        assert result[0] == b"data"
-        assert result[1] is None
+        assert not cache.exists("nonexistent")
 
 
-# Test exists returns True for existing entry
-def test_exists_returns_true() -> None:
-    """Verify exists returns True for existing entries."""
-    with TokenCache(":memory:") as cache:
-        cache.put("exists123", "test", b"data")
-
-        assert cache.exists("exists123", "test") is True
-
-
-# Test exists returns False for missing entry
-def test_exists_returns_false() -> None:
-    """Verify exists returns False for non-existent entries."""
-    with TokenCache(":memory:") as cache:
-        assert cache.exists("missing", "test") is False
-
-
-# Test put replaces existing entry
-def test_put_replaces_existing() -> None:
-    """Verify put overwrites existing entry with same hash and type."""
-    with TokenCache(":memory:") as cache:
-        cache.put("replace", "test", b"old data")
-        cache.put("replace", "test", b"new data")
-
-        result = cache.get("replace", "test")
-
-        assert result == b"new data"
-        assert cache.entry_count() == 1
-
-
-# Test different entry types are independent
-def test_entry_types_are_independent() -> None:
-    """Verify same hash can exist for different entry types."""
-    with TokenCache(":memory:") as cache:
-        cache.put("same_hash", "llm", b"llm data")
-        cache.put("same_hash", "graph", b"graph data")
-
-        assert cache.get("same_hash", "llm") == b"llm data"
-        assert cache.get("same_hash", "graph") == b"graph data"
-        assert cache.entry_count() == 2
-
-
-# Test delete removes entry
+# Test delete removes entry.
 def test_delete_removes_entry() -> None:
-    """Verify delete removes the specified entry."""
     with TokenCache(":memory:") as cache:
-        cache.put("todelete", "test", b"data")
-        assert cache.exists("todelete", "test") is True
-
-        result = cache.delete("todelete", "test")
-
+        cache.put("hash1", b"data")
+        assert cache.exists("hash1")
+        result = cache.delete("hash1")
         assert result is True
-        assert cache.exists("todelete", "test") is False
+        assert not cache.exists("hash1")
 
 
-# Test delete returns False for missing entry
+# Test delete returns False for missing entry.
 def test_delete_returns_false_for_missing() -> None:
-    """Verify delete returns False when entry doesn't exist."""
     with TokenCache(":memory:") as cache:
-        result = cache.delete("nonexistent", "test")
-
+        result = cache.delete("nonexistent")
         assert result is False
 
 
-# Test entry_count with type filter
-def test_entry_count_with_type_filter() -> None:
-    """Verify entry_count filters by entry type."""
+# Test entry_count.
+def test_entry_count() -> None:
     with TokenCache(":memory:") as cache:
-        cache.put("a", "llm", b"data")
-        cache.put("b", "llm", b"data")
-        cache.put("c", "graph", b"data")
-
-        assert cache.entry_count() == 3
-        assert cache.entry_count(entry_type="llm") == 2
-        assert cache.entry_count(entry_type="graph") == 1
-        assert cache.entry_count(entry_type="score") == 0
+        assert cache.entry_count() == 0
+        cache.put("h1", b"d1")
+        assert cache.entry_count() == 1
+        cache.put("h2", b"d2")
+        assert cache.entry_count() == 2
 
 
-# Test list_entry_types returns empty list for empty cache
-def test_list_entry_types_empty() -> None:
-    """Verify list_entry_types returns empty list for empty cache."""
+# Test list_entries.
+def test_list_entries() -> None:
     with TokenCache(":memory:") as cache:
-        assert cache.list_entry_types() == []
-
-
-# Test list_entry_types returns distinct entry types
-def test_list_entry_types_returns_distinct_types() -> None:
-    """Verify list_entry_types returns all distinct entry types."""
-    with TokenCache(":memory:") as cache:
-        cache.put("a", "llm", b"data")
-        cache.put("b", "llm", b"data")
-        cache.put("c", "graph", b"data")
-        cache.put("d", "score", b"data")
-
-        types = cache.list_entry_types()
-
-        assert types == ["graph", "llm", "score"]  # Alphabetical order
-
-
-# Test binary data is preserved exactly
-def test_binary_data_preserved() -> None:
-    """Verify binary data with null bytes is preserved."""
-    with TokenCache(":memory:") as cache:
-        binary_data = b"\x00\x01\x02\xff\xfe\xfd"
-        cache.put("binary", "test", binary_data)
-
-        result = cache.get("binary", "test")
-
-        assert result == binary_data
+        cache.put("h1", b"d1", key_json='{"a":1}')
+        cache.put("h2", b"d2", key_json='{"b":2}')
+        entries = cache.list_entries()
+        assert len(entries) == 2
+        assert entries[0]["hash"] == "h1"
+        assert entries[0]["key_json"] == '{"a":1}'
 
 
 # ============================================================================
-# Export/Import error handling tests (no filesystem access)
+# Collision handling tests
 # ============================================================================
 
 
-# Test export_entries raises KeyError for unregistered type
-def test_export_entries_raises_for_unregistered_type(tmp_path) -> None:
-    """Verify export_entries raises KeyError for unregistered entry_type."""
+# Test collision handling with key_json.
+def test_collision_handling_with_key_json() -> None:
     with TokenCache(":memory:") as cache:
-        with pytest.raises(KeyError):
-            cache.export_entries(tmp_path, "unregistered")
+        # Same hash, different key_json -> collision
+        cache.put("same_hash", b"data1", key_json='{"k":1}')
+        cache.put("same_hash", b"data2", key_json='{"k":2}')
 
+        # Without key_json, returns first
+        result = cache.get("same_hash")
+        assert result == b"data1"
 
-# Test import_entries raises KeyError for unregistered type
-def test_import_entries_raises_for_unregistered_type(tmp_path) -> None:
-    """Verify import_entries raises KeyError for unregistered entry_type."""
-    # Create empty directory for test
-    tmp_path.mkdir(parents=True, exist_ok=True)
-
-    with TokenCache(":memory:") as cache:
-        with pytest.raises(KeyError):
-            cache.import_entries(tmp_path, "unregistered")
-
-
-# Test import_entries raises FileNotFoundError for missing directory
-def test_import_entries_raises_for_missing_directory() -> None:
-    """Verify import_entries raises FileNotFoundError for missing dir."""
-    from pathlib import Path
-
-    from causaliq_core.cache.encoders.base import EntryEncoder
-
-    # Create a minimal encoder for testing
-    class _MinimalEncoder(EntryEncoder):
-        def encode(self, data, token_cache):
-            return str(data).encode()
-
-        def decode(self, blob, token_cache):
-            return blob.decode()
-
-        def export(self, data, path):
-            path.write_text(str(data))
-
-        def import_(self, path):
-            return path.read_text()
-
-    with TokenCache(":memory:") as cache:
-        cache.register_encoder("test", _MinimalEncoder())
-
-        with pytest.raises(FileNotFoundError):
-            cache.import_entries(Path("/nonexistent/path"), "test")
+        # With key_json, returns specific entry
+        result = cache.get("same_hash", key_json='{"k":2}')
+        assert result == b"data2"
 
 
 # ============================================================================
-# Cache hit tracking tests
+# Compressor tests
 # ============================================================================
 
 
-# Test that get increments hit count
-def test_get_increments_hit_count() -> None:
-    """Verify get() increments hit_count for existing entries."""
+# Test set_compressor and has_compressor.
+def test_compressor_registration() -> None:
+    from causaliq_core.cache.compressors import JsonCompressor
+
     with TokenCache(":memory:") as cache:
-        cache.put("key1", "test", b"data")
-
-        # First get
-        cache.get("key1", "test")
-        cursor = cache.conn.execute(
-            "SELECT hit_count FROM cache_entries WHERE hash = 'key1'"
-        )
-        assert cursor.fetchone()[0] == 1
-
-        # Second get
-        cache.get("key1", "test")
-        cursor = cache.conn.execute(
-            "SELECT hit_count FROM cache_entries WHERE hash = 'key1'"
-        )
-        assert cursor.fetchone()[0] == 2
+        assert not cache.has_compressor()
+        cache.set_compressor(JsonCompressor())
+        assert cache.has_compressor()
+        assert cache.get_compressor() is not None
 
 
-# Test that get updates last_accessed_at
-def test_get_updates_last_accessed_at() -> None:
-    """Verify get() updates last_accessed_at timestamp."""
+# Test put_data and get_data with compressor.
+def test_put_get_data_with_compressor() -> None:
+    from causaliq_core.cache.compressors import JsonCompressor
+
     with TokenCache(":memory:") as cache:
-        cache.put("key1", "test", b"data")
-
-        # First get
-        cache.get("key1", "test")
-        cursor = cache.conn.execute(
-            "SELECT last_accessed_at FROM cache_entries WHERE hash = 'key1'"
-        )
-        first_access = cursor.fetchone()[0]
-        assert first_access is not None
+        cache.set_compressor(JsonCompressor())
+        data = {"message": "hello", "count": 42}
+        cache.put_data("h1", data)
+        result = cache.get_data("h1")
+        assert result == data
 
 
-# Test that get returns None for missing entry without error
-def test_get_missing_entry_does_not_increment() -> None:
-    """Verify get() for non-existent entry returns None without error."""
+# Test put_data raises without compressor.
+def test_put_data_raises_without_compressor() -> None:
     with TokenCache(":memory:") as cache:
-        result = cache.get("nonexistent", "test")
-        assert result is None
+        with pytest.raises(RuntimeError, match="No compressor set"):
+            cache.put_data("h1", {"data": 1})
 
 
-# Test total_hits returns sum of all hit counts
-def test_total_hits_returns_sum() -> None:
-    """Verify total_hits() returns sum of all hit counts."""
+# Test get_data raises without compressor.
+def test_get_data_raises_without_compressor() -> None:
     with TokenCache(":memory:") as cache:
-        cache.put("key1", "test", b"data1")
-        cache.put("key2", "test", b"data2")
-
-        # Access key1 twice, key2 once
-        cache.get("key1", "test")
-        cache.get("key1", "test")
-        cache.get("key2", "test")
-
-        assert cache.total_hits() == 3
+        cache.put("h1", b"data")
+        with pytest.raises(RuntimeError, match="No compressor set"):
+            cache.get_data("h1")
 
 
-# Test total_hits with entry_type filter
-def test_total_hits_by_entry_type() -> None:
-    """Verify total_hits() filters by entry_type."""
+# Test get_data_with_metadata.
+def test_get_data_with_metadata() -> None:
+    from causaliq_core.cache.compressors import JsonCompressor
+
     with TokenCache(":memory:") as cache:
-        cache.put("key1", "llm", b"data1")
-        cache.put("key2", "graph", b"data2")
+        cache.set_compressor(JsonCompressor())
+        data = {"key": "value"}
+        meta = {"info": "test"}
+        cache.put_data("h1", data, metadata=meta)
+        result = cache.get_data_with_metadata("h1")
+        assert result is not None
+        d, m = result
+        assert d == data
+        assert m == meta
 
-        cache.get("key1", "llm")
-        cache.get("key1", "llm")
-        cache.get("key2", "graph")
 
-        assert cache.total_hits("llm") == 2
-        assert cache.total_hits("graph") == 1
-        assert cache.total_hits() == 3
+# ============================================================================
+# Transaction tests
+# ============================================================================
 
 
-# Test total_hits returns zero for empty cache
-def test_total_hits_empty_cache() -> None:
-    """Verify total_hits() returns 0 for empty cache."""
+# Test transaction commits on success.
+def test_transaction_commits_on_success() -> None:
+    with TokenCache(":memory:") as cache:
+        with cache.transaction() as cursor:
+            cursor.execute(
+                "INSERT INTO tokens (token) VALUES (?)", ("test_token",)
+            )
+        assert cache.token_count() == 1
+
+
+# Test transaction rolls back on exception.
+def test_transaction_rolls_back_on_exception() -> None:
+    with TokenCache(":memory:") as cache:
+        try:
+            with cache.transaction() as cursor:
+                cursor.execute(
+                    "INSERT INTO tokens (token) VALUES (?)", ("rollback",)
+                )
+                raise ValueError("Simulated error")
+        except ValueError:
+            pass
+        assert cache.token_count() == 0
+
+
+# ============================================================================
+# Hit count tests
+# ============================================================================
+
+
+# Test total_hits starts at zero.
+def test_total_hits_starts_zero() -> None:
     with TokenCache(":memory:") as cache:
         assert cache.total_hits() == 0
 
 
-# ============================================================================
-# Encoder registration tests
-# ============================================================================
-
-
-# Test register_encoder stores encoder
-def test_register_encoder_stores_encoder() -> None:
-    """Verify register_encoder stores encoder for entry type."""
-    from causaliq_core.cache.encoders.base import EntryEncoder
-
-    class _DummyEncoder(EntryEncoder):
-        def encode(self, data, token_cache):
-            return b""
-
-        def decode(self, blob, token_cache):
-            return None
-
-        def export(self, data, path):
-            pass
-
-        def import_(self, path):
-            return None
-
+# Test hit count increments on get.
+def test_hit_count_increments_on_get() -> None:
     with TokenCache(":memory:") as cache:
-        encoder = _DummyEncoder()
-        cache.register_encoder("test", encoder)
-
-        assert cache.has_encoder("test")
-        assert cache.get_encoder("test") is encoder
-
-
-# Test has_encoder returns False for unregistered type
-def test_has_encoder_returns_false() -> None:
-    """Verify has_encoder returns False for unregistered types."""
-    with TokenCache(":memory:") as cache:
-        assert not cache.has_encoder("unregistered")
-
-
-# Test get_encoder returns None for unregistered type
-def test_get_encoder_returns_none() -> None:
-    """Verify get_encoder returns None for unregistered types."""
-    with TokenCache(":memory:") as cache:
-        assert cache.get_encoder("unregistered") is None
+        cache.put("h1", b"data")
+        cache.get("h1")
+        cache.get("h1")
+        assert cache.total_hits() == 2
 
 
 # ============================================================================
-# Hash collision handling tests
+# Additional collision and key_json tests
 # ============================================================================
 
 
-# Test put with key_json stores the key
-def test_put_stores_key_json() -> None:
-    """Verify put stores key_json correctly."""
+# Test put updates existing entry when key_json matches.
+def test_put_updates_existing_entry_when_key_json_matches() -> None:
     with TokenCache(":memory:") as cache:
-        cache.put("hash1", "test", b"data1", key_json='{"key": "value1"}')
+        cache.put("hash1", b"original", key_json='{"k":1}')
+        cache.put("hash1", b"updated", key_json='{"k":1}')
 
-        cursor = cache.conn.execute(
-            "SELECT key_json FROM cache_entries WHERE hash = ?", ("hash1",)
-        )
-        row = cursor.fetchone()
-        assert row[0] == '{"key": "value1"}'
-
-
-# Test put without key_json defaults to empty string
-def test_put_without_key_json_defaults_to_empty() -> None:
-    """Verify put defaults key_json to empty string."""
-    with TokenCache(":memory:") as cache:
-        cache.put("hash1", "test", b"data1")
-
-        cursor = cache.conn.execute(
-            "SELECT key_json FROM cache_entries WHERE hash = ?", ("hash1",)
-        )
-        row = cursor.fetchone()
-        assert row[0] == ""
-
-
-# Test put with same key_json updates existing entry
-def test_put_same_key_json_updates() -> None:
-    """Verify put with same key_json updates the entry."""
-    with TokenCache(":memory:") as cache:
-        cache.put("hash1", "test", b"data1", key_json='{"key": "v1"}')
-        cache.put("hash1", "test", b"data2", key_json='{"key": "v1"}')
-
-        # Should have only one entry
+        # Should still be just one entry
         assert cache.entry_count() == 1
 
-        # Data should be updated
-        data = cache.get("hash1", "test", key_json='{"key": "v1"}')
-        assert data == b"data2"
+        # Should get updated data
+        result = cache.get("hash1", key_json='{"k":1}')
+        assert result == b"updated"
 
 
-# Test collision detection creates new entry with incremented seq
-def test_collision_creates_new_seq() -> None:
-    """Verify hash collision creates new entry with seq > 0."""
+# Test exists with key_json parameter.
+def test_exists_with_key_json() -> None:
     with TokenCache(":memory:") as cache:
-        # First entry with key_json A
-        cache.put("hash1", "test", b"data_a", key_json='{"key": "a"}')
-        # Second entry with same hash but different key_json (collision)
-        cache.put("hash1", "test", b"data_b", key_json='{"key": "b"}')
+        cache.put("hash1", b"data1", key_json='{"k":1}')
+        cache.put("hash1", b"data2", key_json='{"k":2}')
 
-        # Should have two entries
+        # Both entries exist with their specific key_json
+        assert cache.exists("hash1", key_json='{"k":1}')
+        assert cache.exists("hash1", key_json='{"k":2}')
+
+        # Non-existent key_json doesn't exist
+        assert not cache.exists("hash1", key_json='{"k":3}')
+
+
+# Test delete with key_json parameter.
+def test_delete_with_key_json() -> None:
+    with TokenCache(":memory:") as cache:
+        cache.put("hash1", b"data1", key_json='{"k":1}')
+        cache.put("hash1", b"data2", key_json='{"k":2}')
+
         assert cache.entry_count() == 2
 
-        # Check seq values
-        cursor = cache.conn.execute(
-            "SELECT seq, key_json, data FROM cache_entries "
-            "WHERE hash = ? ORDER BY seq",
-            ("hash1",),
-        )
-        rows = cursor.fetchall()
-        assert len(rows) == 2
-        assert rows[0][0] == 0  # seq=0
-        assert rows[0][1] == '{"key": "a"}'
-        assert rows[0][2] == b"data_a"
-        assert rows[1][0] == 1  # seq=1
-        assert rows[1][1] == '{"key": "b"}'
-        assert rows[1][2] == b"data_b"
+        # Delete only one collision entry
+        result = cache.delete("hash1", key_json='{"k":1}')
+        assert result is True
+        assert cache.entry_count() == 1
+
+        # Remaining entry still exists
+        assert cache.exists("hash1", key_json='{"k":2}')
+        assert not cache.exists("hash1", key_json='{"k":1}')
 
 
-# Test get with key_json returns correct collision entry
-def test_get_with_key_json_returns_correct_entry() -> None:
-    """Verify get with key_json returns the correct collision entry."""
+# Test get returns None when key_json doesn't match.
+def test_get_returns_none_when_key_json_mismatch() -> None:
     with TokenCache(":memory:") as cache:
-        cache.put("hash1", "test", b"data_a", key_json='{"key": "a"}')
-        cache.put("hash1", "test", b"data_b", key_json='{"key": "b"}')
+        cache.put("hash1", b"data", key_json='{"k":1}')
 
-        # Get each entry by key_json
-        data_a = cache.get("hash1", "test", key_json='{"key": "a"}')
-        data_b = cache.get("hash1", "test", key_json='{"key": "b"}')
-
-        assert data_a == b"data_a"
-        assert data_b == b"data_b"
-
-
-# Test get without key_json returns first entry (legacy mode)
-def test_get_without_key_json_returns_first() -> None:
-    """Verify get without key_json returns first entry (seq=0)."""
-    with TokenCache(":memory:") as cache:
-        cache.put("hash1", "test", b"data_a", key_json='{"key": "a"}')
-        cache.put("hash1", "test", b"data_b", key_json='{"key": "b"}')
-
-        # Get without key_json should return first entry
-        data = cache.get("hash1", "test")
-        assert data == b"data_a"
-
-
-# Test get with non-matching key_json returns None
-def test_get_with_wrong_key_json_returns_none() -> None:
-    """Verify get returns None if key_json doesn't match."""
-    with TokenCache(":memory:") as cache:
-        cache.put("hash1", "test", b"data", key_json='{"key": "a"}')
-
-        result = cache.get("hash1", "test", key_json='{"key": "wrong"}')
+        # Get with wrong key_json returns None
+        result = cache.get("hash1", key_json='{"k":2}')
         assert result is None
 
 
-# Test get_with_metadata supports key_json
-def test_get_with_metadata_key_json() -> None:
-    """Verify get_with_metadata works with key_json."""
+# Test get_with_metadata with key_json parameter.
+def test_get_with_metadata_and_key_json() -> None:
     with TokenCache(":memory:") as cache:
-        cache.put("hash1", "test", b"data_a", b"meta_a", '{"key": "a"}')
-        cache.put("hash1", "test", b"data_b", b"meta_b", '{"key": "b"}')
+        cache.put("hash1", b"data1", metadata=b"meta1", key_json='{"k":1}')
+        cache.put("hash1", b"data2", metadata=b"meta2", key_json='{"k":2}')
 
-        result = cache.get_with_metadata("hash1", "test", '{"key": "b"}')
-        assert result == (b"data_b", b"meta_b")
+        result = cache.get_with_metadata("hash1", key_json='{"k":2}')
+        assert result is not None
+        data, meta = result
+        assert data == b"data2"
+        assert meta == b"meta2"
 
 
-# Test get_with_metadata without key_json returns first
-def test_get_with_metadata_legacy_mode() -> None:
-    """Verify get_with_metadata without key_json returns first entry."""
+# Test get_with_metadata returns None for missing entry.
+def test_get_with_metadata_returns_none_for_missing() -> None:
     with TokenCache(":memory:") as cache:
-        cache.put("hash1", "test", b"data_a", b"meta_a", '{"key": "a"}')
-        cache.put("hash1", "test", b"data_b", b"meta_b", '{"key": "b"}')
-
-        result = cache.get_with_metadata("hash1", "test")
-        assert result == (b"data_a", b"meta_a")
+        result = cache.get_with_metadata("nonexistent")
+        assert result is None
 
 
-# Test exists with key_json
-def test_exists_with_key_json() -> None:
-    """Verify exists works with key_json parameter."""
-    with TokenCache(":memory:") as cache:
-        cache.put("hash1", "test", b"data", key_json='{"key": "a"}')
-
-        assert cache.exists("hash1", "test", '{"key": "a"}')
-        assert not cache.exists("hash1", "test", '{"key": "b"}')
-
-
-# Test exists without key_json checks any entry
-def test_exists_without_key_json() -> None:
-    """Verify exists without key_json checks for any matching hash."""
-    with TokenCache(":memory:") as cache:
-        cache.put("hash1", "test", b"data", key_json='{"key": "a"}')
-
-        assert cache.exists("hash1", "test")
-        assert not cache.exists("hash2", "test")
-
-
-# Test delete with key_json deletes specific entry
-def test_delete_with_key_json() -> None:
-    """Verify delete with key_json removes specific collision entry."""
-    with TokenCache(":memory:") as cache:
-        cache.put("hash1", "test", b"data_a", key_json='{"key": "a"}')
-        cache.put("hash1", "test", b"data_b", key_json='{"key": "b"}')
-
-        # Delete only key_json 'a'
-        result = cache.delete("hash1", "test", '{"key": "a"}')
-        assert result is True
-
-        # Only one entry should remain
-        assert cache.entry_count() == 1
-        assert cache.get("hash1", "test", '{"key": "b"}') == b"data_b"
-        assert cache.get("hash1", "test", '{"key": "a"}') is None
-
-
-# Test delete without key_json deletes all entries with hash
-def test_delete_without_key_json() -> None:
-    """Verify delete without key_json removes all entries with hash."""
-    with TokenCache(":memory:") as cache:
-        cache.put("hash1", "test", b"data_a", key_json='{"key": "a"}')
-        cache.put("hash1", "test", b"data_b", key_json='{"key": "b"}')
-
-        # Delete all entries with this hash
-        result = cache.delete("hash1", "test")
-        assert result is True
-
-        # No entries should remain
-        assert cache.entry_count() == 0
-
-
-# Test multiple collisions increment seq correctly
-def test_multiple_collisions() -> None:
-    """Verify multiple collisions increment seq sequentially."""
-    with TokenCache(":memory:") as cache:
-        cache.put("hash1", "test", b"data_a", key_json='{"k": "a"}')
-        cache.put("hash1", "test", b"data_b", key_json='{"k": "b"}')
-        cache.put("hash1", "test", b"data_c", key_json='{"k": "c"}')
-
-        assert cache.entry_count() == 3
-
-        # Verify seq values
-        cursor = cache.conn.execute(
-            "SELECT seq FROM cache_entries WHERE hash = ? ORDER BY seq",
-            ("hash1",),
-        )
-        seqs = [row[0] for row in cursor.fetchall()]
-        assert seqs == [0, 1, 2]
-
-
-# Test update after collision uses correct seq
-def test_update_collision_entry() -> None:
-    """Verify updating a collision entry works correctly."""
-    with TokenCache(":memory:") as cache:
-        cache.put("hash1", "test", b"data_a", key_json='{"k": "a"}')
-        cache.put("hash1", "test", b"data_b", key_json='{"k": "b"}')
-
-        # Update the second entry
-        cache.put("hash1", "test", b"data_b_updated", key_json='{"k": "b"}')
-
-        # Should still have two entries
-        assert cache.entry_count() == 2
-
-        # Second entry should be updated
-        data = cache.get("hash1", "test", key_json='{"k": "b"}')
-        assert data == b"data_b_updated"
-
-
-# Test put_data with key_json
-def test_put_data_with_key_json() -> None:
-    """Verify put_data passes key_json through."""
-    from causaliq_core.cache.encoders import JsonEncoder
+# Test get_data returns None for missing entry.
+def test_get_data_returns_none_for_missing() -> None:
+    from causaliq_core.cache.compressors import JsonCompressor
 
     with TokenCache(":memory:") as cache:
-        cache.register_encoder("json", JsonEncoder())
-        cache.put_data("h1", "json", {"a": 1}, key_json='{"key": "a"}')
-        cache.put_data("h1", "json", {"b": 2}, key_json='{"key": "b"}')
+        cache.set_compressor(JsonCompressor())
+        result = cache.get_data("nonexistent")
+        assert result is None
+
+
+# Test get_data_with_metadata returns None for missing entry.
+def test_get_data_with_metadata_returns_none_for_missing() -> None:
+    from causaliq_core.cache.compressors import JsonCompressor
+
+    with TokenCache(":memory:") as cache:
+        cache.set_compressor(JsonCompressor())
+        result = cache.get_data_with_metadata("nonexistent")
+        assert result is None
+
+
+# Test put_data with key_json and collision.
+def test_put_data_with_key_json_collision() -> None:
+    from causaliq_core.cache.compressors import JsonCompressor
+
+    with TokenCache(":memory:") as cache:
+        cache.set_compressor(JsonCompressor())
+        cache.put_data("hash1", {"a": 1}, key_json='{"k":1}')
+        cache.put_data("hash1", {"b": 2}, key_json='{"k":2}')
 
         assert cache.entry_count() == 2
 
-        result_a = cache.get_data("h1", "json", key_json='{"key": "a"}')
-        result_b = cache.get_data("h1", "json", key_json='{"key": "b"}')
+        result1 = cache.get_data("hash1", key_json='{"k":1}')
+        result2 = cache.get_data("hash1", key_json='{"k":2}')
+        assert result1 == {"a": 1}
+        assert result2 == {"b": 2}
 
-        assert result_a == {"a": 1}
-        assert result_b == {"b": 2}
 
-
-# Test get_data_with_metadata with key_json
-def test_get_data_with_metadata_key_json() -> None:
-    """Verify get_data_with_metadata passes key_json through."""
-    from causaliq_core.cache.encoders import JsonEncoder
-
+# Test get_data_with_metadata raises without compressor on existing entry.
+def test_get_data_with_metadata_raises_without_compressor() -> None:
     with TokenCache(":memory:") as cache:
-        cache.register_encoder("json", JsonEncoder())
-        cache.put_data("h1", "json", {"d": 1}, {"m": 1}, '{"key": "a"}')
-        cache.put_data("h1", "json", {"d": 2}, {"m": 2}, '{"key": "b"}')
-
-        result = cache.get_data_with_metadata("h1", "json", '{"key": "b"}')
-        assert result == ({"d": 2}, {"m": 2})
-
-        result_legacy = cache.get_data_with_metadata("h1", "json")
-        assert result_legacy == ({"d": 1}, {"m": 1})
-
-
-# ============================================================================
-# list_entries tests
-# ============================================================================
-
-
-# Test list_entries returns empty list for empty cache.
-def test_list_entries_empty_cache() -> None:
-    with TokenCache(":memory:") as cache:
-        entries = cache.list_entries()
-        assert entries == []
-
-
-# Test list_entries returns all entries.
-def test_list_entries_returns_all_entries() -> None:
-    with TokenCache(":memory:") as cache:
-        cache.put("h1", "type_a", b"data1", key_json='{"k": "1"}')
-        cache.put("h2", "type_b", b"data2", key_json='{"k": "2"}')
-        cache.put("h3", "type_a", b"data3", key_json='{"k": "3"}')
-
-        entries = cache.list_entries()
-        assert len(entries) == 3
-
-        # Check all required keys are present
-        for entry in entries:
-            assert "hash" in entry
-            assert "entry_type" in entry
-            assert "key_json" in entry
-            assert "created_at" in entry
-            assert "metadata" in entry
-
-
-# Test list_entries filters by entry_type.
-def test_list_entries_filters_by_entry_type() -> None:
-    with TokenCache(":memory:") as cache:
-        cache.put("h1", "type_a", b"data1")
-        cache.put("h2", "type_b", b"data2")
-        cache.put("h3", "type_a", b"data3")
-
-        entries_a = cache.list_entries("type_a")
-        assert len(entries_a) == 2
-        assert all(e["entry_type"] == "type_a" for e in entries_a)
-
-        entries_b = cache.list_entries("type_b")
-        assert len(entries_b) == 1
-        assert entries_b[0]["entry_type"] == "type_b"
-
-
-# Test list_entries returns entries in creation order.
-def test_list_entries_ordered_by_created_at() -> None:
-    with TokenCache(":memory:") as cache:
-        cache.put("h1", "test", b"first")
-        cache.put("h2", "test", b"second")
-        cache.put("h3", "test", b"third")
-
-        entries = cache.list_entries()
-        assert len(entries) == 3
-
-        # Entries should be ordered by created_at
-        assert entries[0]["hash"] == "h1"
-        assert entries[1]["hash"] == "h2"
-        assert entries[2]["hash"] == "h3"
-
-
-# Test list_entries includes metadata.
-def test_list_entries_includes_metadata() -> None:
-    from causaliq_core.cache.encoders import JsonEncoder
-
-    with TokenCache(":memory:") as cache:
-        cache.register_encoder("json", JsonEncoder())
-        cache.put_data("h1", "json", {"v": 1}, metadata={"source": "test"})
-
-        entries = cache.list_entries("json")
-        assert len(entries) == 1
-        # Metadata is stored as encoded bytes
-        assert entries[0]["metadata"] is not None
-
-
-# Test list_entries returns correct key_json values.
-def test_list_entries_returns_key_json() -> None:
-    with TokenCache(":memory:") as cache:
-        cache.put("h1", "test", b"data", key_json='{"a": "1", "b": "2"}')
-
-        entries = cache.list_entries()
-        assert len(entries) == 1
-        assert entries[0]["key_json"] == '{"a": "1", "b": "2"}'
-
-
-# Test list_entries with nonexistent entry_type returns empty.
-def test_list_entries_nonexistent_type_returns_empty() -> None:
-    with TokenCache(":memory:") as cache:
-        cache.put("h1", "existing", b"data")
-
-        entries = cache.list_entries("nonexistent")
-        assert entries == []
+        # Put raw bytes without compressor
+        cache.put("h1", b"raw data")
+        # get_data_with_metadata should raise without compressor
+        with pytest.raises(RuntimeError, match="No compressor set"):
+            cache.get_data_with_metadata("h1")

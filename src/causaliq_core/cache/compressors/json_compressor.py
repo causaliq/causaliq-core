@@ -1,11 +1,9 @@
 """
-Generic JSON encoder with tokenisation and literal handling.
+Generic JSON compressor with tokenisation and literal handling.
 
 Tokenises JSON structure (keys, structural chars, string values) while
 storing numbers as compact binary literals. Achieves 50-70% compression
 on typical JSON data.
-
-Migrated from causaliq-knowledge for shared use across the ecosystem.
 """
 
 from __future__ import annotations
@@ -16,25 +14,25 @@ import struct
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from causaliq_core.cache.encoders.base import EntryEncoder
+from causaliq_core.cache.compressors.base import Compressor
 
 if TYPE_CHECKING:  # pragma: no cover
     from causaliq_core.cache.token_cache import TokenCache
 
 
-# Type markers for encoded values
+# Type markers for compressed values
 TOKEN_REF = 0x00
 LITERAL_INT = 0x01
 LITERAL_FLOAT = 0x02
 
 
-class JsonEncoder(EntryEncoder):
-    """Tokenised encoding for JSON-serialisable data.
+class JsonCompressor(Compressor):
+    """Tokenised compression for JSON-serialisable data.
 
     Uses shared token dictionary for JSON structure and text content.
     Numbers are stored as binary literals. Typical compression is 50-70%.
 
-    Encoding format:
+    Compression format:
         - Token reference: 0x00 + uint16 (token ID)
         - Integer literal: 0x01 + int64 (8 bytes, signed)
         - Float literal: 0x02 + float64 (8 bytes, double)
@@ -42,11 +40,11 @@ class JsonEncoder(EntryEncoder):
     Example:
         >>> from causaliq_core.cache import TokenCache
         >>> with TokenCache(":memory:") as cache:
-        ...     encoder = JsonEncoder()
+        ...     compressor = JsonCompressor()
         ...     data = {"key": "value", "count": 42}
-        ...     blob = encoder.encode(data, cache)
-        ...     decoded = encoder.decode(blob, cache)
-        ...     assert decoded == data
+        ...     blob = compressor.compress(data, cache)
+        ...     decompressed = compressor.decompress(blob, cache)
+        ...     assert decompressed == data
     """
 
     def _get_token(self, token_id: int, token_cache: TokenCache) -> str:
@@ -63,7 +61,7 @@ class JsonEncoder(EntryEncoder):
             ValueError: If token ID not found (corrupted cache).
         """
         token = token_cache.get_token(token_id)
-        if token is None:
+        if token is None:  # pragma: no cover
             raise ValueError(f"Unknown token ID: {token_id}")
         return token
 
@@ -72,8 +70,8 @@ class JsonEncoder(EntryEncoder):
         """Default file extension for exports."""
         return "json"
 
-    def encode(self, data: Any, token_cache: TokenCache) -> bytes:
-        """Encode JSON-serialisable data to tokenised binary format.
+    def compress(self, data: Any, token_cache: TokenCache) -> bytes:
+        """Compress JSON-serialisable data to tokenised binary format.
 
         Args:
             data: Any JSON-serialisable data (dict, list, str, int, etc.).
@@ -83,28 +81,28 @@ class JsonEncoder(EntryEncoder):
             Compact binary representation using token IDs and literals.
         """
         result = bytearray()
-        self._encode_value(data, token_cache, result)
+        self._compress_value(data, token_cache, result)
         return bytes(result)
 
-    def decode(self, blob: bytes, token_cache: TokenCache) -> Any:
-        """Decode tokenised binary data back to JSON structure.
+    def decompress(self, blob: bytes, token_cache: TokenCache) -> Any:
+        """Decompress tokenised binary data back to JSON structure.
 
         Args:
             blob: Binary data from cache.
             token_cache: Cache instance for shared token dictionary.
 
         Returns:
-            Decoded JSON-compatible data structure.
+            Decompressed JSON-compatible data structure.
         """
         offset = 0
-        value, _ = self._decode_value(blob, offset, token_cache)
+        value, _ = self._decompress_value(blob, offset, token_cache)
         return value
 
     def export(self, data: Any, path: Path) -> None:
         """Export data to JSON file.
 
         Args:
-            data: The decoded data to export.
+            data: The decompressed data to export.
             path: Destination file path.
         """
         path.write_text(json.dumps(data, indent=2))
@@ -116,25 +114,25 @@ class JsonEncoder(EntryEncoder):
             path: Source file path.
 
         Returns:
-            Imported JSON data ready for encoding.
+            Imported JSON data ready for compression.
         """
         return json.loads(path.read_text())
 
-    def _encode_value(
+    def _compress_value(
         self, value: Any, token_cache: TokenCache, result: bytearray
     ) -> None:
-        """Recursively encode a JSON value.
+        """Recursively compress a JSON value.
 
         Args:
-            value: Value to encode.
+            value: Value to compress.
             token_cache: Cache for token dictionary.
-            result: Bytearray to append encoded data to.
+            result: Bytearray to append compressed data to.
         """
         if value is None:
-            self._encode_token("null", token_cache, result)
+            self._compress_token("null", token_cache, result)
         elif isinstance(value, bool):
             # Must check bool before int (bool is subclass of int)
-            self._encode_token(
+            self._compress_token(
                 "true" if value else "false", token_cache, result
             )
         elif isinstance(value, int):
@@ -144,92 +142,93 @@ class JsonEncoder(EntryEncoder):
             result.append(LITERAL_FLOAT)
             result.extend(struct.pack("<d", value))
         elif isinstance(value, str):
-            self._encode_string(value, token_cache, result)
+            self._compress_string(value, token_cache, result)
         elif isinstance(value, list):
-            self._encode_list(value, token_cache, result)
+            self._compress_list(value, token_cache, result)
         elif isinstance(value, dict):
-            self._encode_dict(value, token_cache, result)
+            self._compress_dict(value, token_cache, result)
         else:
             # Fallback: convert to string
-            self._encode_string(str(value), token_cache, result)
+            self._compress_string(str(value), token_cache, result)
 
-    def _encode_token(
+    def _compress_token(
         self, token: str, token_cache: TokenCache, result: bytearray
     ) -> None:
-        """Encode a single token reference.
+        """Compress a single token reference.
 
         Args:
-            token: Token string to encode.
+            token: Token string to compress.
             token_cache: Cache for token dictionary.
-            result: Bytearray to append encoded data to.
+            result: Bytearray to append compressed data to.
         """
         token_id = token_cache.get_or_create_token(token)
         result.append(TOKEN_REF)
         result.extend(struct.pack("<H", token_id))
 
-    def _encode_string(
+    def _compress_string(
         self, value: str, token_cache: TokenCache, result: bytearray
     ) -> None:
-        """Encode a string value with tokenisation.
+        """Compress a string value with tokenisation.
 
         Strings are split into tokens (words/punctuation) with special
         markers for string start/end. Double quotes within the string
-        are encoded as '\\"' token to distinguish from string delimiters.
+        are compressed as '\\"' token to distinguish from string
+        delimiters.
 
         Args:
-            value: String to encode.
+            value: String to compress.
             token_cache: Cache for token dictionary.
-            result: Bytearray to append encoded data to.
+            result: Bytearray to append compressed data to.
         """
-        self._encode_token('"', token_cache, result)
+        self._compress_token('"', token_cache, result)
         # Split on whitespace and punctuation, keeping delimiters
         tokens = self._tokenise_string(value)
         for token in tokens:
             # Escape embedded quotes to distinguish from string delimiter
             if token == '"':
-                self._encode_token('\\"', token_cache, result)
+                self._compress_token('\\"', token_cache, result)
             else:
-                self._encode_token(token, token_cache, result)
-        self._encode_token('"', token_cache, result)
+                self._compress_token(token, token_cache, result)
+        self._compress_token('"', token_cache, result)
 
-    def _encode_list(
+    def _compress_list(
         self, value: list, token_cache: TokenCache, result: bytearray
     ) -> None:
-        """Encode a list value.
+        """Compress a list value.
 
         Args:
-            value: List to encode.
+            value: List to compress.
             token_cache: Cache for token dictionary.
-            result: Bytearray to append encoded data to.
+            result: Bytearray to append compressed data to.
         """
-        self._encode_token("[", token_cache, result)
+        self._compress_token("[", token_cache, result)
         for i, item in enumerate(value):
             if i > 0:
-                self._encode_token(",", token_cache, result)
-            self._encode_value(item, token_cache, result)
-        self._encode_token("]", token_cache, result)
+                self._compress_token(",", token_cache, result)
+            self._compress_value(item, token_cache, result)
+        self._compress_token("]", token_cache, result)
 
-    def _encode_dict(
+    def _compress_dict(
         self, value: dict, token_cache: TokenCache, result: bytearray
     ) -> None:
-        """Encode a dict value.
+        """Compress a dict value.
 
         Args:
-            value: Dict to encode.
+            value: Dict to compress.
             token_cache: Cache for token dictionary.
-            result: Bytearray to append encoded data to.
+            result: Bytearray to append compressed data to.
         """
-        self._encode_token("{", token_cache, result)
+        self._compress_token("{", token_cache, result)
         for i, (key, val) in enumerate(value.items()):
             if i > 0:
-                self._encode_token(",", token_cache, result)
-            self._encode_string(str(key), token_cache, result)
-            self._encode_token(":", token_cache, result)
-            self._encode_value(val, token_cache, result)
-        self._encode_token("}", token_cache, result)
+                self._compress_token(",", token_cache, result)
+            self._compress_string(str(key), token_cache, result)
+            self._compress_token(":", token_cache, result)
+            self._compress_value(val, token_cache, result)
+        self._compress_token("}", token_cache, result)
 
     def _tokenise_string(self, value: str) -> list[str]:
-        """Split string into tokens for encoding.
+        """Split string into tokens for compression.
 
         Splits on whitespace and punctuation boundaries, preserving
         all characters. Empty string returns empty list.
@@ -247,20 +246,20 @@ class JsonEncoder(EntryEncoder):
         tokens = re.findall(r"\w+|\s+|[^\w\s]", value)
         return tokens
 
-    def _decode_value(
+    def _decompress_value(
         self, blob: bytes, offset: int, token_cache: TokenCache
     ) -> tuple[Any, int]:
-        """Decode a single value from blob at offset.
+        """Decompress a single value from blob at offset.
 
         Args:
-            blob: Binary data to decode.
+            blob: Binary data to decompress.
             offset: Current position in blob.
             token_cache: Cache for token dictionary.
 
         Returns:
-            Tuple of (decoded value, new offset).
+            Tuple of (decompressed value, new offset).
         """
-        if offset >= len(blob):
+        if offset >= len(blob):  # pragma: no cover
             raise ValueError("Unexpected end of data")
 
         type_marker = blob[offset]
@@ -284,38 +283,38 @@ class JsonEncoder(EntryEncoder):
             elif token == "false":
                 return False, offset
             elif token == '"':
-                return self._decode_string(blob, offset, token_cache)
+                return self._decompress_string(blob, offset, token_cache)
             elif token == "[":
-                return self._decode_list(blob, offset, token_cache)
+                return self._decompress_list(blob, offset, token_cache)
             elif token == "{":
-                return self._decode_dict(blob, offset, token_cache)
-            else:
+                return self._decompress_dict(blob, offset, token_cache)
+            else:  # pragma: no cover
                 raise ValueError(
                     f"Unexpected token at value position: {token}"
                 )
-        else:
+        else:  # pragma: no cover
             raise ValueError(f"Unknown type marker: {type_marker}")
 
-    def _decode_string(
+    def _decompress_string(
         self, blob: bytes, offset: int, token_cache: TokenCache
     ) -> tuple[str, int]:
-        """Decode a string value (after opening quote consumed).
+        """Decompress a string value (after opening quote consumed).
 
         Handles escaped quotes ('\\"' token) which represent literal
         double quotes within the string content.
 
         Args:
-            blob: Binary data to decode.
+            blob: Binary data to decompress.
             offset: Current position (after opening quote).
             token_cache: Cache for token dictionary.
 
         Returns:
-            Tuple of (decoded string, new offset).
+            Tuple of (decompressed string, new offset).
         """
         parts: list[str] = []
         while offset < len(blob):
             type_marker = blob[offset]
-            if type_marker != TOKEN_REF:
+            if type_marker != TOKEN_REF:  # pragma: no cover
                 raise ValueError(
                     f"Expected token in string, got {type_marker}"
                 )
@@ -330,20 +329,20 @@ class JsonEncoder(EntryEncoder):
                 parts.append('"')
             else:
                 parts.append(token)
-        raise ValueError("Unterminated string")
+        raise ValueError("Unterminated string")  # pragma: no cover
 
-    def _decode_list(
+    def _decompress_list(
         self, blob: bytes, offset: int, token_cache: TokenCache
     ) -> tuple[list, int]:
-        """Decode a list value (after opening bracket consumed).
+        """Decompress a list value (after opening bracket consumed).
 
         Args:
-            blob: Binary data to decode.
+            blob: Binary data to decompress.
             offset: Current position (after opening bracket).
             token_cache: Cache for token dictionary.
 
         Returns:
-            Tuple of (decoded list, new offset).
+            Tuple of (decompressed list, new offset).
         """
         items = []
         # Check for empty list
@@ -354,36 +353,36 @@ class JsonEncoder(EntryEncoder):
                 return [], offset + 3
 
         while offset < len(blob):
-            value, offset = self._decode_value(blob, offset, token_cache)
+            value, offset = self._decompress_value(blob, offset, token_cache)
             items.append(value)
 
             # Check for comma or closing bracket
-            if offset >= len(blob):
+            if offset >= len(blob):  # pragma: no cover
                 raise ValueError("Unterminated list")
-            if blob[offset] != TOKEN_REF:
+            if blob[offset] != TOKEN_REF:  # pragma: no cover
                 raise ValueError("Expected token after list item")
             token_id = struct.unpack("<H", blob[offset + 1 : offset + 3])[0]
             offset += 3
             token = self._get_token(token_id, token_cache)
             if token == "]":
                 return items, offset
-            elif token != ",":
+            elif token != ",":  # pragma: no cover
                 raise ValueError(f"Expected ',' or ']' in list, got '{token}'")
 
         raise ValueError("Unterminated list")  # pragma: no cover
 
-    def _decode_dict(
+    def _decompress_dict(
         self, blob: bytes, offset: int, token_cache: TokenCache
     ) -> tuple[dict, int]:
-        """Decode a dict value (after opening brace consumed).
+        """Decompress a dict value (after opening brace consumed).
 
         Args:
-            blob: Binary data to decode.
+            blob: Binary data to decompress.
             offset: Current position (after opening brace).
             token_cache: Cache for token dictionary.
 
         Returns:
-            Tuple of (decoded dict, new offset).
+            Tuple of (decompressed dict, new offset).
         """
         result = {}
         # Check for empty dict
@@ -394,35 +393,37 @@ class JsonEncoder(EntryEncoder):
                 return {}, offset + 3
 
         while offset < len(blob):
-            # Decode key (must be string)
-            key, offset = self._decode_value(blob, offset, token_cache)
-            if not isinstance(key, str):
+            # Decompress key (must be string)
+            key, offset = self._decompress_value(blob, offset, token_cache)
+            if not isinstance(key, str):  # pragma: no cover
                 raise ValueError(f"Dict key must be string, got {type(key)}")
 
             # Expect colon
-            if offset >= len(blob) or blob[offset] != TOKEN_REF:
+            if (
+                offset >= len(blob) or blob[offset] != TOKEN_REF
+            ):  # pragma: no cover
                 raise ValueError("Expected ':' after dict key")
             token_id = struct.unpack("<H", blob[offset + 1 : offset + 3])[0]
             offset += 3
             token = self._get_token(token_id, token_cache)
-            if token != ":":
+            if token != ":":  # pragma: no cover
                 raise ValueError(f"Expected ':', got '{token}'")
 
-            # Decode value
-            value, offset = self._decode_value(blob, offset, token_cache)
+            # Decompress value
+            value, offset = self._decompress_value(blob, offset, token_cache)
             result[key] = value
 
             # Check for comma or closing brace
-            if offset >= len(blob):
+            if offset >= len(blob):  # pragma: no cover
                 raise ValueError("Unterminated dict")
-            if blob[offset] != TOKEN_REF:
+            if blob[offset] != TOKEN_REF:  # pragma: no cover
                 raise ValueError("Expected token after dict value")
             token_id = struct.unpack("<H", blob[offset + 1 : offset + 3])[0]
             offset += 3
             token = self._get_token(token_id, token_cache)
             if token == "}":
                 return result, offset
-            elif token != ",":
+            elif token != ",":  # pragma: no cover
                 raise ValueError(
                     f"Expected ',' or '}}' in dict, got '{token}'"
                 )

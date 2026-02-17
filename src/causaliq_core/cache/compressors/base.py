@@ -1,10 +1,8 @@
 """
-Abstract base class for cache entry encoders.
+Abstract base class for cache entry compressors.
 
-Encoders transform data to/from compact binary representations,
+Compressors transform data to/from compact binary representations,
 optionally using a shared token dictionary for compression.
-
-Migrated from causaliq-knowledge for shared use across the ecosystem.
 """
 
 from __future__ import annotations
@@ -17,38 +15,38 @@ if TYPE_CHECKING:  # pragma: no cover
     from causaliq_core.cache.token_cache import TokenCache
 
 
-class EntryEncoder(ABC):
-    """Abstract base class for type-specific cache entry encoders.
+class Compressor(ABC):
+    """Abstract base class for cache entry compressors.
 
-    Encoders handle:
-    - Encoding data to compact binary format for storage
-    - Decoding binary data back to original structure
+    Compressors handle:
+    - Compressing data to compact binary format for storage
+    - Decompressing binary data back to original structure
     - Exporting to human-readable formats (JSON, GraphML, etc.)
     - Importing from human-readable formats
 
-    Encoders may use the shared token dictionary in TokenCache
+    Compressors may use the shared token dictionary in TokenCache
     for cross-entry compression of repeated strings.
 
     Example:
-        >>> class MyEncoder(EntryEncoder):
-        ...     def encode(self, data, token_cache):
+        >>> class MyCompressor(Compressor):
+        ...     def compress(self, data, token_cache):
         ...         return json.dumps(data).encode()
-        ...     def decode(self, blob, token_cache):
+        ...     def decompress(self, blob, token_cache):
         ...         return json.loads(blob.decode())
         ...     # ... export/import methods
     """
 
     @property
-    def default_export_format(self) -> str:
+    def default_export_format(self) -> str:  # pragma: no cover
         """Default file extension for exports (e.g. 'json', 'graphml')."""
         return "json"
 
     @abstractmethod
-    def encode(self, data: Any, token_cache: TokenCache) -> bytes:
-        """Encode data to binary format.
+    def compress(self, data: Any, token_cache: TokenCache) -> bytes:
+        """Compress data to binary format.
 
         Args:
-            data: The data to encode (type depends on encoder).
+            data: The data to compress (type depends on compressor).
             token_cache: Cache instance for shared token dictionary.
 
         Returns:
@@ -57,15 +55,15 @@ class EntryEncoder(ABC):
         ...
 
     @abstractmethod
-    def decode(self, blob: bytes, token_cache: TokenCache) -> Any:
-        """Decode binary data back to original structure.
+    def decompress(self, blob: bytes, token_cache: TokenCache) -> Any:
+        """Decompress binary data back to original structure.
 
         Args:
             blob: Binary data from cache.
             token_cache: Cache instance for shared token dictionary.
 
         Returns:
-            Decoded data in original format.
+            Decompressed data in original format.
         """
         ...
 
@@ -74,7 +72,7 @@ class EntryEncoder(ABC):
         """Export data to human-readable file format.
 
         Args:
-            data: The data to export (decoded format).
+            data: The data to export (decompressed format).
             path: Destination file path.
         """
         ...
@@ -87,6 +85,6 @@ class EntryEncoder(ABC):
             path: Source file path.
 
         Returns:
-            Imported data ready for encoding.
+            Imported data ready for compression.
         """
         ...

@@ -6,8 +6,6 @@ Provides efficient storage for cache entries with:
 - In-memory mode via :memory:
 - Concurrency support via SQLite locking
 - Shared token dictionary for cross-entry compression
-
-Migrated from causaliq-knowledge for shared use across the ecosystem.
 """
 
 from __future__ import annotations
@@ -19,7 +17,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Iterator
 
 if TYPE_CHECKING:  # pragma: no cover
-    from causaliq_core.cache.encoders.base import EntryEncoder
+    from causaliq_core.cache.compressors.base import Compressor
 
 
 class TokenCache:
@@ -31,13 +29,13 @@ class TokenCache:
 
     Example:
         >>> with TokenCache(":memory:") as cache:
-        ...     cache.put("abc123", "test", b"hello")
-        ...     data = cache.get("abc123", "test")
+        ...     cache.put("abc123", b"hello")
+        ...     data = cache.get("abc123")
     """
 
     # SQL statements for schema creation
     _SCHEMA_SQL = """
-        -- Token dictionary (grows dynamically, shared across encoders)
+        -- Token dictionary (grows dynamically, shared across compressors)
         CREATE TABLE IF NOT EXISTS tokens (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             token TEXT UNIQUE NOT NULL,
@@ -47,7 +45,6 @@ class TokenCache:
         -- Generic cache entries with collision handling
         CREATE TABLE IF NOT EXISTS cache_entries (
             hash TEXT NOT NULL,
-            entry_type TEXT NOT NULL,
             seq INTEGER DEFAULT 0,
             key_json TEXT NOT NULL,
             data BLOB NOT NULL,
@@ -55,12 +52,10 @@ class TokenCache:
             metadata BLOB,
             hit_count INTEGER DEFAULT 0,
             last_accessed_at TEXT,
-            PRIMARY KEY (hash, entry_type, seq)
+            PRIMARY KEY (hash, seq)
         );
 
-        -- Indexes for common queries
-        CREATE INDEX IF NOT EXISTS idx_entry_type
-            ON cache_entries(entry_type);
+        -- Index for common queries
         CREATE INDEX IF NOT EXISTS idx_created_at
             ON cache_entries(created_at);
     """
@@ -77,8 +72,8 @@ class TokenCache:
         # In-memory token dictionary for fast lookup
         self._token_to_id: dict[str, int] = {}
         self._id_to_token: dict[int, str] = {}
-        # Registered encoders for auto-encoding (entry_type -> encoder)
-        self._encoders: dict[str, EntryEncoder] = {}
+        # Single compressor for auto-compressing data
+        self._compressor: Compressor | None = None
 
     @property
     def conn(self) -> sqlite3.Connection:
@@ -117,7 +112,7 @@ class TokenCache:
         )
         # Enable foreign keys and WAL mode for better concurrency
         self._conn.execute("PRAGMA foreign_keys = ON")
-        if not self.is_memory:
+        if not self.is_memory:  # pragma: no cover
             self._conn.execute("PRAGMA journal_mode = WAL")
 
         self._init_schema()
@@ -140,7 +135,7 @@ class TokenCache:
         cursor = self.conn.execute("SELECT id, token FROM tokens")
         self._token_to_id.clear()
         self._id_to_token.clear()
-        for row in cursor:
+        for row in cursor:  # pragma: no cover
             token_id, token = row[0], row[1]
             self._token_to_id[token] = token_id
             self._id_to_token[token_id] = token
@@ -196,42 +191,15 @@ class TokenCache:
         )
         return cursor.fetchone() is not None
 
-    def entry_count(self, entry_type: str | None = None) -> int:
-        """Count cache entries, optionally filtered by type.
-
-        Args:
-            entry_type: If provided, count only entries of this type.
+    def entry_count(self) -> int:
+        """Count cache entries.
 
         Returns:
-            Number of matching entries.
+            Number of entries in the cache.
         """
-        if entry_type is None:
-            cursor = self.conn.execute("SELECT COUNT(*) FROM cache_entries")
-        else:
-            cursor = self.conn.execute(
-                "SELECT COUNT(*) FROM cache_entries WHERE entry_type = ?",
-                (entry_type,),
-            )
+        cursor = self.conn.execute("SELECT COUNT(*) FROM cache_entries")
         row = cursor.fetchone()
         return int(row[0]) if row else 0
-
-    def list_entry_types(self) -> list[str]:
-        """List all distinct entry types in the cache.
-
-        Returns:
-            List of entry type names found in the cache.
-
-        Example:
-            >>> with TokenCache(":memory:") as cache:
-            ...     cache.register_encoder("llm", LLMEntryEncoder())
-            ...     cache.put_data("h1", "llm", {"data": "test"})
-            ...     cache.list_entry_types()
-            ['llm']
-        """
-        cursor = self.conn.execute(
-            "SELECT DISTINCT entry_type FROM cache_entries ORDER BY entry_type"
-        )
-        return [row[0] for row in cursor.fetchall()]
 
     def token_count(self) -> int:
         """Count tokens in the dictionary.
@@ -243,82 +211,59 @@ class TokenCache:
         row = cursor.fetchone()
         return int(row[0]) if row else 0
 
-    def list_entries(
-        self,
-        entry_type: str | None = None,
-    ) -> list[dict[str, Any]]:
+    def list_entries(self) -> list[dict[str, Any]]:
         """List all cache entries with metadata.
 
         Returns a list of dictionaries containing entry details including
-        hash, entry_type, key_json, created_at, and metadata blob.
-
-        Args:
-            entry_type: If provided, list only entries of this type.
+        hash, key_json, created_at, and metadata blob.
 
         Returns:
-            List of entry dictionaries with keys: hash, entry_type,
-            key_json, created_at, metadata (raw bytes or None).
+            List of entry dictionaries with keys: hash, key_json,
+            created_at, metadata (raw bytes or None).
 
         Example:
             >>> with TokenCache(":memory:") as cache:
-            ...     cache.register_encoder("json", JsonEncoder())
-            ...     cache.put_data("h1", "json", {"test": 1})
-            ...     entries = cache.list_entries("json")
+            ...     cache.set_compressor(JsonCompressor())
+            ...     cache.put_data("h1", {"test": 1})
+            ...     entries = cache.list_entries()
             ...     len(entries)
             1
         """
-        if entry_type is None:
-            cursor = self.conn.execute(
-                "SELECT hash, entry_type, key_json, created_at, metadata "
-                "FROM cache_entries ORDER BY created_at"
-            )
-        else:
-            cursor = self.conn.execute(
-                "SELECT hash, entry_type, key_json, created_at, metadata "
-                "FROM cache_entries WHERE entry_type = ? ORDER BY created_at",
-                (entry_type,),
-            )
+        cursor = self.conn.execute(
+            "SELECT hash, key_json, created_at, metadata "
+            "FROM cache_entries ORDER BY created_at"
+        )
 
         entries = []
         for row in cursor:
             entries.append(
                 {
                     "hash": row[0],
-                    "entry_type": row[1],
-                    "key_json": row[2],
-                    "created_at": row[3],
-                    "metadata": row[4],
+                    "key_json": row[1],
+                    "created_at": row[2],
+                    "metadata": row[3],
                 }
             )
         return entries
 
-    def total_hits(self, entry_type: str | None = None) -> int:
+    def total_hits(self) -> int:
         """Get total cache hits across all entries.
-
-        Args:
-            entry_type: If provided, count only hits for this entry type.
 
         Returns:
             Total hit count.
         """
-        if entry_type is None:
-            cursor = self.conn.execute(
-                "SELECT COALESCE(SUM(hit_count), 0) FROM cache_entries"
-            )
-        else:
-            cursor = self.conn.execute(
-                "SELECT COALESCE(SUM(hit_count), 0) FROM cache_entries "
-                "WHERE entry_type = ?",
-                (entry_type,),
-            )
+        cursor = self.conn.execute(
+            "SELECT COALESCE(SUM(hit_count), 0) FROM cache_entries"
+        )
         row = cursor.fetchone()
         return int(row[0]) if row else 0
 
     def get_or_create_token(self, token: str) -> int:
         """Get token ID, creating a new entry if needed.
 
-        This method is used by encoders to compress strings to integer IDs.
-        The token dictionary grows dynamically as new tokens are encountered.
+        This method is used by compressors to compress strings to integer
+        IDs. The token dictionary grows dynamically as new tokens are
+        encountered.
 
         Args:
             token: The string token to look up or create.
@@ -356,7 +301,8 @@ class TokenCache:
     def get_token(self, token_id: int) -> str | None:
         """Get token string by ID.
 
-        This method is used by decoders to expand integer IDs back to strings.
+        This method is used by decompressors to expand integer IDs back
+        to strings.
 
         Args:
             token_id: The integer ID to look up.
@@ -373,30 +319,28 @@ class TokenCache:
     def put(
         self,
         hash: str,
-        entry_type: str,
         data: bytes,
         metadata: bytes | None = None,
         key_json: str = "",
     ) -> None:
         """Store a cache entry with collision handling.
 
-        If an entry with the same hash and entry_type exists but different
-        key_json, a new entry is created with incremented seq (collision).
+        If an entry with the same hash exists but different key_json,
+        a new entry is created with incremented seq (collision).
         If key_json matches, the existing entry is updated.
 
         Args:
             hash: Unique identifier for the entry (e.g. SHA-256 truncated).
-            entry_type: Type of entry (e.g. 'llm', 'graph', 'score').
             data: Binary data to store.
             metadata: Optional binary metadata.
             key_json: Original unhashed key as JSON string for collision
                 detection. Empty string if not provided.
         """
-        # Check for existing entries with this hash and entry_type
+        # Check for existing entries with this hash
         cursor = self.conn.execute(
             "SELECT seq, key_json FROM cache_entries "
-            "WHERE hash = ? AND entry_type = ? ORDER BY seq",
-            (hash, entry_type),
+            "WHERE hash = ? ORDER BY seq",
+            (hash,),
         )
         rows = cursor.fetchall()
 
@@ -404,11 +348,10 @@ class TokenCache:
             # No existing entry - insert with seq=0
             self.conn.execute(
                 "INSERT INTO cache_entries "
-                "(hash, entry_type, seq, key_json, data, created_at, metadata)"
-                " VALUES (?, ?, 0, ?, ?, ?, ?)",
+                "(hash, seq, key_json, data, created_at, metadata)"
+                " VALUES (?, 0, ?, ?, ?, ?)",
                 (
                     hash,
-                    entry_type,
                     key_json,
                     data,
                     self._utcnow_iso(),
@@ -423,13 +366,12 @@ class TokenCache:
                     self.conn.execute(
                         "UPDATE cache_entries SET data = ?, metadata = ?, "
                         "created_at = ? "
-                        "WHERE hash = ? AND entry_type = ? AND seq = ?",
+                        "WHERE hash = ? AND seq = ?",
                         (
                             data,
                             metadata,
                             self._utcnow_iso(),
                             hash,
-                            entry_type,
                             seq,
                         ),
                     )
@@ -440,11 +382,10 @@ class TokenCache:
             max_seq = max(row[0] for row in rows)
             self.conn.execute(
                 "INSERT INTO cache_entries "
-                "(hash, entry_type, seq, key_json, data, created_at, metadata)"
-                " VALUES (?, ?, ?, ?, ?, ?, ?)",
+                "(hash, seq, key_json, data, created_at, metadata)"
+                " VALUES (?, ?, ?, ?, ?, ?)",
                 (
                     hash,
-                    entry_type,
                     max_seq + 1,
                     key_json,
                     data,
@@ -458,7 +399,6 @@ class TokenCache:
     def get(
         self,
         hash: str,
-        entry_type: str,
         key_json: str = "",
     ) -> bytes | None:
         """Retrieve a cache entry and increment hit count.
@@ -468,7 +408,6 @@ class TokenCache:
 
         Args:
             hash: Unique identifier for the entry.
-            entry_type: Type of entry to retrieve.
             key_json: Original unhashed key for collision verification.
                 If empty string, returns first matching entry (legacy mode).
 
@@ -479,15 +418,15 @@ class TokenCache:
             # Exact match required for collision safety
             cursor = self.conn.execute(
                 "SELECT seq, data FROM cache_entries "
-                "WHERE hash = ? AND entry_type = ? AND key_json = ?",
-                (hash, entry_type, key_json),
+                "WHERE hash = ? AND key_json = ?",
+                (hash, key_json),
             )
         else:
             # Legacy mode: return first match (seq=0)
             cursor = self.conn.execute(
                 "SELECT seq, data FROM cache_entries "
-                "WHERE hash = ? AND entry_type = ? ORDER BY seq LIMIT 1",
-                (hash, entry_type),
+                "WHERE hash = ? ORDER BY seq LIMIT 1",
+                (hash,),
             )
 
         row = cursor.fetchone()
@@ -497,8 +436,8 @@ class TokenCache:
             self.conn.execute(
                 "UPDATE cache_entries SET hit_count = hit_count + 1, "
                 "last_accessed_at = ? "
-                "WHERE hash = ? AND entry_type = ? AND seq = ?",
-                (self._utcnow_iso(), hash, entry_type, seq),
+                "WHERE hash = ? AND seq = ?",
+                (self._utcnow_iso(), hash, seq),
             )
             self.conn.commit()
             result: bytes = data
@@ -508,14 +447,12 @@ class TokenCache:
     def get_with_metadata(
         self,
         hash: str,
-        entry_type: str,
         key_json: str = "",
     ) -> tuple[bytes, bytes | None] | None:
         """Retrieve a cache entry with its metadata.
 
         Args:
             hash: Unique identifier for the entry.
-            entry_type: Type of entry to retrieve.
             key_json: Original unhashed key for collision verification.
                 If empty string, returns first matching entry (legacy mode).
 
@@ -525,24 +462,23 @@ class TokenCache:
         if key_json:
             cursor = self.conn.execute(
                 "SELECT data, metadata FROM cache_entries "
-                "WHERE hash = ? AND entry_type = ? AND key_json = ?",
-                (hash, entry_type, key_json),
+                "WHERE hash = ? AND key_json = ?",
+                (hash, key_json),
             )
         else:
             cursor = self.conn.execute(
                 "SELECT data, metadata FROM cache_entries "
-                "WHERE hash = ? AND entry_type = ? ORDER BY seq LIMIT 1",
-                (hash, entry_type),
+                "WHERE hash = ? ORDER BY seq LIMIT 1",
+                (hash,),
             )
         row = cursor.fetchone()
         return (row[0], row[1]) if row else None
 
-    def exists(self, hash: str, entry_type: str, key_json: str = "") -> bool:
+    def exists(self, hash: str, key_json: str = "") -> bool:
         """Check if a cache entry exists.
 
         Args:
             hash: Unique identifier for the entry.
-            entry_type: Type of entry to check.
             key_json: Original unhashed key for collision verification.
                 If empty string, checks for any entry with this hash.
 
@@ -552,28 +488,25 @@ class TokenCache:
         if key_json:
             cursor = self.conn.execute(
                 "SELECT 1 FROM cache_entries "
-                "WHERE hash = ? AND entry_type = ? AND key_json = ?",
-                (hash, entry_type, key_json),
+                "WHERE hash = ? AND key_json = ?",
+                (hash, key_json),
             )
         else:
             cursor = self.conn.execute(
-                "SELECT 1 FROM cache_entries "
-                "WHERE hash = ? AND entry_type = ?",
-                (hash, entry_type),
+                "SELECT 1 FROM cache_entries WHERE hash = ?",
+                (hash,),
             )
         return cursor.fetchone() is not None
 
     def delete(
         self,
         hash: str,
-        entry_type: str,
         key_json: str = "",
     ) -> bool:
         """Delete a cache entry.
 
         Args:
             hash: Unique identifier for the entry.
-            entry_type: Type of entry to delete.
             key_json: Original unhashed key for collision verification.
                 If empty string, deletes all entries with this hash.
 
@@ -582,162 +515,155 @@ class TokenCache:
         """
         if key_json:
             cursor = self.conn.execute(
-                "DELETE FROM cache_entries "
-                "WHERE hash = ? AND entry_type = ? AND key_json = ?",
-                (hash, entry_type, key_json),
+                "DELETE FROM cache_entries " "WHERE hash = ? AND key_json = ?",
+                (hash, key_json),
             )
         else:
             cursor = self.conn.execute(
-                "DELETE FROM cache_entries WHERE hash = ? AND entry_type = ?",
-                (hash, entry_type),
+                "DELETE FROM cache_entries WHERE hash = ?",
+                (hash,),
             )
         self.conn.commit()
         return cursor.rowcount > 0
 
     # ========================================================================
-    # Encoder registration and auto-encoding operations
+    # Compressor registration and auto-compression operations
     # ========================================================================
 
-    def register_encoder(self, entry_type: str, encoder: EntryEncoder) -> None:
-        """Register an encoder for a specific entry type.
+    def set_compressor(self, compressor: Compressor) -> None:
+        """Set the compressor for automatic data compression.
 
-        Once registered, `put_data()` and `get_data()` will automatically
-        encode/decode entries of this type using the registered encoder.
+        Once set, `put_data()` and `get_data()` will automatically
+        compress/decompress entries using this compressor.
 
         Args:
-            entry_type: Type identifier (e.g. 'llm', 'json', 'score').
-            encoder: EntryEncoder instance for this type.
+            compressor: Compressor instance for data compression.
 
         Example:
-            >>> from causaliq_core.cache.encoders import JsonEncoder
+            >>> from causaliq_core.cache.compressors import JsonCompressor
             >>> with TokenCache(":memory:") as cache:
-            ...     cache.register_encoder("json", JsonEncoder())
-            ...     cache.put_data("key1", "json", {"msg": "hello"})
+            ...     cache.set_compressor(JsonCompressor())
+            ...     cache.put_data("key1", {"msg": "hello"})
         """
-        self._encoders[entry_type] = encoder
+        self._compressor = compressor
 
-    def get_encoder(self, entry_type: str) -> EntryEncoder | None:
-        """Get the registered encoder for an entry type.
-
-        Args:
-            entry_type: Type identifier to look up.
+    def get_compressor(self) -> Compressor | None:
+        """Get the current compressor.
 
         Returns:
-            The registered encoder, or None if not registered.
+            The registered compressor, or None if not set.
         """
-        return self._encoders.get(entry_type)
+        return self._compressor
 
-    def has_encoder(self, entry_type: str) -> bool:
-        """Check if an encoder is registered for an entry type.
-
-        Args:
-            entry_type: Type identifier to check.
+    def has_compressor(self) -> bool:
+        """Check if a compressor is set.
 
         Returns:
-            True if encoder is registered, False otherwise.
+            True if compressor is set, False otherwise.
         """
-        return entry_type in self._encoders
+        return self._compressor is not None
 
     def put_data(
         self,
         hash: str,
-        entry_type: str,
         data: Any,
         metadata: Any | None = None,
         key_json: str = "",
     ) -> None:
-        """Store data using the registered encoder for the entry type.
+        """Store data using the registered compressor.
 
-        This method automatically encodes the data using the encoder
-        registered for the given entry_type. Use `put()` for raw bytes.
+        This method automatically compresses the data using the compressor
+        set via `set_compressor()`. Use `put()` for raw bytes.
 
         Args:
             hash: Unique identifier for the entry.
-            entry_type: Type of entry (must have registered encoder).
-            data: Data to encode and store.
-            metadata: Optional metadata to encode and store.
+            data: Data to compress and store.
+            metadata: Optional metadata to compress and store.
             key_json: Original unhashed key as JSON string for collision
                 detection. Empty string if not provided.
 
         Raises:
-            KeyError: If no encoder is registered for entry_type.
+            RuntimeError: If no compressor is set.
 
         Example:
             >>> with TokenCache(":memory:") as cache:
-            ...     cache.register_encoder("json", JsonEncoder())
-            ...     cache.put_data("abc", "json", {"key": "value"})
+            ...     cache.set_compressor(JsonCompressor())
+            ...     cache.put_data("abc", {"key": "value"})
         """
-        encoder = self._encoders[entry_type]
-        blob = encoder.encode(data, self)
+        if self._compressor is None:
+            raise RuntimeError("No compressor set. Call set_compressor first.")
+        blob = self._compressor.compress(data, self)
         meta_blob = (
-            encoder.encode(metadata, self) if metadata is not None else None
+            self._compressor.compress(metadata, self)
+            if metadata is not None
+            else None
         )
-        self.put(hash, entry_type, blob, meta_blob, key_json)
+        self.put(hash, blob, meta_blob, key_json)
 
     def get_data(
         self,
         hash: str,
-        entry_type: str,
         key_json: str = "",
     ) -> Any | None:
-        """Retrieve and decode data using the registered encoder.
+        """Retrieve and decompress data using the registered compressor.
 
-        This method automatically decodes the data using the encoder
-        registered for the given entry_type. Use `get()` for raw bytes.
+        This method automatically decompresses the data using the compressor
+        set via `set_compressor()`. Use `get()` for raw bytes.
 
         Args:
             hash: Unique identifier for the entry.
-            entry_type: Type of entry (must have registered encoder).
             key_json: Original unhashed key for collision verification.
                 If empty string, returns first matching entry (legacy mode).
 
         Returns:
-            Decoded data if found, None otherwise.
+            Decompressed data if found, None otherwise.
 
         Raises:
-            KeyError: If no encoder is registered for entry_type.
+            RuntimeError: If no compressor is set.
 
         Example:
             >>> with TokenCache(":memory:") as cache:
-            ...     cache.register_encoder("json", JsonEncoder())
-            ...     cache.put_data("abc", "json", {"key": "value"})
-            ...     data = cache.get_data("abc", "json")
+            ...     cache.set_compressor(JsonCompressor())
+            ...     cache.put_data("abc", {"key": "value"})
+            ...     data = cache.get_data("abc")
         """
-        blob = self.get(hash, entry_type, key_json)
+        blob = self.get(hash, key_json)
         if blob is None:
             return None
-        encoder = self._encoders[entry_type]
-        return encoder.decode(blob, self)
+        if self._compressor is None:
+            raise RuntimeError("No compressor set. Call set_compressor first.")
+        return self._compressor.decompress(blob, self)
 
     def get_data_with_metadata(
         self,
         hash: str,
-        entry_type: str,
         key_json: str = "",
     ) -> tuple[Any, Any | None] | None:
-        """Retrieve and decode data with metadata using registered encoder.
+        """Retrieve and decompress data with metadata.
 
         Args:
             hash: Unique identifier for the entry.
-            entry_type: Type of entry (must have registered encoder).
             key_json: Original unhashed key for collision verification.
                 If empty string, returns first matching entry (legacy mode).
 
         Returns:
-            Tuple of (decoded_data, decoded_metadata) if found, None otherwise.
-            metadata may be None if not stored.
+            Tuple of (decompressed_data, decompressed_metadata) if found,
+            None otherwise. metadata may be None if not stored.
 
         Raises:
-            KeyError: If no encoder is registered for entry_type.
+            RuntimeError: If no compressor is set.
         """
-        result = self.get_with_metadata(hash, entry_type, key_json)
+        result = self.get_with_metadata(hash, key_json)
         if result is None:
             return None
+        if self._compressor is None:
+            raise RuntimeError("No compressor set. Call set_compressor first.")
         data_blob, meta_blob = result
-        encoder = self._encoders[entry_type]
-        decoded_data = encoder.decode(data_blob, self)
-        decoded_meta = encoder.decode(meta_blob, self) if meta_blob else None
-        return (decoded_data, decoded_meta)
+        decompressed_data = self._compressor.decompress(data_blob, self)
+        decompressed_meta = (
+            self._compressor.decompress(meta_blob, self) if meta_blob else None
+        )
+        return (decompressed_data, decompressed_meta)
 
     # ========================================================================
     # Import/Export operations
@@ -746,57 +672,52 @@ class TokenCache:
     def export_entries(
         self,
         output_dir: Path,
-        entry_type: str,
         fmt: str | None = None,
     ) -> int:
         """Export cache entries to human-readable files.
 
         Each entry is exported to a separate file named `{hash}.{ext}` where
-        ext is determined by the format or encoder's default_export_format.
+        ext is determined by the format or compressor's default_export_format.
 
         Args:
             output_dir: Directory to write exported files to. Created if
                 it doesn't exist.
-            entry_type: Type of entries to export (must have registered
-                encoder).
             fmt: Export format (e.g. 'json', 'yaml'). If None, uses the
-                encoder's default_export_format.
+                compressor's default_export_format.
 
         Returns:
             Number of entries exported.
 
         Raises:
-            KeyError: If no encoder is registered for entry_type.
+            RuntimeError: If no compressor is set.
 
         Example:
             >>> from pathlib import Path
             >>> from causaliq_core.cache import TokenCache
-            >>> from causaliq_core.cache.encoders import JsonEncoder
+            >>> from causaliq_core.cache.compressors import JsonCompressor
             >>> with TokenCache(":memory:") as cache:
-            ...     cache.register_encoder("json", JsonEncoder())
-            ...     cache.put_data("abc123", "json", {"key": "value"})
-            ...     count = cache.export_entries(Path("./export"), "json")
+            ...     cache.set_compressor(JsonCompressor())
+            ...     cache.put_data("abc123", {"key": "value"})
+            ...     count = cache.export_entries(Path("./export"))
             ...     # Creates ./export/abc123.json
         """
-        encoder = self._encoders[entry_type]
-        ext = fmt or encoder.default_export_format
+        if self._compressor is None:
+            raise RuntimeError("No compressor set. Call set_compressor first.")
+        ext = fmt or self._compressor.default_export_format
 
         # Create output directory if needed
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        # Query all entries of this type
-        cursor = self.conn.execute(
-            "SELECT hash, data FROM cache_entries WHERE entry_type = ?",
-            (entry_type,),
-        )
+        # Query all entries
+        cursor = self.conn.execute("SELECT hash, data FROM cache_entries")
 
         count = 0
         for hash_val, blob in cursor:
-            # Decode the blob to get original data
-            data = encoder.decode(blob, self)
-            # Export to file using encoder's export method
+            # Decompress the blob to get original data
+            data = self._compressor.decompress(blob, self)
+            # Export to file using compressor's export method
             file_path = output_dir / f"{hash_val}.{ext}"
-            encoder.export(data, file_path)
+            self._compressor.export(data, file_path)
             count += 1
 
         return count
@@ -804,36 +725,34 @@ class TokenCache:
     def import_entries(
         self,
         input_dir: Path,
-        entry_type: str,
     ) -> int:
         """Import human-readable files into the cache.
 
         Each file is imported with its stem (filename without extension)
-        used as the cache hash. The encoder's import_() method reads the
-        file and the data is encoded before storage.
+        used as the cache hash. The compressor's import_() method reads the
+        file and the data is compressed before storage.
 
         Args:
             input_dir: Directory containing files to import.
-            entry_type: Type to assign to imported entries (must have
-                registered encoder).
 
         Returns:
             Number of entries imported.
 
         Raises:
-            KeyError: If no encoder is registered for entry_type.
+            RuntimeError: If no compressor is set.
             FileNotFoundError: If input_dir doesn't exist.
 
         Example:
             >>> from pathlib import Path
             >>> from causaliq_core.cache import TokenCache
-            >>> from causaliq_core.cache.encoders import JsonEncoder
+            >>> from causaliq_core.cache.compressors import JsonCompressor
             >>> with TokenCache(":memory:") as cache:
-            ...     cache.register_encoder("json", JsonEncoder())
-            ...     count = cache.import_entries(Path("./import"), "json")
-            ...     # Imports all files from ./import as "json" entries
+            ...     cache.set_compressor(JsonCompressor())
+            ...     count = cache.import_entries(Path("./import"))
+            ...     # Imports all files from ./import
         """
-        encoder = self._encoders[entry_type]
+        if self._compressor is None:
+            raise RuntimeError("No compressor set. Call set_compressor first.")
 
         if not input_dir.exists():
             raise FileNotFoundError(f"Input directory not found: {input_dir}")
@@ -843,10 +762,10 @@ class TokenCache:
             if file_path.is_file():
                 # Use filename (without extension) as hash
                 hash_val = file_path.stem
-                # Import data using encoder
-                data = encoder.import_(file_path)
-                # Encode and store
-                self.put_data(hash_val, entry_type, data)
+                # Import data using compressor
+                data = self._compressor.import_(file_path)
+                # Compress and store
+                self.put_data(hash_val, data)
                 count += 1
 
         return count
