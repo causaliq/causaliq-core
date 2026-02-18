@@ -25,6 +25,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - Nothing yet
 
+## [0.4.0 Caching Infrastructure] - 2026-02-18
+
+### Added
+- Token-based caching infrastructure
+- Compression and decompression support for JSON format
+- Compression and decompression support for GraphML format
+
+## [0.3.0 Bayesian Networks] - 2025-12-15
+
+### Added
+- Bayesian Network (`BN`) class
+- Local probability distribution classes
+- DSC file format support (read and write)
+- XDSL file format support (read and write)
+
 ## [0.2.0 Graph classes] - 2025-11-30
 
 ### Added

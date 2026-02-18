@@ -1,9 +1,10 @@
 # causaliq-core
 
-[![Python Support](https://img.shields.io/pypi/pyversions/causaliq-core.svg)](https://pypi.org/project/causaliq-core/)
+![Python Versions](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
 
-This is the core package providing common functionality required by several CausalIQ packages.
+This is the core package providing common functionality required by several CausalIQ packages. It is part of the [CausalIQ ecosystem](https://causaliq.org) for intelligent causal discovery and inference. 
 
 ## Installation
 
@@ -20,6 +21,7 @@ pip install causaliq-core
 - migrating functionality from the legacy monolithic [discovery repo](https://github.com/causaliq/discovery) 
 - restructuring classes to reduce module size and improve maintainability and improve usability
 - ensure CausalIQ development standards are met
+- adding new core functionality required by several CausalIQ packages
 
 
 
@@ -30,10 +32,11 @@ Currently implemented:
 - **Release v0.1.0 - Foundation and utilities**: CausalIQ compliant development environment and utility functions (timing, random numbers, environment detection, etc.)
 - **Release v0.2.0 - Graph classes**: Graph types for causal discovery including Summary Dependence Graphs (SDG), Partially Directed Acyclic Graphs (PDAG), Directed Acyclic Graphs (DAG), with conversion utilities and I/O support for Tetrad/Bayesys formats
 - **Release v0.3.0 - Bayesian Networks**: support for Bayesian Networks and their parameterised distributions and I/O support for DSC and XDSL formats
+- **Release v0.4.0 - Caching Infrastructure** [February 2026]: Token-based caching and (de)compression of JSON and GraphML.
 
 Upcoming releases:
 
-- **Release v0.4.0 - Graph ML**: support for GraphML formats
+- none planned
 
 ## Quick Start
 
@@ -57,7 +60,7 @@ dag = extend_pdag(pdag)  # Extend PDAG to DAG
 ### Prerequisites
 
 - Git 
-- Latest stable versions of Python 3.9, 3.10. 3.11 and 3.12
+- Latest stable versions of Python 3.9, 3.10. 3.11, 3.12 and 3.13
 
 
 ### Clone the new repo locally and check that it works
@@ -110,6 +113,8 @@ This repository is part of the CausalIQ ecosystem. For development setup:
 
 ---
 
-**Supported Python Versions**: 3.9, 3.10, 3.11, 3.12  
+**Supported Python Versions**: 3.9, 3.10, 3.11, 3.12 , 3.13
+
 **Default Python Version**: 3.11  
+
 **License**: MIT
