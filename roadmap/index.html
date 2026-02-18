@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
@@ -27,7 +27,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#causaliq-repo-template-development-roadmap" class="md-skip">
+        <a href="#causaliq-core-development-roadmap" class="md-skip">
           Skip to content
         </a>
       
@@ -549,6 +549,34 @@
     
   
     Architectural Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/caching/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Caching System
   
 
     
@@ -1779,6 +1807,124 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cache
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Cache
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TokenCache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/cache_compressors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compressors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1891,9 +2037,9 @@
 
 
 
-<h1 id="causaliq-repo-template-development-roadmap">CausalIQ Repo Template - Development Roadmap<a class="headerlink" href="#causaliq-repo-template-development-roadmap" title="Permanent link">&para;</a></h1>
-<p><strong>Last updated</strong>: December 13, 2025  </p>
-<p>This project roadmap fits into the <a href="https:/https://causaliq.org/projects/ecosystem_roadmap/">overall ecosystem roadmap</a></p>
+<h1 id="causaliq-core-development-roadmap">CausalIQ Core - Development Roadmap<a class="headerlink" href="#causaliq-core-development-roadmap" title="Permanent link">&para;</a></h1>
+<p><strong>Last updated</strong>: February 18, 2026  </p>
+<p>This project roadmap fits into the <a href="https://causaliq.org/projects/ecosystem_roadmap/">overall ecosystem roadmap</a></p>
 <h2 id="under-development">🚧 Under Development<a class="headerlink" href="#under-development" title="Permanent link">&para;</a></h2>
 <ul>
 <li>none</li>
@@ -1902,20 +2048,25 @@
 <h2 id="previous-releases">✅ Previous Releases<a class="headerlink" href="#previous-releases" title="Permanent link">&para;</a></h2>
 <ul>
 <li>
-<p><strong>0.1 Foundation</strong> [November 2025]: Initial package creation and support for shared utility capabilities (mathematical, random numbers and enums etc.)</p>
+<p><strong>0.1.0 Foundation</strong> [November 2025]: Initial package creation and support for shared utility capabilities (mathematical, random numbers and enums etc.)</p>
 </li>
 <li>
-<p><strong>0.2 Graphs</strong> [November 2025]: Graph classes representing SDG (general graph), PDAGs and DAGs, and support for Tetrad and Bayesys graph file formats.</p>
+<p><strong>0.2.0 Graphs</strong> [November 2025]: Graph classes representing SDG (general graph), PDAGs and DAGs, and support for Tetrad and Bayesys graph file formats.</p>
 </li>
 <li>
-<p><strong>0.3 Bayesian Networks</strong> [December 2025]: BN class and classes for local probability distributions, and support for DSC and XDSL BN file formats.</p>
+<p><strong>0.3.0 Bayesian Networks</strong> [December 2025]: BN class and classes for local probability distributions, and support for DSC and XDSL BN file formats.</p>
+</li>
+<li>
+<p><strong>0.4.0 Caching Infrastructure</strong> [February 2026]: Token-based caching and (de)compression of JSON and GraphML.</p>
 </li>
 </ul>
 <p><em>See Git commit history for detailed implementation progress</em></p>
 <h2 id="upcoming-implementation">🛣️ Upcoming Implementation<a class="headerlink" href="#upcoming-implementation" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>🛣️ 0.4 GraphML</strong> [December 2025]: Support for GraphML format</li>
+<li>none planned</li>
 </ul>
+<hr />
+<p><strong>Dependencies</strong>: None (this is the base layer)</p>
 
 
 
@@ -2018,10 +2169,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "search.highlight", "search.share", "content.code.copy", "content.tabs.link"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "search.highlight", "search.share", "content.code.copy", "content.tabs.link"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

@@ -17,7 +17,7 @@
       
       
       <link rel="icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
@@ -25,7 +25,7 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.484c7ddc.min.css">
       
         
         <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
@@ -569,6 +569,34 @@
     
   
     Architectural Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="architecture/caching/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Caching System
   
 
     
@@ -1799,6 +1827,124 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cache
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Cache
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api/cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TokenCache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api/cache_compressors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compressors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1936,7 +2082,9 @@
 <h1 id="causaliq-core">CausalIQ Core<a class="headerlink" href="#causaliq-core" title="Permanent link">&para;</a></h1>
 <!-- add in coverage and CI badges when repo is public -->
 
-<p><img alt="Python Versions" src="https://img.shields.io/badge/python-3.9%2C%203.10%2C%203.11%2C%203.12-blue" /></p>
+<p><img alt="Python Versions" src="https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue" />
+<a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" /></a>
+<img alt="Coverage" src="https://img.shields.io/badge/coverage-100%25-brightgreen" /></p>
 <h2 id="welcome">Welcome<a class="headerlink" href="#welcome" title="Permanent link">&para;</a></h2>
 <p>Welcome to the documentation for the CausalIQ Core — part of the <a href="https://causaliq.org">CausalIQ ecosystem</a> for intelligent causal discovery. </p>
 <p>CausalIQ Core provides functionality required by several CausalIQ projects. It is not envisaged that it will be used or called directly itself, nor can it be directly used in <a href="https://causaliq.org/projects/workflow/">CausalIQ Workflows</a>.</p>
@@ -1946,6 +2094,7 @@
 <ul>
 <li><strong>graph</strong>: support for general graphs, PDAGs and CPDAGs used in causal discovery;</li>
 <li><strong>bn</strong>: support for Bayesian Networks (BNs);</li>
+<li><strong>cache</strong>: SQLite-backed caching infrastructure with pluggable compressors and shared token dictionary;</li>
 <li><strong>io</strong>: filesystem io and format conversion, particularly relating to standard formats for graphs (.graphml, .dsc etc) and BNs (.xdsl)</li>
 <li><strong>utils</strong>: utility enums, functions and classes, relating to random numbers, mathematical functions, path handling etc.</li>
 </ul>
@@ -1974,8 +2123,8 @@
 Use the navigation sidebar to explore the documentation.<br />
 For the latest code and releases, visit the <a href="https://github.com/causaliq/causaliq-core">causaliq-core GitHub repository</a>.</p>
 <hr />
-<p><strong>Supported Python Versions</strong>: 3.9, 3.10, 3.11, 3.12<br />
-<strong>Default Python Version</strong>: 3.11</p>
+<p><strong>Supported Python Versions</strong>: 3.9, 3.10, 3.11, 3.12  , 3.13</p>
+<p><strong>Default Python Version</strong>: 3.11</p>
 
 
 
@@ -2062,10 +2211,10 @@ For the latest code and releases, visit the <a href="https://github.com/causaliq
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "search.highlight", "search.share", "content.code.copy", "content.tabs.link"], "search": "assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "search.highlight", "search.share", "content.code.copy", "content.tabs.link"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>
