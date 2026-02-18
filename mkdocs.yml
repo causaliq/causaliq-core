@@ -46,6 +46,7 @@ nav:
   - Roadmap: roadmap.md
   - Architecture: 
     - Architectural Overview: architecture/overview.md
+    - Caching System: architecture/caching.md
   - API Reference: 
     - API Overview: api/overview.md
     - Main Package: api/main.md
@@ -81,6 +82,9 @@ nav:
       - Environment: api/utils_environment.md
       - Random Numbers: api/utils_random.md
       - Timing: api/utils_timing.md
+    - Cache:
+      - TokenCache: api/cache.md
+      - Compressors: api/cache_compressors.md
   - Testing: testing.md
 
 plugins:

@@ -2,7 +2,10 @@
 
 <!-- add in coverage and CI badges when repo is public -->
 
-![Python Versions](https://img.shields.io/badge/python-3.9%2C%203.10%2C%203.11%2C%203.12-blue)
+![Python Versions](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
+
 
 ## Welcome
 
@@ -18,6 +21,7 @@ CausalIQ Core provides the following common functionality required by several us
 
 - **graph**: support for general graphs, PDAGs and CPDAGs used in causal discovery;
 - **bn**: support for Bayesian Networks (BNs);
+- **cache**: SQLite-backed caching infrastructure with pluggable compressors and shared token dictionary;
 - **io**: filesystem io and format conversion, particularly relating to standard formats for graphs (.graphml, .dsc etc) and BNs (.xdsl)
 - **utils**: utility enums, functions and classes, relating to random numbers, mathematical functions, path handling etc.
 
@@ -56,5 +60,6 @@ For the latest code and releases, visit the [causaliq-core GitHub repository](ht
 
 ---
 
-**Supported Python Versions**: 3.9, 3.10, 3.11, 3.12  
+**Supported Python Versions**: 3.9, 3.10, 3.11, 3.12  , 3.13
+
 **Default Python Version**: 3.11

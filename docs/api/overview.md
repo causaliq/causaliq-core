@@ -7,6 +7,7 @@ avoid overlong pages.
 ## [Main Package](main.md)
 
 The main `causaliq_core` package exports:
+
 - `SOFTWARE_VERSION`: Legacy software version constant for compatibility
 - Package metadata (`__version__`, `VERSION`, etc.)
 
@@ -15,6 +16,13 @@ The main `causaliq_core` package exports:
 ### [Bayesian Networks](bn.md)
 
 Bayesian Networks functionality including network structures, conditional distributions, and I/O operations.
+
+### [Cache](cache.md)
+
+SQLite-backed caching infrastructure with shared token dictionary:
+
+- [TokenCache](cache.md): Core cache with connection management
+- [Compressors](cache_compressors.md): Pluggable compressors (Compressor, JsonCompressor)
 
 ### [CLI](cli.md)
 
@@ -28,6 +36,7 @@ causal discovery.
 ### [Utils](utils.md)
 
 Comprehensive utility module with specialized functional areas:
+
 - [Mathematical Functions](utils_math.md): Number formatting and logarithm calculations
 - [Environment Detection](utils_environment.md): System information with caching  
 - [Random Numbers](utils_random.md): Reproducible random number generation

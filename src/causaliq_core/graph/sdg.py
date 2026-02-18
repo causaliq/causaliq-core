@@ -443,6 +443,7 @@ class SDG:
         """Compress graph to compact binary representation.
 
         Format:
+
         - 2 bytes: number of nodes (uint16, big-endian)
         - For each node: 2 bytes name length + UTF-8 encoded name
         - 2 bytes: number of edges (uint16, big-endian)

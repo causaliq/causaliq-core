@@ -7,6 +7,7 @@ The two endpoints of each edge can be a head ">", tail "-" or circle "o"
 (which means either head or tail).
 
 This format can represent most dependency graph types including:
+
  - Markov Graphs
  - Directed Acyclic Graphs (DAGs)
  - Partially Directed Acyclic Graphs (PDAGs)
