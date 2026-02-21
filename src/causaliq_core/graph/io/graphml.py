@@ -9,10 +9,11 @@
 #
 #   Reference: http://graphml.graphdrawing.org/
 #
+from __future__ import annotations
 
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Dict, Optional, TextIO, Union
+from typing import TYPE_CHECKING, Dict, Optional, TextIO, Tuple, Union
 
 from causaliq_core.utils import FileFormatError, is_valid_path
 
@@ -20,6 +21,9 @@ from ..dag import DAG
 from ..enums import EdgeMark, EdgeType
 from ..pdag import PDAG
 from ..sdg import SDG
+
+if TYPE_CHECKING:  # pragma: no cover
+    from ..pdg import PDG, EdgeProbabilities  # noqa: F401
 
 # Type alias for file path or file-like object
 FileLike = Union[str, Path, TextIO]
@@ -381,6 +385,12 @@ def write(graph: Union[SDG, PDAG, DAG], file: FileLike) -> None:
         if path_str.lower().split(".")[-1] != "graphml":
             raise ValueError("graphml.write() bad file suffix")
 
+    # Determine graph type for edgedefault attribute
+    # DAG: all edges directed, use edgedefault="directed"
+    # PDAG/SDG: mixed edges, use edgedefault="undirected"
+    is_dag = isinstance(graph, DAG)
+    edge_default = "directed" if is_dag else "undirected"
+
     # Build XML document
     root = ET.Element("graphml", xmlns=GRAPHML_NS)
 
@@ -395,8 +405,8 @@ def write(graph: Union[SDG, PDAG, DAG], file: FileLike) -> None:
     target_key.set("attr.name", "targetEndpoint")
     target_key.set("attr.type", "string")
 
-    # Create graph element (edgedefault doesn't matter as we specify per-edge)
-    graph_elem = ET.SubElement(root, "graph", id="G", edgedefault="directed")
+    # Create graph element
+    graph_elem = ET.SubElement(root, "graph", id="G", edgedefault=edge_default)
 
     # Add nodes in order
     for node in graph.nodes:
@@ -406,9 +416,39 @@ def write(graph: Union[SDG, PDAG, DAG], file: FileLike) -> None:
     edge_id = 0
     for (source, target), edge_type in graph.edges.items():
         edge_id += 1
-        edge_elem = ET.SubElement(
-            graph_elem, "edge", id=f"e{edge_id}", source=source, target=target
-        )
+
+        # For non-DAG graphs, mark simple directed edges (->)
+        # with directed="true" for third-party tool compatibility
+        is_directed_edge = edge_type == EdgeType.DIRECTED
+
+        if is_dag:
+            # DAG: edgedefault is directed, no per-edge override needed
+            edge_elem = ET.SubElement(
+                graph_elem,
+                "edge",
+                id=f"e{edge_id}",
+                source=source,
+                target=target,
+            )
+        elif is_directed_edge:
+            # PDAG/SDG: mark directed edges explicitly
+            edge_elem = ET.SubElement(
+                graph_elem,
+                "edge",
+                id=f"e{edge_id}",
+                source=source,
+                target=target,
+                directed="true",
+            )
+        else:
+            # PDAG/SDG: undirected (inherits from graph default)
+            edge_elem = ET.SubElement(
+                graph_elem,
+                "edge",
+                id=f"e{edge_id}",
+                source=source,
+                target=target,
+            )
 
         # Get endpoint marks from EdgeType
         source_mark = edge_type.value[1]
@@ -431,6 +471,271 @@ def write(graph: Union[SDG, PDAG, DAG], file: FileLike) -> None:
     else:
         # File-like object - write as string
         # ET.write() doesn't support StringIO directly, so we convert
+        xml_str = ET.tostring(root, encoding="unicode")
+        xml_declaration = '<?xml version="1.0" encoding="utf-8"?>\n'
+        file.write(xml_declaration + xml_str)  # type: ignore[union-attr]
+
+
+# ---------------------------------------------------------------------------
+# PDG (Probabilistic Dependency Graph) I/O
+# ---------------------------------------------------------------------------
+
+
+def read_pdg(file: FileLike) -> "PDG":
+    """Read a PDG from a GraphML file or file-like object.
+
+    Reads a Probabilistic Dependency Graph with edge probability attributes.
+    The file should have undirected edges with p_forward, p_backward,
+    p_undirected, and p_none data attributes.
+
+    Args:
+        file: File path (str or Path) or file-like object (e.g., StringIO).
+            For file paths, suffix must be '.graphml'.
+
+    Returns:
+        PDG instance with edge probabilities.
+
+    Raises:
+        TypeError: If argument types incorrect.
+        ValueError: If file path suffix not '.graphml'.
+        FileNotFoundError: If specified file does not exist.
+        FileFormatError: If file contents are not valid GraphML or
+            missing required probability attributes.
+
+    Example:
+        >>> from io import StringIO
+        >>> xml = '''<?xml version="1.0"?>
+        ... <graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+        ...   <key id="p_forward" for="edge" attr.type="double"/>
+        ...   <graph edgedefault="undirected">
+        ...     <node id="A"/><node id="B"/>
+        ...     <edge source="A" target="B">
+        ...       <data key="p_forward">0.8</data>
+        ...       <data key="p_backward">0.1</data>
+        ...       <data key="p_undirected">0.05</data>
+        ...       <data key="p_none">0.05</data>
+        ...     </edge>
+        ...   </graph>
+        ... </graphml>'''
+        >>> pdg = read_pdg(StringIO(xml))
+    """
+    from causaliq_core.graph.pdg import (  # noqa: F811
+        PDG,
+        EdgeProbabilities,
+    )
+
+    # Validate file argument type
+    is_path = isinstance(file, (str, Path))
+    is_file_like = hasattr(file, "read")
+
+    if not is_path and not is_file_like:
+        raise TypeError(
+            "graphml.read_pdg() file arg must be str, Path, "
+            "or file-like object"
+        )
+
+    source_desc = str(file) if is_path else "<file-like object>"
+
+    if is_path:
+        path_str = str(file)
+        if path_str.lower().split(".")[-1] != "graphml":
+            raise ValueError("graphml.read_pdg() bad file suffix")
+        is_valid_path(path_str)
+
+    try:
+        if is_path:
+            tree = ET.parse(str(file))
+        else:
+            tree = ET.parse(file)  # type: ignore[arg-type]
+        root = tree.getroot()
+    except ET.ParseError as e:
+        raise FileFormatError(f"file {source_desc} invalid XML: {e}")
+
+    # Handle namespaced and non-namespaced GraphML
+    if root.tag == f"{{{GRAPHML_NS}}}graphml":
+        ns = NS
+    elif root.tag == "graphml":
+        ns = {}
+    else:
+        raise FileFormatError(
+            f"file {source_desc} not a GraphML file "
+            f"(root element: {root.tag})"
+        )
+
+    # Find the graph element
+    graph_elem = root.find("g:graph", ns) if ns else root.find("graph")
+    if graph_elem is None:
+        raise FileFormatError(f"file {source_desc} has no graph element")
+
+    # Parse nodes
+    nodes = _parse_nodes(graph_elem, ns, source_desc)
+    if not nodes:
+        raise FileFormatError(f"file {source_desc} has no nodes")
+
+    # Parse edges with probability attributes
+    edges: Dict[Tuple[str, str], "EdgeProbabilities"] = {}
+    edge_tag = "g:edge" if ns else "edge"
+    data_tag = "g:data" if ns else "data"
+
+    for edge_elem in graph_elem.findall(edge_tag, ns):
+        source = edge_elem.get("source")
+        target = edge_elem.get("target")
+
+        if source is None or target is None:
+            raise FileFormatError(
+                f"file {source_desc} has edge without source or target"
+            )
+
+        # Parse probability data elements
+        p_forward = 0.0
+        p_backward = 0.0
+        p_undirected = 0.0
+        p_none = 0.0
+        found_probs = False
+
+        for data_elem in edge_elem.findall(data_tag, ns):
+            key = data_elem.get("key")
+            value = data_elem.text or "0.0"
+            try:
+                if key == "p_forward":
+                    p_forward = float(value)
+                    found_probs = True
+                elif key == "p_backward":
+                    p_backward = float(value)
+                    found_probs = True
+                elif key == "p_undirected":
+                    p_undirected = float(value)
+                    found_probs = True
+                elif key == "p_none":
+                    p_none = float(value)
+                    found_probs = True
+            except ValueError:
+                raise FileFormatError(
+                    f"file {source_desc} has invalid probability value: "
+                    f"{value}"
+                )
+
+        if not found_probs:
+            raise FileFormatError(
+                f"file {source_desc} edge ({source}, {target}) "
+                "missing probability attributes"
+            )
+
+        # Canonicalise edge order (source < target alphabetically)
+        if source > target:
+            source, target = target, source
+            p_forward, p_backward = p_backward, p_forward
+
+        try:
+            probs = EdgeProbabilities(
+                forward=p_forward,
+                backward=p_backward,
+                undirected=p_undirected,
+                none=p_none,
+            )
+        except ValueError as e:
+            raise FileFormatError(
+                f"file {source_desc} edge ({source}, {target}): {e}"
+            )
+
+        edges[(source, target)] = probs
+
+    return PDG(nodes, edges)
+
+
+def write_pdg(pdg: "PDG", file: FileLike) -> None:
+    """Write a PDG to a GraphML file or file-like object.
+
+    Exports the PDG with undirected edges and probability data attributes
+    (p_forward, p_backward, p_undirected, p_none).
+
+    Only edges with p_exist > 0 (i.e., p_none < 1.0) are written.
+
+    Args:
+        pdg: PDG to write.
+        file: File path (str or Path) or file-like object (e.g., StringIO).
+            For file paths, suffix must be '.graphml'.
+
+    Raises:
+        TypeError: If argument types incorrect.
+        ValueError: If file path suffix not '.graphml'.
+
+    Example:
+        >>> from io import StringIO
+        >>> from causaliq_core.graph.pdg import PDG, EdgeProbabilities
+        >>> pdg = PDG(["A", "B"], {
+        ...     ("A", "B"): EdgeProbabilities(forward=0.8, none=0.2)
+        ... })
+        >>> buffer = StringIO()
+        >>> write_pdg(pdg, buffer)
+        >>> print(buffer.getvalue())
+    """
+    from causaliq_core.graph.pdg import PDG  # noqa: F811
+
+    if not isinstance(pdg, PDG):
+        raise TypeError("graphml.write_pdg() pdg arg must be PDG")
+
+    # Validate file argument type
+    is_path = isinstance(file, (str, Path))
+    is_file_like = hasattr(file, "write")
+
+    if not is_path and not is_file_like:
+        raise TypeError(
+            "graphml.write_pdg() file arg must be str, Path, "
+            "or file-like object"
+        )
+
+    if is_path:
+        path_str = str(file)
+        if path_str.lower().split(".")[-1] != "graphml":
+            raise ValueError("graphml.write_pdg() bad file suffix")
+
+    # Build XML document
+    root = ET.Element("graphml", xmlns=GRAPHML_NS)
+
+    # Add key definitions for probability attributes
+    for key_id in ["p_forward", "p_backward", "p_undirected", "p_none"]:
+        key_elem = ET.SubElement(root, "key", id=key_id)
+        key_elem.set("for", "edge")
+        key_elem.set("attr.name", key_id)
+        key_elem.set("attr.type", "double")
+
+    # Create graph element with undirected default
+    graph_elem = ET.SubElement(root, "graph", id="G", edgedefault="undirected")
+
+    # Add nodes in order
+    for node in pdg.nodes:
+        ET.SubElement(graph_elem, "node", id=node)
+
+    # Add edges with probability attributes (only if p_exist > 0)
+    edge_id = 0
+    for (source, target), probs in pdg.edges.items():
+        if probs.p_exist == 0:
+            continue  # Skip edges with no probability of existing
+
+        edge_id += 1
+        edge_elem = ET.SubElement(
+            graph_elem, "edge", id=f"e{edge_id}", source=source, target=target
+        )
+
+        # Add probability data elements (4 significant figures)
+        for key_id, value in [
+            ("p_forward", probs.forward),
+            ("p_backward", probs.backward),
+            ("p_undirected", probs.undirected),
+            ("p_none", probs.none),
+        ]:
+            data_elem = ET.SubElement(edge_elem, "data", key=key_id)
+            data_elem.text = f"{value:.4g}"
+
+    # Write to file with XML declaration and proper formatting
+    tree = ET.ElementTree(root)
+    ET.indent(tree, space="  ")
+
+    if is_path:
+        with open(str(file), "wb") as f:
+            tree.write(f, encoding="utf-8", xml_declaration=True)
+    else:
         xml_str = ET.tostring(root, encoding="unicode")
         xml_declaration = '<?xml version="1.0" encoding="utf-8"?>\n'
         file.write(xml_declaration + xml_str)  # type: ignore[union-attr]

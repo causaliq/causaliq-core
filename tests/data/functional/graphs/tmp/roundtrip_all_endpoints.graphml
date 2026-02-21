@@ -2,7 +2,7 @@
 <graphml xmlns="http://graphml.graphdrawing.org/xmlns">
   <key id="sourceEndpoint" for="edge" attr.name="sourceEndpoint" attr.type="string" />
   <key id="targetEndpoint" for="edge" attr.name="targetEndpoint" attr.type="string" />
-  <graph id="G" edgedefault="directed">
+  <graph id="G" edgedefault="undirected">
     <node id="A" />
     <node id="B" />
     <node id="C" />
@@ -13,7 +13,7 @@
     <node id="H" />
     <node id="I" />
     <node id="J" />
-    <edge id="e1" source="A" target="B">
+    <edge id="e1" source="A" target="B" directed="true">
       <data key="sourceEndpoint">none</data>
       <data key="targetEndpoint">arrow</data>
     </edge>
@@ -29,7 +29,7 @@
       <data key="sourceEndpoint">arrow</data>
       <data key="targetEndpoint">arrow</data>
     </edge>
-    <edge id="e5" source="E" target="F">
+    <edge id="e5" source="E" target="F" directed="true">
       <data key="sourceEndpoint">none</data>
       <data key="targetEndpoint">arrow</data>
     </edge>

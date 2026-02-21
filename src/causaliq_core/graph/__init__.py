@@ -13,6 +13,9 @@ from .dag import DAG, NotDAGError
 from .enums import EdgeMark, EdgeType
 from .pdag import PDAG, NotPDAGError
 
+# Import PDG classes
+from .pdg import PDG, EdgeProbabilities
+
 # Import graph classes - moved to top to fix E402
 from .sdg import SDG
 
@@ -29,6 +32,8 @@ __all__ = [
     "NotPDAGError",
     "DAG",
     "NotDAGError",
+    "PDG",
+    "EdgeProbabilities",
     "dag_to_pdag",
     "pdag_to_cpdag",
     "extend_pdag",

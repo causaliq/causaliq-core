@@ -7,7 +7,7 @@ The graphml module supports both filesystem paths and file-like objects
 
 from . import bayesys, common, graphml, tetrad
 from .common import read_graph, write_graph
-from .graphml import FileLike
+from .graphml import FileLike, read_pdg, write_pdg
 
 __all__ = [
     "bayesys",
@@ -16,5 +16,7 @@ __all__ = [
     "tetrad",
     "read_graph",
     "write_graph",
+    "read_pdg",
+    "write_pdg",
     "FileLike",
 ]
