@@ -151,7 +151,7 @@ def test_core_provider_metadata() -> None:
     provider = CoreActionProvider()
     assert provider.name == "causaliq-core"
     assert provider.version == "1.0.0"
-    assert provider.supported_types == {"graphml", "json"}
+    assert provider.supported_types == {"graphml", "json", "pdg"}
     assert provider.supported_actions == set()
 
 
@@ -249,6 +249,74 @@ def test_core_provider_decompress_unsupported() -> None:
     with TokenCache(":memory:") as cache:
         with pytest.raises(NotImplementedError, match="does not support"):
             provider.decompress("csv", b"a,b,c", cache)
+
+
+# Test CoreActionProvider compresses pdg to compact bytes.
+def test_core_provider_compress_pdg() -> None:
+    provider = CoreActionProvider()
+    pdg_json = json.dumps(
+        {
+            "nodes": ["A", "B", "C"],
+            "edges": {
+                "A,B": {"forward": 0.8, "backward": 0.1, "undirected": 0.0},
+                "A,C": {"forward": 0.6, "backward": 0.2, "undirected": 0.1},
+            },
+        }
+    )
+
+    with TokenCache(":memory:") as cache:
+        blob = provider.compress("pdg", pdg_json, cache)
+        assert isinstance(blob, bytes)
+        assert len(blob) < len(pdg_json)  # Should be compressed
+
+
+# Test CoreActionProvider decompresses pdg from bytes.
+def test_core_provider_decompress_pdg() -> None:
+    provider = CoreActionProvider()
+    pdg_json = json.dumps(
+        {
+            "nodes": ["X", "Y"],
+            "edges": {
+                "X,Y": {"forward": 0.9, "backward": 0.0, "undirected": 0.0},
+            },
+        }
+    )
+
+    with TokenCache(":memory:") as cache:
+        blob = provider.compress("pdg", pdg_json, cache)
+        restored = provider.decompress("pdg", blob, cache)
+
+    parsed = json.loads(restored)
+    assert parsed["nodes"] == ["X", "Y"]
+    assert "X,Y" in parsed["edges"]
+    # Allow small rounding due to 4 s.f. encoding
+    assert abs(parsed["edges"]["X,Y"]["forward"] - 0.9) < 1e-3
+
+
+# Test CoreActionProvider pdg roundtrip preserves probabilities.
+def test_core_provider_pdg_roundtrip() -> None:
+    provider = CoreActionProvider()
+    original_data = {
+        "nodes": ["A", "B", "C"],
+        "edges": {
+            "A,B": {"forward": 0.8765, "backward": 0.1, "undirected": 0.0},
+            "B,C": {"forward": 0.5, "backward": 0.3, "undirected": 0.1},
+        },
+    }
+    pdg_json = json.dumps(original_data)
+
+    with TokenCache(":memory:") as cache:
+        blob = provider.compress("pdg", pdg_json, cache)
+        restored = provider.decompress("pdg", blob, cache)
+
+    parsed = json.loads(restored)
+    assert parsed["nodes"] == original_data["nodes"]
+    # Check probabilities preserved to 4 s.f.
+    for key in original_data["edges"]:
+        orig_edge = original_data["edges"][key]
+        rest_edge = parsed["edges"][key]
+        assert abs(rest_edge["forward"] - orig_edge["forward"]) < 1e-3
+        assert abs(rest_edge["backward"] - orig_edge["backward"]) < 1e-3
 
 
 # Test compress raises ValueError for too many nodes.

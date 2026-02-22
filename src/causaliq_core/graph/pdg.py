@@ -316,3 +316,230 @@ class PDG:
     def __repr__(self) -> str:
         """Return detailed representation of the PDG."""
         return f"PDG(nodes={self.nodes}, edges={self.edges})"
+
+    def compress(self) -> bytes:
+        """Compress PDG to compact binary representation.
+
+        Format:
+        - 2 bytes: number of nodes (uint16, big-endian)
+        - For each node: 2 bytes name length + UTF-8 encoded name
+        - 2 bytes: number of edge pairs with probabilities (uint16)
+        - For each edge pair:
+            - 2 bytes: source node index (uint16)
+            - 2 bytes: target node index (uint16)
+            - 3 bytes: p_forward (4 s.f. mantissa + exponent)
+            - 3 bytes: p_backward (4 s.f. mantissa + exponent)
+            - 3 bytes: p_undirected (4 s.f. mantissa + exponent)
+
+        Probabilities are encoded with 4 significant figures using a
+        mantissa (0-9999) and exponent format: value = mantissa × 10^exp.
+        The p_none value is derived as 1.0 - (forward + backward + undirected).
+
+        Returns:
+            Compact binary representation of the PDG.
+
+        Raises:
+            ValueError: If graph has more than 65535 nodes or edge pairs.
+        """
+        if len(self.nodes) > 65535:
+            raise ValueError("PDG.compress() graph has too many nodes")
+        if len(self.edges) > 65535:
+            raise ValueError("PDG.compress() graph has too many edge pairs")
+
+        # Build node index for edge compression
+        node_index = {node: i for i, node in enumerate(self.nodes)}
+
+        # Compress number of nodes
+        data = len(self.nodes).to_bytes(2, "big")
+
+        # Compress each node name
+        for node in self.nodes:
+            name_bytes = node.encode("utf-8")
+            if len(name_bytes) > 65535:
+                raise ValueError("PDG.compress() node name too long")
+            data += len(name_bytes).to_bytes(2, "big")
+            data += name_bytes
+
+        # Compress number of edge pairs
+        data += len(self.edges).to_bytes(2, "big")
+
+        # Compress each edge pair (source idx, target idx, 3 probabilities)
+        for (source, target), probs in self.edges.items():
+            data += node_index[source].to_bytes(2, "big")
+            data += node_index[target].to_bytes(2, "big")
+            data += _encode_probability(probs.forward)
+            data += _encode_probability(probs.backward)
+            data += _encode_probability(probs.undirected)
+
+        return data
+
+    @classmethod
+    def decompress(cls, data: bytes) -> "PDG":
+        """Decompress PDG from compact binary representation.
+
+        Args:
+            data: Binary data from PDG.compress().
+
+        Returns:
+            Reconstructed PDG instance.
+
+        Raises:
+            TypeError: If data is not bytes.
+            ValueError: If data is invalid or corrupted.
+        """
+        if not isinstance(data, bytes):
+            raise TypeError("PDG.decompress() data must be bytes")
+
+        if len(data) < 2:
+            raise ValueError("PDG.decompress() data too short")
+
+        pos = 0
+
+        # Decompress number of nodes
+        num_nodes = int.from_bytes(data[pos : pos + 2], "big")
+        pos += 2
+
+        # Decompress node names
+        nodes = []
+        for _ in range(num_nodes):
+            if pos + 2 > len(data):
+                raise ValueError("PDG.decompress() data truncated")
+            name_len = int.from_bytes(data[pos : pos + 2], "big")
+            pos += 2
+            if pos + name_len > len(data):
+                raise ValueError("PDG.decompress() data truncated")
+            node = data[pos : pos + name_len].decode("utf-8")
+            pos += name_len
+            nodes.append(node)
+
+        # Decompress number of edge pairs
+        if pos + 2 > len(data):
+            raise ValueError("PDG.decompress() data truncated")
+        num_edges = int.from_bytes(data[pos : pos + 2], "big")
+        pos += 2
+
+        # Decompress edge pairs
+        edges: Dict[Tuple[str, str], EdgeProbabilities] = {}
+        for _ in range(num_edges):
+            if pos + 13 > len(data):  # 2+2+3+3+3 = 13 bytes per edge
+                raise ValueError("PDG.decompress() data truncated")
+
+            source_idx = int.from_bytes(data[pos : pos + 2], "big")
+            pos += 2
+            target_idx = int.from_bytes(data[pos : pos + 2], "big")
+            pos += 2
+
+            if source_idx >= len(nodes) or target_idx >= len(nodes):
+                raise ValueError("PDG.decompress() invalid node index")
+
+            p_forward = _decode_probability(data[pos : pos + 3])
+            pos += 3
+            p_backward = _decode_probability(data[pos : pos + 3])
+            pos += 3
+            p_undirected = _decode_probability(data[pos : pos + 3])
+            pos += 3
+
+            # Derive p_none from the constraint that probabilities sum to 1.0
+            p_none = 1.0 - (p_forward + p_backward + p_undirected)
+
+            # Handle floating point precision issues
+            if p_none < 0:
+                if p_none > -1e-9:  # pragma: no cover
+                    p_none = 0.0
+                else:
+                    raise ValueError(
+                        "PDG.decompress() probabilities sum to more than 1.0"
+                    )
+
+            source = nodes[source_idx]
+            target = nodes[target_idx]
+            edges[(source, target)] = EdgeProbabilities(
+                forward=p_forward,
+                backward=p_backward,
+                undirected=p_undirected,
+                none=p_none,
+            )
+
+        return cls(nodes, edges)
+
+
+def _encode_probability(value: float) -> bytes:
+    """Encode probability to 3 bytes with 4 significant figures.
+
+    Format: 2 bytes mantissa (uint16) + 1 byte exponent (int8).
+    Value = mantissa × 10^exponent.
+
+    Args:
+        value: Probability value in range [0.0, 1.0].
+
+    Returns:
+        3-byte encoding.
+
+    Example:
+        >>> _encode_probability(0.9876)  # mantissa=9876, exp=-4
+        >>> _encode_probability(0.001234)  # mantissa=1234, exp=-6
+        >>> _encode_probability(0.0)  # mantissa=0, exp=0
+    """
+    if value == 0.0:
+        return b"\x00\x00\x00"
+
+    if value < 0 or value > 1.0:
+        raise ValueError(f"Probability must be in [0, 1], got {value}")
+
+    # Special case for exactly 1.0
+    if value == 1.0:
+        # 1.0 = 1000 × 10^-3
+        mantissa = 1000
+        exponent = -3
+        return mantissa.to_bytes(2, "big") + exponent.to_bytes(
+            1, "big", signed=True
+        )
+
+    # Find exponent: we want mantissa in range [1000, 9999] for 4 s.f.
+    import math
+
+    log_val = math.log10(value)
+    # Exponent to get mantissa in [1000, 9999]
+    exponent = int(math.floor(log_val)) - 3
+
+    # Calculate mantissa
+    mantissa = round(value / (10**exponent))
+
+    # Ensure mantissa is in valid range
+    if mantissa >= 10000:
+        mantissa = mantissa // 10
+        exponent += 1
+    elif mantissa < 1000 and mantissa > 0:  # pragma: no cover
+        mantissa = mantissa * 10
+        exponent -= 1
+
+    # Clamp mantissa to uint16 range
+    mantissa = max(0, min(9999, mantissa))
+
+    # Clamp exponent to int8 range
+    exponent = max(-128, min(127, exponent))
+
+    return bytes(
+        mantissa.to_bytes(2, "big") + exponent.to_bytes(1, "big", signed=True)
+    )
+
+
+def _decode_probability(data: bytes) -> float:
+    """Decode probability from 3-byte format.
+
+    Args:
+        data: 3 bytes (mantissa uint16 + exponent int8).
+
+    Returns:
+        Decoded probability value.
+    """
+    if len(data) != 3:
+        raise ValueError("Probability encoding must be 3 bytes")
+
+    mantissa = int.from_bytes(data[0:2], "big")
+    exponent = int.from_bytes(data[2:3], "big", signed=True)
+
+    if mantissa == 0:
+        return 0.0
+
+    return float(mantissa * (10**exponent))
