@@ -254,69 +254,106 @@ def test_core_provider_decompress_unsupported() -> None:
 # Test CoreActionProvider compresses pdg to compact bytes.
 def test_core_provider_compress_pdg() -> None:
     provider = CoreActionProvider()
-    pdg_json = json.dumps(
-        {
-            "nodes": ["A", "B", "C"],
-            "edges": {
-                "A,B": {"forward": 0.8, "backward": 0.1, "undirected": 0.0},
-                "A,C": {"forward": 0.6, "backward": 0.2, "undirected": 0.1},
-            },
-        }
-    )
+    # PDG interchange format is now GraphML
+    pdg_graphml = """<?xml version="1.0" encoding="utf-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <key id="p_forward" for="edge" attr.type="double" />
+  <key id="p_backward" for="edge" attr.type="double" />
+  <key id="p_undirected" for="edge" attr.type="double" />
+  <key id="p_none" for="edge" attr.type="double" />
+  <graph id="G" edgedefault="undirected">
+    <node id="A" />
+    <node id="B" />
+    <node id="C" />
+    <edge id="e1" source="A" target="B">
+      <data key="p_forward">0.8</data>
+      <data key="p_backward">0.1</data>
+      <data key="p_undirected">0.0</data>
+      <data key="p_none">0.1</data>
+    </edge>
+    <edge id="e2" source="A" target="C">
+      <data key="p_forward">0.6</data>
+      <data key="p_backward">0.2</data>
+      <data key="p_undirected">0.1</data>
+      <data key="p_none">0.1</data>
+    </edge>
+  </graph>
+</graphml>"""
 
     with TokenCache(":memory:") as cache:
-        blob = provider.compress("pdg", pdg_json, cache)
+        blob = provider.compress("pdg", pdg_graphml, cache)
         assert isinstance(blob, bytes)
-        assert len(blob) < len(pdg_json)  # Should be compressed
+        assert len(blob) < len(pdg_graphml)  # Should be compressed
 
 
 # Test CoreActionProvider decompresses pdg from bytes.
 def test_core_provider_decompress_pdg() -> None:
     provider = CoreActionProvider()
-    pdg_json = json.dumps(
-        {
-            "nodes": ["X", "Y"],
-            "edges": {
-                "X,Y": {"forward": 0.9, "backward": 0.0, "undirected": 0.0},
-            },
-        }
-    )
+    pdg_graphml = """<?xml version="1.0" encoding="utf-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <key id="p_forward" for="edge" attr.type="double" />
+  <key id="p_backward" for="edge" attr.type="double" />
+  <key id="p_undirected" for="edge" attr.type="double" />
+  <key id="p_none" for="edge" attr.type="double" />
+  <graph id="G" edgedefault="undirected">
+    <node id="X" />
+    <node id="Y" />
+    <edge id="e1" source="X" target="Y">
+      <data key="p_forward">0.9</data>
+      <data key="p_backward">0.0</data>
+      <data key="p_undirected">0.0</data>
+      <data key="p_none">0.1</data>
+    </edge>
+  </graph>
+</graphml>"""
 
     with TokenCache(":memory:") as cache:
-        blob = provider.compress("pdg", pdg_json, cache)
+        blob = provider.compress("pdg", pdg_graphml, cache)
         restored = provider.decompress("pdg", blob, cache)
 
-    parsed = json.loads(restored)
-    assert parsed["nodes"] == ["X", "Y"]
-    assert "X,Y" in parsed["edges"]
-    # Allow small rounding due to 4 s.f. encoding
-    assert abs(parsed["edges"]["X,Y"]["forward"] - 0.9) < 1e-3
+    # Restored format is GraphML, parse and check
+    assert "<graphml" in restored
+    assert 'id="X"' in restored
+    assert 'id="Y"' in restored
+    assert "p_forward" in restored
 
 
 # Test CoreActionProvider pdg roundtrip preserves probabilities.
 def test_core_provider_pdg_roundtrip() -> None:
+    from io import StringIO
+
+    from causaliq_core.graph.io import graphml
+    from causaliq_core.graph.pdg import PDG, EdgeProbabilities
+
     provider = CoreActionProvider()
-    original_data = {
-        "nodes": ["A", "B", "C"],
-        "edges": {
-            "A,B": {"forward": 0.8765, "backward": 0.1, "undirected": 0.0},
-            "B,C": {"forward": 0.5, "backward": 0.3, "undirected": 0.1},
+
+    # Create PDG and convert to GraphML
+    pdg = PDG(
+        ["A", "B", "C"],
+        {
+            ("A", "B"): EdgeProbabilities(
+                forward=0.8765, backward=0.1, undirected=0.0, none=0.0235
+            ),
+            ("B", "C"): EdgeProbabilities(
+                forward=0.5, backward=0.3, undirected=0.1, none=0.1
+            ),
         },
-    }
-    pdg_json = json.dumps(original_data)
+    )
+    buffer = StringIO()
+    graphml.write_pdg(pdg, buffer)
+    pdg_graphml = buffer.getvalue()
 
     with TokenCache(":memory:") as cache:
-        blob = provider.compress("pdg", pdg_json, cache)
-        restored = provider.decompress("pdg", blob, cache)
+        blob = provider.compress("pdg", pdg_graphml, cache)
+        restored_graphml = provider.decompress("pdg", blob, cache)
 
-    parsed = json.loads(restored)
-    assert parsed["nodes"] == original_data["nodes"]
+    restored_pdg = graphml.read_pdg(StringIO(restored_graphml))
+    assert restored_pdg.nodes == pdg.nodes
     # Check probabilities preserved to 4 s.f.
-    for key in original_data["edges"]:
-        orig_edge = original_data["edges"][key]
-        rest_edge = parsed["edges"][key]
-        assert abs(rest_edge["forward"] - orig_edge["forward"]) < 1e-3
-        assert abs(rest_edge["backward"] - orig_edge["backward"]) < 1e-3
+    for (src, tgt), orig_probs in pdg.edges.items():
+        rest_probs = restored_pdg.get_probabilities(src, tgt)
+        assert abs(rest_probs.forward - orig_probs.forward) < 1e-3
+        assert abs(rest_probs.backward - orig_probs.backward) < 1e-3
 
 
 # Test compress raises ValueError for too many nodes.

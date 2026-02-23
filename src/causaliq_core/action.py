@@ -452,78 +452,38 @@ class CoreActionProvider(CausalIQActionProvider):
         return json.dumps(data, indent=2)
 
     def _compress_pdg(self, content: str, cache: TokenCache) -> bytes:
-        """Compress PDG JSON to compact binary format.
+        """Compress PDG GraphML to compact binary format.
 
-        The content is expected to be a JSON representation of a PDG:
-        {
-            "nodes": ["A", "B", "C"],
-            "edges": {
-                "A,B": {"forward": 0.8, "backward": 0.1, "undirected": 0.0},
-                ...
-            }
-        }
+        The content is expected to be a GraphML representation of a PDG
+        with edge probability attributes (p_forward, p_backward,
+        p_undirected, p_none).
 
         Args:
-            content: JSON string representation of PDG.
+            content: GraphML string representation of PDG.
             cache: TokenCache (unused, PDG uses self-contained compression).
 
         Returns:
             Compact binary blob from PDG.compress().
         """
-        from causaliq_core.graph.pdg import PDG, EdgeProbabilities
-
-        data = json.loads(content)
-        nodes = data.get("nodes", [])
-        edges_data = data.get("edges", {})
-
-        edges = {}
-        for key, probs in edges_data.items():
-            source, target = key.split(",")
-            p_forward = probs.get("forward", 0.0)
-            p_backward = probs.get("backward", 0.0)
-            p_undirected = probs.get("undirected", 0.0)
-            p_none = 1.0 - (p_forward + p_backward + p_undirected)
-            edges[(source, target)] = EdgeProbabilities(
-                forward=p_forward,
-                backward=p_backward,
-                undirected=p_undirected,
-                none=p_none,
-            )
-
-        pdg = PDG(nodes, edges)
+        pdg = graphml.read_pdg(StringIO(content))
         return pdg.compress()
 
     def _decompress_pdg(self, blob: bytes, cache: TokenCache) -> str:
-        """Decompress compact binary to PDG JSON string.
+        """Decompress compact binary to PDG GraphML string.
 
         Args:
             blob: Binary data from PDG.compress().
             cache: TokenCache (unused, PDG uses self-contained compression).
 
         Returns:
-            JSON string representation of PDG.
+            GraphML string representation of PDG.
         """
         from causaliq_core.graph.pdg import PDG
 
         pdg = PDG.decompress(blob)
-
-        # Build JSON representation
-        edges_dict = {}
-        for (source, target), probs in pdg.edges.items():
-            key = f"{source},{target}"
-            edges_dict[key] = {
-                "forward": probs.forward,
-                "backward": probs.backward,
-                "undirected": probs.undirected,
-                "none": probs.none,
-            }
-
-        result = {
-            "nodes": pdg.nodes,
-            "edges": edges_dict,
-        }
-
-        return json.dumps(result, indent=2)
+        buffer = StringIO()
+        graphml.write_pdg(pdg, buffer)
+        return buffer.getvalue()
 
 
 # Export ActionProvider for auto-discovery by causaliq-workflow

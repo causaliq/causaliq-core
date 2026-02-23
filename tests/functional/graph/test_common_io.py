@@ -6,8 +6,14 @@ from unittest.mock import patch
 import pytest
 
 from causaliq_core.graph.dag import DAG
-from causaliq_core.graph.io.common import read_graph, write_graph
+from causaliq_core.graph.io.common import (
+    read_graph,
+    read_pdg,
+    write_graph,
+    write_pdg,
+)
 from causaliq_core.graph.pdag import PDAG
+from causaliq_core.graph.pdg import PDG, EdgeProbabilities
 
 # Path to test data
 TEST_DATA_DIR = Path("tests/data/functional/graphs")
@@ -23,6 +29,8 @@ def tmp_dir():
     for file in TMP_DIR.glob("*.csv"):
         file.unlink()
     for file in TMP_DIR.glob("*.tetrad"):
+        file.unlink()
+    for file in TMP_DIR.glob("*.graphml"):
         file.unlink()
 
 
@@ -179,3 +187,50 @@ def test_common_roundtrip_pdag_tetrad(tmp_dir):
     # Compare
     assert set(original_pdag.nodes) == set(read_pdag.nodes)
     assert original_pdag.is_DAG() == read_pdag.is_DAG()
+
+
+# Test write GraphML file calls graphml.write.
+def test_common_write_graphml_calls_graphml(tmp_dir):
+    dag = DAG(["A", "B"], [("A", "->", "B")])
+    test_file = tmp_dir / "test_output.graphml"
+
+    with patch(
+        "causaliq_core.graph.io.common.graphml.write"
+    ) as mock_graphml_write:
+        write_graph(dag, str(test_file))
+        mock_graphml_write.assert_called_once_with(dag, str(test_file))
+
+
+# Test read_pdg calls graphml.read_pdg.
+def test_common_read_pdg_calls_graphml():
+    with patch(
+        "causaliq_core.graph.io.common.graphml.read_pdg"
+    ) as mock_read_pdg:
+        mock_read_pdg.return_value = PDG(
+            ["A", "B"],
+            {
+                ("A", "B"): EdgeProbabilities(
+                    forward=0.8, backward=0.1, none=0.1
+                )
+            },
+        )
+        result = read_pdg(str(TEST_DATA_DIR / "test.graphml"))
+        mock_read_pdg.assert_called_once_with(
+            str(TEST_DATA_DIR / "test.graphml")
+        )
+        assert result is not None
+
+
+# Test write_pdg calls graphml.write_pdg.
+def test_common_write_pdg_calls_graphml(tmp_dir):
+    pdg = PDG(
+        ["A", "B"],
+        {("A", "B"): EdgeProbabilities(forward=0.8, backward=0.1, none=0.1)},
+    )
+    test_file = tmp_dir / "test_output.graphml"
+
+    with patch(
+        "causaliq_core.graph.io.common.graphml.write_pdg"
+    ) as mock_write_pdg:
+        write_pdg(pdg, str(test_file))
+        mock_write_pdg.assert_called_once_with(pdg, str(test_file))
