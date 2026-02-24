@@ -347,7 +347,11 @@ _MARK_TO_ENDPOINT = {
 }
 
 
-def write(graph: Union[SDG, PDAG, DAG], file: FileLike) -> None:
+def write(
+    graph: Union[SDG, PDAG, DAG],
+    file: FileLike,
+    graph_id: str = "G",
+) -> None:
     """Write a graph to a GraphML file or file-like object.
 
     Exports the graph with node ordering preserved and edge types encoded
@@ -357,6 +361,7 @@ def write(graph: Union[SDG, PDAG, DAG], file: FileLike) -> None:
         graph: SDG, PDAG or DAG to write.
         file: File path (str or Path) or file-like object (e.g., StringIO).
             For file paths, suffix must be '.graphml'.
+        graph_id: ID attribute for the graph element. Defaults to "G".
 
     Raises:
         TypeError: If argument types incorrect.
@@ -406,7 +411,9 @@ def write(graph: Union[SDG, PDAG, DAG], file: FileLike) -> None:
     target_key.set("attr.type", "string")
 
     # Create graph element
-    graph_elem = ET.SubElement(root, "graph", id="G", edgedefault=edge_default)
+    graph_elem = ET.SubElement(
+        root, "graph", id=graph_id, edgedefault=edge_default
+    )
 
     # Add nodes in order
     for node in graph.nodes:
