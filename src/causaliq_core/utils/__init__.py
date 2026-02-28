@@ -8,6 +8,14 @@ from enum import Enum
 from typing import Any
 
 from .environment import environment
+from .filter_expr import (
+    FilterExpressionError,
+    FilterSyntaxError,
+    evaluate_filter,
+    filter_entries,
+    get_filter_variables,
+    validate_filter,
+)
 from .io import FileFormatError, is_valid_path, write_dataframe
 from .math import ln, rndsf
 from .random import RandomIntegers
@@ -87,12 +95,18 @@ class EnumWithAttrs(Enum):
 __all__ = [
     "EnumWithAttrs",
     "environment",
+    "evaluate_filter",
+    "filter_entries",
+    "FilterExpressionError",
+    "FilterSyntaxError",
+    "get_filter_variables",
     "rndsf",
     "ln",
     "FileFormatError",
     "is_valid_path",
     "RandomIntegers",
     "Timing",
+    "validate_filter",
     "values_same",
     "dicts_same",
     "dists_same",
