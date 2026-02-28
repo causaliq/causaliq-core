@@ -37,6 +37,21 @@ Performance measurement and timeout functionality:
 - `run_with_timeout()` and `@with_timeout` for algorithm timeouts  
 - Thread-safe execution with configurable timeouts
 
+### [Filter Expressions](utils_filter_expr.md)
+Safe filter expression evaluation for metadata filtering:
+
+- `evaluate_filter()` - Evaluate filter against metadata
+- `validate_filter()` - Check filter syntax validity
+- `filter_entries()` - Filter collections by expression
+- Python syntax with `simpleeval` for security
+
+### [Weight Computation](utils_weights.md)
+Metadata-driven weight computation for aggregation:
+
+- `compute_weight()` - Calculate weight from metadata
+- `validate_weight_spec()` - Validate weight specification
+- Multiplicative weighting by metadata field values
+
 ### Enhanced Enumerations
 
 ::: causaliq_core.utils.EnumWithAttrs
@@ -54,6 +69,12 @@ from causaliq_core.utils import rndsf, ln
 # Environment detection  
 from causaliq_core.utils import environment
 
+# Filter expressions
+from causaliq_core.utils import evaluate_filter, filter_entries
+
+# Weight computation
+from causaliq_core.utils import compute_weight, validate_weight_spec
+
 # Enhanced enums
 from causaliq_core.utils import EnumWithAttrs
 
@@ -65,8 +86,10 @@ from causaliq_core.utils.random import stable_random
 ## Module Structure
 
 - **Main Module** (`causaliq_core.utils`): Core functions and enhanced enums
+- **Filter Submodule** (`causaliq_core.utils.filter_expr`): Filter expression evaluation
+- **Weights Submodule** (`causaliq_core.utils.weights`): Weight computation
 - **Random Submodule** (`causaliq_core.utils.random`): Random number utilities
 - **Timing Submodule** (`causaliq_core.utils.timing`): Performance and timeout utilities
 
-For detailed API documentation, see the specialized pages linked above.
+For detailed API documentation, see the specialised pages linked above.
 

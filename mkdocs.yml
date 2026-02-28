@@ -80,6 +80,8 @@ nav:
       - Mathematical Functions: api/utils_math.md
       - I/O Operations: api/utils_io.md
       - Environment: api/utils_environment.md
+      - Filter Expressions: api/utils_filter_expr.md
+      - Weight Computation: api/utils_weights.md
       - Random Numbers: api/utils_random.md
       - Timing: api/utils_timing.md
     - Cache:
