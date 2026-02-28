@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../utils_weights/">
+        <link rel="prev" href="../utils_environment/">
       
       
-        <link rel="next" href="../utils_timing/">
+        <link rel="next" href="../utils_weights/">
       
       
         
@@ -23,7 +23,7 @@
     
     
       
-        <title>Random Numbers - causaliq-core</title>
+        <title>Filter Expressions - causaliq-core</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#random-number-utilities" class="md-skip">
+        <a href="#filter-expression-utilities" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Random Numbers
+              Filter Expressions
             
           </span>
         </div>
@@ -1677,62 +1677,6 @@
                 
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../utils_filter_expr/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Filter Expressions
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../utils_weights/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Weight Computation
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
     
   
   
@@ -1752,7 +1696,7 @@
   <span class="md-ellipsis">
     
   
-    Random Numbers
+    Filter Expressions
   
 
     
@@ -1770,7 +1714,7 @@
   <span class="md-ellipsis">
     
   
-    Random Numbers
+    Filter Expressions
   
 
     
@@ -1809,33 +1753,33 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.random_generator" class="md-nav__link">
+  <a href="#causaliq_core.utils.evaluate_filter" class="md-nav__link">
     <span class="md-ellipsis">
       
-        random_generator
+        evaluate_filter
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="evaluate_filter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#causaliq_core.utils.evaluate_filter(expression)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        expression
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.set_random_seed" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        set_random_seed
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="set_random_seed">
-      <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.set_random_seed(seed)" class="md-nav__link">
+  <a href="#causaliq_core.utils.evaluate_filter(metadata)" class="md-nav__link">
     <span class="md-ellipsis">
       
-        seed
+        metadata
       
     </span>
   </a>
@@ -1848,22 +1792,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.stable_random" class="md-nav__link">
+  <a href="#causaliq_core.utils.validate_filter" class="md-nav__link">
     <span class="md-ellipsis">
       
-        stable_random
+        validate_filter
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="stable_random">
+    <nav class="md-nav" aria-label="validate_filter">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.stable_random(path)" class="md-nav__link">
+  <a href="#causaliq_core.utils.validate_filter(expression)" class="md-nav__link">
     <span class="md-ellipsis">
       
-        path
+        expression
       
     </span>
   </a>
@@ -1876,33 +1820,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.generate_stable_random" class="md-nav__link">
+  <a href="#causaliq_core.utils.get_filter_variables" class="md-nav__link">
     <span class="md-ellipsis">
       
-        generate_stable_random
+        get_filter_variables
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="generate_stable_random">
+    <nav class="md-nav" aria-label="get_filter_variables">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.generate_stable_random(N)" class="md-nav__link">
+  <a href="#causaliq_core.utils.get_filter_variables(expression)" class="md-nav__link">
     <span class="md-ellipsis">
       
-        N
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.generate_stable_random(path)" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        path
+        expression
       
     </span>
   </a>
@@ -1915,22 +1848,44 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.init_stable_random" class="md-nav__link">
+  <a href="#causaliq_core.utils.filter_entries" class="md-nav__link">
     <span class="md-ellipsis">
       
-        init_stable_random
+        filter_entries
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="init_stable_random">
+    <nav class="md-nav" aria-label="filter_entries">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.init_stable_random(offset)" class="md-nav__link">
+  <a href="#causaliq_core.utils.filter_entries(entries)" class="md-nav__link">
     <span class="md-ellipsis">
       
-        offset
+        entries
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#causaliq_core.utils.filter_entries(expression)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        expression
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#causaliq_core.utils.filter_entries(metadata_key)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        metadata_key
       
     </span>
   </a>
@@ -1943,10 +1898,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#classes" class="md-nav__link">
+  <a href="#exceptions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Classes
+        Exceptions
       
     </span>
   </a>
@@ -1954,10 +1909,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.Randomise" class="md-nav__link">
+  <a href="#causaliq_core.utils.FilterExpressionError" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Randomise
+        FilterExpressionError
       
     </span>
   </a>
@@ -1965,74 +1920,24 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.RandomIntegers" class="md-nav__link">
+  <a href="#causaliq_core.utils.FilterSyntaxError" class="md-nav__link">
     <span class="md-ellipsis">
       
-        RandomIntegers
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="RandomIntegers">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.RandomIntegers(n)" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        n
+        FilterSyntaxError
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.RandomIntegers(subsample)" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#expression-syntax" class="md-nav__link">
     <span class="md-ellipsis">
       
-        subsample
+        Expression Syntax
       
     </span>
   </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.RandomIntegers(path)" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        path
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.RandomIntegers.__iter__" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        __iter__
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.RandomIntegers.__next__" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        __next__
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -2049,10 +1954,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#basic-random-number-generation" class="md-nav__link">
+  <a href="#basic-filtering" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Basic Random Number Generation
+        Basic Filtering
       
     </span>
   </a>
@@ -2060,10 +1965,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#stable-random-sequences" class="md-nav__link">
+  <a href="#validating-expressions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Stable Random Sequences
+        Validating Expressions
       
     </span>
   </a>
@@ -2071,10 +1976,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#random-integer-sequences" class="md-nav__link">
+  <a href="#extracting-variables" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Random Integer Sequences
+        Extracting Variables
       
     </span>
   </a>
@@ -2082,10 +1987,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#experiment-randomization-types" class="md-nav__link">
+  <a href="#filtering-collections" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Experiment Randomization Types
+        Filtering Collections
       
     </span>
   </a>
@@ -2098,10 +2003,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#features" class="md-nav__link">
+  <a href="#workflow-integration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Features
+        Workflow Integration
       
     </span>
   </a>
@@ -2112,6 +2017,62 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utils_weights/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Weight Computation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utils_random/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Random Numbers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -2348,33 +2309,33 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.random_generator" class="md-nav__link">
+  <a href="#causaliq_core.utils.evaluate_filter" class="md-nav__link">
     <span class="md-ellipsis">
       
-        random_generator
+        evaluate_filter
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="evaluate_filter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#causaliq_core.utils.evaluate_filter(expression)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        expression
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.set_random_seed" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        set_random_seed
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="set_random_seed">
-      <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.set_random_seed(seed)" class="md-nav__link">
+  <a href="#causaliq_core.utils.evaluate_filter(metadata)" class="md-nav__link">
     <span class="md-ellipsis">
       
-        seed
+        metadata
       
     </span>
   </a>
@@ -2387,22 +2348,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.stable_random" class="md-nav__link">
+  <a href="#causaliq_core.utils.validate_filter" class="md-nav__link">
     <span class="md-ellipsis">
       
-        stable_random
+        validate_filter
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="stable_random">
+    <nav class="md-nav" aria-label="validate_filter">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.stable_random(path)" class="md-nav__link">
+  <a href="#causaliq_core.utils.validate_filter(expression)" class="md-nav__link">
     <span class="md-ellipsis">
       
-        path
+        expression
       
     </span>
   </a>
@@ -2415,33 +2376,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.generate_stable_random" class="md-nav__link">
+  <a href="#causaliq_core.utils.get_filter_variables" class="md-nav__link">
     <span class="md-ellipsis">
       
-        generate_stable_random
+        get_filter_variables
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="generate_stable_random">
+    <nav class="md-nav" aria-label="get_filter_variables">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.generate_stable_random(N)" class="md-nav__link">
+  <a href="#causaliq_core.utils.get_filter_variables(expression)" class="md-nav__link">
     <span class="md-ellipsis">
       
-        N
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.generate_stable_random(path)" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        path
+        expression
       
     </span>
   </a>
@@ -2454,22 +2404,44 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.init_stable_random" class="md-nav__link">
+  <a href="#causaliq_core.utils.filter_entries" class="md-nav__link">
     <span class="md-ellipsis">
       
-        init_stable_random
+        filter_entries
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="init_stable_random">
+    <nav class="md-nav" aria-label="filter_entries">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.init_stable_random(offset)" class="md-nav__link">
+  <a href="#causaliq_core.utils.filter_entries(entries)" class="md-nav__link">
     <span class="md-ellipsis">
       
-        offset
+        entries
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#causaliq_core.utils.filter_entries(expression)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        expression
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#causaliq_core.utils.filter_entries(metadata_key)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        metadata_key
       
     </span>
   </a>
@@ -2482,10 +2454,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#classes" class="md-nav__link">
+  <a href="#exceptions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Classes
+        Exceptions
       
     </span>
   </a>
@@ -2493,10 +2465,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.Randomise" class="md-nav__link">
+  <a href="#causaliq_core.utils.FilterExpressionError" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Randomise
+        FilterExpressionError
       
     </span>
   </a>
@@ -2504,74 +2476,24 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.RandomIntegers" class="md-nav__link">
+  <a href="#causaliq_core.utils.FilterSyntaxError" class="md-nav__link">
     <span class="md-ellipsis">
       
-        RandomIntegers
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="RandomIntegers">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.RandomIntegers(n)" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        n
+        FilterSyntaxError
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.RandomIntegers(subsample)" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#expression-syntax" class="md-nav__link">
     <span class="md-ellipsis">
       
-        subsample
+        Expression Syntax
       
     </span>
   </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.RandomIntegers(path)" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        path
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.RandomIntegers.__iter__" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        __iter__
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#causaliq_core.utils.random.RandomIntegers.__next__" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        __next__
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -2588,10 +2510,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#basic-random-number-generation" class="md-nav__link">
+  <a href="#basic-filtering" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Basic Random Number Generation
+        Basic Filtering
       
     </span>
   </a>
@@ -2599,10 +2521,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#stable-random-sequences" class="md-nav__link">
+  <a href="#validating-expressions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Stable Random Sequences
+        Validating Expressions
       
     </span>
   </a>
@@ -2610,10 +2532,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#random-integer-sequences" class="md-nav__link">
+  <a href="#extracting-variables" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Random Integer Sequences
+        Extracting Variables
       
     </span>
   </a>
@@ -2621,10 +2543,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#experiment-randomization-types" class="md-nav__link">
+  <a href="#filtering-collections" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Experiment Randomization Types
+        Filtering Collections
       
     </span>
   </a>
@@ -2637,10 +2559,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#features" class="md-nav__link">
+  <a href="#workflow-integration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Features
+        Workflow Integration
       
     </span>
   </a>
@@ -2664,71 +2586,62 @@
 
 
 
-<h1 id="random-number-utilities">Random Number Utilities<a class="headerlink" href="#random-number-utilities" title="Permanent link">&para;</a></h1>
-<p>Stable, reproducible random number generation for scientific computing and experimental repeatability.</p>
+<h1 id="filter-expression-utilities">Filter Expression Utilities<a class="headerlink" href="#filter-expression-utilities" title="Permanent link">&para;</a></h1>
+<p>Safe filter expression evaluation for metadata filtering in workflows
+and aggregation operations.</p>
+<p>This module provides functions for evaluating Python-like filter expressions
+against metadata dictionaries using the <code>simpleeval</code> library for safe
+evaluation without security risks of <code>eval()</code>.</p>
 <h2 id="core-functions">Core Functions<a class="headerlink" href="#core-functions" title="Permanent link">&para;</a></h2>
 
 
 <div class="doc doc-object doc-function">
 
 
-<h2 id="causaliq_core.utils.random.random_generator" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">random_generator</span>
+<h2 id="causaliq_core.utils.evaluate_filter" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">evaluate_filter</span>
 
 
-<a href="#causaliq_core.utils.random.random_generator" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">random_generator</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><span title="numpy.random.Generator">Generator</span></span>
+<a href="#causaliq_core.utils.evaluate_filter" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">evaluate_filter</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="expression (causaliq_core.utils.evaluate_filter(expression))" href="#causaliq_core.utils.evaluate_filter(expression)">expression</a></span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="metadata (causaliq_core.utils.evaluate_filter(metadata))" href="#causaliq_core.utils.evaluate_filter(metadata)">metadata</a></span><span class="p">:</span> <span class="n"><span title="typing.Dict">Dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n"><span title="bool">bool</span></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Get the current random number generator instance.</p>
-
-
-<p><span class="doc-section-title">Returns:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-              <code><span title="numpy.random.Generator">Generator</span></code>
-          –
-          <div class="doc-md-description">
-            <p>numpy.random.Generator: The current random number generator</p>
-          </div>
-        </li>
-    </ul>
-
-          
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="causaliq_core.utils.random.set_random_seed" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">set_random_seed</span>
-
-
-<a href="#causaliq_core.utils.random.set_random_seed" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">set_random_seed</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="seed (causaliq_core.utils.random.set_random_seed(seed))" href="#causaliq_core.utils.random.set_random_seed(seed)">seed</a></span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents first">
-
-        <p>Set the seed of the random number generator.</p>
+        <p>Evaluate filter expression against metadata dictionary.</p>
+<p>The expression uses Python syntax with metadata field names as variables.
+Supports comparison operators (==, !=, &gt;, &lt;, &gt;=, &lt;=), boolean operators
+(and, or, not), membership testing (in), and parentheses for grouping.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-<h3 id="causaliq_core.utils.random.set_random_seed(seed)" class="doc doc-heading doc-heading-parameter">              <b><code>seed</code></b>
-<a href="#causaliq_core.utils.random.set_random_seed(seed)" class="headerlink" title="Permanent link">&para;</a></h3>              (<code><span title="typing.Optional">Optional</span>[<span title="int">int</span>]</code>, default:
-                  <code>None</code>
-)
+<h3 id="causaliq_core.utils.evaluate_filter(expression)" class="doc doc-heading doc-heading-parameter">              <b><code>expression</code></b>
+<a href="#causaliq_core.utils.evaluate_filter(expression)" class="headerlink" title="Permanent link">&para;</a></h3>              (<code><span title="str">str</span></code>)
           –
           <div class="doc-md-description">
-            <p>Seed for pseudo-random number generation, or None for truly
-random</p>
+            <p>Filter expression string.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+<h3 id="causaliq_core.utils.evaluate_filter(metadata)" class="doc doc-heading doc-heading-parameter">              <b><code>metadata</code></b>
+<a href="#causaliq_core.utils.evaluate_filter(metadata)" class="headerlink" title="Permanent link">&para;</a></h3>              (<code><span title="typing.Dict">Dict</span>[<span title="str">str</span>, <span title="typing.Any">Any</span>]</code>)
+          –
+          <div class="doc-md-description">
+            <p>Metadata dictionary with field values.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="bool">bool</span></code>
+          –
+          <div class="doc-md-description">
+            <p>True if metadata matches the filter expression, False otherwise.</p>
           </div>
         </li>
     </ul>
@@ -2736,14 +2649,41 @@ random</p>
 
 <p><span class="doc-section-title">Raises:</span></p>
     <ul>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="            FilterSyntaxError (causaliq_core.utils.filter_expr.FilterSyntaxError)" href="#causaliq_core.utils.FilterSyntaxError">FilterSyntaxError</a></code>
+            –
+          <div class="doc-md-description">
+            <p>If expression has invalid syntax.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="            FilterExpressionError (causaliq_core.utils.filter_expr.FilterExpressionError)" href="#causaliq_core.utils.FilterExpressionError">FilterExpressionError</a></code>
+            –
+          <div class="doc-md-description">
+            <p>If evaluation fails (e.g., undefined variable).</p>
+          </div>
+        </li>
         <li class="doc-section-item field-body">
               <code><span title="TypeError">TypeError</span></code>
             –
           <div class="doc-md-description">
-            <p>If seed is not an int or None</p>
+            <p>If expression is not a string or metadata is not a dict.</p>
           </div>
         </li>
     </ul>
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="language-pycon highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;network&quot;</span><span class="p">:</span> <span class="s2">&quot;asia&quot;</span><span class="p">,</span> <span class="s2">&quot;sample_size&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span> <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;ok&quot;</span><span class="p">}</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">evaluate_filter</span><span class="p">(</span><span class="s2">&quot;network == &#39;asia&#39;&quot;</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="go">True</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">evaluate_filter</span><span class="p">(</span><span class="s2">&quot;sample_size &gt; 500 and status == &#39;ok&#39;&quot;</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="go">True</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">evaluate_filter</span><span class="p">(</span><span class="s2">&quot;network in [&#39;asia&#39;, &#39;alarm&#39;]&quot;</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="go">True</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">evaluate_filter</span><span class="p">(</span><span class="s2">&quot;not network == &#39;sports&#39;&quot;</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="go">True</span>
+</span></code></pre></div>
 
           
 
@@ -2754,41 +2694,29 @@ random</p>
 <div class="doc doc-object doc-function">
 
 
-<h2 id="causaliq_core.utils.random.stable_random" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">stable_random</span>
+<h2 id="causaliq_core.utils.validate_filter" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">validate_filter</span>
 
 
-<a href="#causaliq_core.utils.random.stable_random" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">stable_random</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="path (causaliq_core.utils.random.stable_random(path))" href="#causaliq_core.utils.random.stable_random(path)">path</a></span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="float">float</span></span>
+<a href="#causaliq_core.utils.validate_filter" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">validate_filter</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="expression (causaliq_core.utils.validate_filter(expression))" href="#causaliq_core.utils.validate_filter(expression)">expression</a></span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Return next random number in stable sequence.</p>
+        <p>Validate filter expression syntax without evaluating.</p>
+<p>Checks that the expression can be parsed. Does not verify that variable
+names exist - that is checked during evaluation.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-<h3 id="causaliq_core.utils.random.stable_random(path)" class="doc doc-heading doc-heading-parameter">              <b><code>path</code></b>
-<a href="#causaliq_core.utils.random.stable_random(path)" class="headerlink" title="Permanent link">&para;</a></h3>              (<code><span title="typing.Optional">Optional</span>[<span title="str">str</span>]</code>, default:
-                  <code>None</code>
-)
+<h3 id="causaliq_core.utils.validate_filter(expression)" class="doc doc-heading doc-heading-parameter">              <b><code>expression</code></b>
+<a href="#causaliq_core.utils.validate_filter(expression)" class="headerlink" title="Permanent link">&para;</a></h3>              (<code><span title="str">str</span></code>)
           –
           <div class="doc-md-description">
-            <p>Legacy compatibility parameter (ignored)</p>
-          </div>
-        </li>
-    </ul>
-
-
-<p><span class="doc-section-title">Returns:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-              <code><span title="float">float</span></code>
-          –
-          <div class="doc-md-description">
-            <p>Next random number from stable sequence</p>
+            <p>Filter expression string.</p>
           </div>
         </li>
     </ul>
@@ -2797,22 +2725,33 @@ random</p>
 <p><span class="doc-section-title">Raises:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-              <code><span title="StopIteration">StopIteration</span></code>
+              <code><a class="autorefs autorefs-internal" title="            FilterSyntaxError (causaliq_core.utils.filter_expr.FilterSyntaxError)" href="#causaliq_core.utils.FilterSyntaxError">FilterSyntaxError</a></code>
             –
           <div class="doc-md-description">
-            <p>When no more numbers available</p>
+            <p>If expression has invalid syntax.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
-              <code><span title="FileNotFoundError">FileNotFoundError</span></code>
+              <code><span title="TypeError">TypeError</span></code>
             –
           <div class="doc-md-description">
-            <p>For legacy compatibility when sequence
-unavailable</p>
+            <p>If expression is not a string.</p>
           </div>
         </li>
     </ul>
 
+
+<details class="example" open>
+  <summary>Example</summary>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p>validate_filter("network == 'asia'")  # OK
+validate_filter("network ==")  # Raises FilterSyntaxError</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</details>
           
 
     </div>
@@ -2822,40 +2761,29 @@ unavailable</p>
 <div class="doc doc-object doc-function">
 
 
-<h2 id="causaliq_core.utils.random.generate_stable_random" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">generate_stable_random</span>
+<h2 id="causaliq_core.utils.get_filter_variables" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">get_filter_variables</span>
 
 
-<a href="#causaliq_core.utils.random.generate_stable_random" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">generate_stable_random</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="N (causaliq_core.utils.random.generate_stable_random(N))" href="#causaliq_core.utils.random.generate_stable_random(N)">N</a></span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="path (causaliq_core.utils.random.generate_stable_random(path))" href="#causaliq_core.utils.random.generate_stable_random(path)">path</a></span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="typing.List">List</span></span><span class="p">[</span><span class="n"><span title="float">float</span></span><span class="p">]</span>
+<a href="#causaliq_core.utils.get_filter_variables" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">get_filter_variables</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="expression (causaliq_core.utils.get_filter_variables(expression))" href="#causaliq_core.utils.get_filter_variables(expression)">expression</a></span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="typing.Set">Set</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Generate a sequence of random numbers for repeatability.</p>
-<p>This function returns N random numbers from the embedded stable sequence,
-maintaining compatibility with legacy code that expects file-based
-generation. For compatibility, the path parameter is accepted but ignored.</p>
+        <p>Extract variable names used in a filter expression.</p>
+<p>Parses the expression and returns the set of variable names referenced.
+Useful for validating that required metadata fields are present.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-<h3 id="causaliq_core.utils.random.generate_stable_random(N)" class="doc doc-heading doc-heading-parameter">              <b><code>N</code></b>
-<a href="#causaliq_core.utils.random.generate_stable_random(N)" class="headerlink" title="Permanent link">&para;</a></h3>              (<code><span title="int">int</span></code>)
+<h3 id="causaliq_core.utils.get_filter_variables(expression)" class="doc doc-heading doc-heading-parameter">              <b><code>expression</code></b>
+<a href="#causaliq_core.utils.get_filter_variables(expression)" class="headerlink" title="Permanent link">&para;</a></h3>              (<code><span title="str">str</span></code>)
           –
           <div class="doc-md-description">
-            <p>Number of random numbers to generate</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-<h3 id="causaliq_core.utils.random.generate_stable_random(path)" class="doc doc-heading doc-heading-parameter">              <b><code>path</code></b>
-<a href="#causaliq_core.utils.random.generate_stable_random(path)" class="headerlink" title="Permanent link">&para;</a></h3>              (<code><span title="typing.Optional">Optional</span>[<span title="str">str</span>]</code>, default:
-                  <code>None</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Legacy compatibility parameter (ignored)</p>
+            <p>Filter expression string.</p>
           </div>
         </li>
     </ul>
@@ -2864,10 +2792,10 @@ generation. For compatibility, the path parameter is accepted but ignored.</p>
 <p><span class="doc-section-title">Returns:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-              <code><span title="typing.List">List</span>[<span title="float">float</span>]</code>
+              <code><span title="typing.Set">Set</span>[<span title="str">str</span>]</code>
           –
           <div class="doc-md-description">
-            <p>List of N random numbers from the stable sequence</p>
+            <p>Set of variable names used in the expression.</p>
           </div>
         </li>
     </ul>
@@ -2876,14 +2804,32 @@ generation. For compatibility, the path parameter is accepted but ignored.</p>
 <p><span class="doc-section-title">Raises:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-              <code><span title="ValueError">ValueError</span></code>
+              <code><a class="autorefs autorefs-internal" title="            FilterSyntaxError (causaliq_core.utils.filter_expr.FilterSyntaxError)" href="#causaliq_core.utils.FilterSyntaxError">FilterSyntaxError</a></code>
             –
           <div class="doc-md-description">
-            <p>If N is greater than available sequence length</p>
+            <p>If expression has invalid syntax.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><span title="TypeError">TypeError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If expression is not a string.</p>
           </div>
         </li>
     </ul>
 
+
+<details class="example" open>
+  <summary>Example</summary>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p _network_="'network'," _sample_size_="'sample_size'">get_filter_variables("network == 'asia' and sample_size &gt; 500")</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</details>
           
 
     </div>
@@ -2893,57 +2839,129 @@ generation. For compatibility, the path parameter is accepted but ignored.</p>
 <div class="doc doc-object doc-function">
 
 
-<h2 id="causaliq_core.utils.random.init_stable_random" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">init_stable_random</span>
+<h2 id="causaliq_core.utils.filter_entries" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">filter_entries</span>
 
 
-<a href="#causaliq_core.utils.random.init_stable_random" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">init_stable_random</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="offset (causaliq_core.utils.random.init_stable_random(offset))" href="#causaliq_core.utils.random.init_stable_random(offset)">offset</a></span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<a href="#causaliq_core.utils.filter_entries" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">filter_entries</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n"><a class="autorefs autorefs-internal" title="entries (causaliq_core.utils.filter_entries(entries))" href="#causaliq_core.utils.filter_entries(entries)">entries</a></span><span class="p">:</span> <span class="n"><span title="typing.List">List</span></span><span class="p">[</span><span class="n"><span title="typing.Dict">Dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]],</span> <span class="n"><a class="autorefs autorefs-internal" title="expression (causaliq_core.utils.filter_entries(expression))" href="#causaliq_core.utils.filter_entries(expression)">expression</a></span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="metadata_key (causaliq_core.utils.filter_entries(metadata_key))" href="#causaliq_core.utils.filter_entries(metadata_key)">metadata_key</a></span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">=</span> <span class="s2">&quot;metadata&quot;</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="typing.List">List</span></span><span class="p">[</span><span class="n"><span title="typing.Dict">Dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]]</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Set the stable random offset and clear cache.</p>
-<p>Sets the stable random offset so that different stable sequences can
-be generated from the same embedded data. Also clears the cache.</p>
+        <p>Filter a list of entries by metadata expression.</p>
+<p>Convenience function to filter a list of cache entry dictionaries
+by a filter expression applied to each entry's metadata.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-<h3 id="causaliq_core.utils.random.init_stable_random(offset)" class="doc doc-heading doc-heading-parameter">              <b><code>offset</code></b>
-<a href="#causaliq_core.utils.random.init_stable_random(offset)" class="headerlink" title="Permanent link">&para;</a></h3>              (<code><span title="int">int</span></code>, default:
-                  <code>0</code>
+<h3 id="causaliq_core.utils.filter_entries(entries)" class="doc doc-heading doc-heading-parameter">              <b><code>entries</code></b>
+<a href="#causaliq_core.utils.filter_entries(entries)" class="headerlink" title="Permanent link">&para;</a></h3>              (<code><span title="typing.List">List</span>[<span title="typing.Dict">Dict</span>[<span title="str">str</span>, <span title="typing.Any">Any</span>]]</code>)
+          –
+          <div class="doc-md-description">
+            <p>List of entry dictionaries.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+<h3 id="causaliq_core.utils.filter_entries(expression)" class="doc doc-heading doc-heading-parameter">              <b><code>expression</code></b>
+<a href="#causaliq_core.utils.filter_entries(expression)" class="headerlink" title="Permanent link">&para;</a></h3>              (<code><span title="str">str</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Filter expression string.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+<h3 id="causaliq_core.utils.filter_entries(metadata_key)" class="doc doc-heading doc-heading-parameter">              <b><code>metadata_key</code></b>
+<a href="#causaliq_core.utils.filter_entries(metadata_key)" class="headerlink" title="Permanent link">&para;</a></h3>              (<code><span title="str">str</span></code>, default:
+                  <code>&#39;metadata&#39;</code>
 )
           –
           <div class="doc-md-description">
-            <p>Offset which generates different sequences</p>
+            <p>Key in entry dict containing metadata.</p>
           </div>
         </li>
     </ul>
 
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="typing.List">List</span>[<span title="typing.Dict">Dict</span>[<span title="str">str</span>, <span title="typing.Any">Any</span>]]</code>
+          –
+          <div class="doc-md-description">
+            <p>List of entries where metadata matches the filter.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="            FilterSyntaxError (causaliq_core.utils.filter_expr.FilterSyntaxError)" href="#causaliq_core.utils.FilterSyntaxError">FilterSyntaxError</a></code>
+            –
+          <div class="doc-md-description">
+            <p>If expression has invalid syntax.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="            FilterExpressionError (causaliq_core.utils.filter_expr.FilterExpressionError)" href="#causaliq_core.utils.FilterExpressionError">FilterExpressionError</a></code>
+            –
+          <div class="doc-md-description">
+            <p>If evaluation fails.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><span title="TypeError">TypeError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If arguments have invalid types.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<details class="example" open>
+  <summary>Example</summary>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p>entries = [
+...     {"metadata": {"network": "asia", "size": 100}},
+...     {"metadata": {"network": "alarm", "size": 200}},
+... ]
+filter_entries(entries, "network == 'asia'")
+[{'metadata': {'network': 'asia', 'size': 100}}]</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</details>
           
 
     </div>
 
-</div><h2 id="classes">Classes<a class="headerlink" href="#classes" title="Permanent link">&para;</a></h2>
+</div><h2 id="exceptions">Exceptions<a class="headerlink" href="#exceptions" title="Permanent link">&para;</a></h2>
 
 
 <div class="doc doc-object doc-class">
 
 
 
-<h2 id="causaliq_core.utils.random.Randomise" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">Randomise</span>
+<h2 id="causaliq_core.utils.FilterExpressionError" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">FilterExpressionError</span>
 
 
-<a href="#causaliq_core.utils.random.Randomise" class="headerlink" title="Permanent link">&para;</a></h2>
+<a href="#causaliq_core.utils.FilterExpressionError" class="headerlink" title="Permanent link">&para;</a></h2>
 
 
     <div class="doc doc-contents first">
 
 
-        <p>Supported experiment randomisations.</p>
+        <p>Raised when filter expression evaluation fails.</p>
 
           
 
@@ -2958,23 +2976,6 @@ be generated from the same embedded data. Also clears the cache.</p>
 
 
 
-
-
-
-  <div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
-
-
-  </div>
 
     </div>
 
@@ -2984,79 +2985,17 @@ be generated from the same embedded data. Also clears the cache.</p>
 
 
 
-<h2 id="causaliq_core.utils.random.RandomIntegers" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">RandomIntegers</span>
+<h2 id="causaliq_core.utils.FilterSyntaxError" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">FilterSyntaxError</span>
 
 
-<a href="#causaliq_core.utils.random.RandomIntegers" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">RandomIntegers</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="n (causaliq_core.utils.random.RandomIntegers(n))" href="#causaliq_core.utils.random.RandomIntegers(n)">n</a></span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="subsample (causaliq_core.utils.random.RandomIntegers(subsample))" href="#causaliq_core.utils.random.RandomIntegers(subsample)">subsample</a></span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="path (causaliq_core.utils.random.RandomIntegers(path))" href="#causaliq_core.utils.random.RandomIntegers(path)">path</a></span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
-</span></code></pre></div>
+<a href="#causaliq_core.utils.FilterSyntaxError" class="headerlink" title="Permanent link">&para;</a></h2>
+
 
     <div class="doc doc-contents first">
 
 
-        <p>Iterable producing repeatable sequences of random integers.</p>
-<p>Produces repeatable sequences of random integers for all integers
-in a range from 0 to specified n.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-<h3 id="causaliq_core.utils.random.RandomIntegers(n)" class="doc doc-heading doc-heading-parameter">              <b><code>n</code></b>
-<a href="#causaliq_core.utils.random.RandomIntegers(n)" class="headerlink" title="Permanent link">&para;</a></h3>              (<code><span title="int">int</span></code>)
-          –
-          <div class="doc-md-description">
-            <p>Maximum integer in sequence (exclusive upper bound)</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-<h3 id="causaliq_core.utils.random.RandomIntegers(subsample)" class="doc doc-heading doc-heading-parameter">              <b><code>subsample</code></b>
-<a href="#causaliq_core.utils.random.RandomIntegers(subsample)" class="headerlink" title="Permanent link">&para;</a></h3>              (<code><span title="int">int</span></code>, default:
-                  <code>0</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Unique integer id for each sequence</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-<h3 id="causaliq_core.utils.random.RandomIntegers(path)" class="doc doc-heading doc-heading-parameter">              <b><code>path</code></b>
-<a href="#causaliq_core.utils.random.RandomIntegers(path)" class="headerlink" title="Permanent link">&para;</a></h3>              (<code><span title="typing.Optional">Optional</span>[<span title="str">str</span>]</code>, default:
-                  <code>None</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Legacy compatibility parameter (ignored)</p>
-          </div>
-        </li>
-    </ul>
-
-
-<p><span class="doc-section-title">Raises:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-              <code><span title="TypeError">TypeError</span></code>
-            –
-          <div class="doc-md-description">
-            <p>If bad argument type</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-              <code><span title="ValueError">ValueError</span></code>
-            –
-          <div class="doc-md-description">
-            <p>If bad argument value</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-              <code><span title="FileNotFoundError">FileNotFoundError</span></code>
-            –
-          <div class="doc-md-description">
-            <p>If stable random sequence unavailable</p>
-          </div>
-        </li>
-    </ul>
+        <p>Raised when filter expression has invalid syntax.</p>
 
           
 
@@ -3070,171 +3009,95 @@ in a range from 0 to specified n.</p>
 
 
 
-<p><span class="doc-section-title">Methods:</span></p>
-    <ul>
-          <li class="doc-section-item field-body">
-            <b><code><a class="autorefs autorefs-internal" title="            __iter__ (causaliq_core.utils.random.RandomIntegers.__iter__)" href="#causaliq_core.utils.random.RandomIntegers.__iter__">__iter__</a></code></b>
-            –
-            <div class="doc-md-description">
-              <p>Initialize the iterator.</p>
-            </div>
-          </li>
-          <li class="doc-section-item field-body">
-            <b><code><a class="autorefs autorefs-internal" title="            __next__ (causaliq_core.utils.random.RandomIntegers.__next__)" href="#causaliq_core.utils.random.RandomIntegers.__next__">__next__</a></code></b>
-            –
-            <div class="doc-md-description">
-              <p>Return next integer in random sequence.</p>
-            </div>
-          </li>
-    </ul>
 
-
-
-
-
-
-  <div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="causaliq_core.utils.random.RandomIntegers.__iter__" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">__iter__</span>
-
-
-<a href="#causaliq_core.utils.random.RandomIntegers.__iter__" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">__iter__</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="            RandomIntegers (causaliq_core.utils.random.RandomIntegers)" href="#causaliq_core.utils.random.RandomIntegers">RandomIntegers</a></span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Initialize the iterator.</p>
-
-
-<p><span class="doc-section-title">Returns:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-              <code><a class="autorefs autorefs-internal" title="            RandomIntegers (causaliq_core.utils.random.RandomIntegers)" href="#causaliq_core.utils.random.RandomIntegers">RandomIntegers</a></code>
-          –
-          <div class="doc-md-description">
-            <p>The initialized iterator</p>
-          </div>
-        </li>
-    </ul>
-
-          
 
     </div>
 
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="causaliq_core.utils.random.RandomIntegers.__next__" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">__next__</span>
-
-
-<a href="#causaliq_core.utils.random.RandomIntegers.__next__" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">__next__</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><span title="int">int</span></span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Return next integer in random sequence.</p>
-
-
-<p><span class="doc-section-title">Returns:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-              <code><span title="int">int</span></code>
-          –
-          <div class="doc-md-description">
-            <p>Next integer in random sequence</p>
-          </div>
-        </li>
-    </ul>
-
-
-<p><span class="doc-section-title">Raises:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-              <code><span title="StopIteration">StopIteration</span></code>
-            –
-          <div class="doc-md-description">
-            <p>When all values have been returned</p>
-          </div>
-        </li>
-    </ul>
-
-          
-
-    </div>
-
-</div>
-
-
-
-  </div>
-
-    </div>
-
-</div><h2 id="usage-examples">Usage Examples<a class="headerlink" href="#usage-examples" title="Permanent link">&para;</a></h2>
-<h3 id="basic-random-number-generation">Basic Random Number Generation<a class="headerlink" href="#basic-random-number-generation" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">causaliq_core.utils.random</span><span class="w"> </span><span class="kn">import</span> <span class="n">random_generator</span><span class="p">,</span> <span class="n">set_random_seed</span>
+</div><h2 id="expression-syntax">Expression Syntax<a class="headerlink" href="#expression-syntax" title="Permanent link">&para;</a></h2>
+<p>Filter expressions use Python syntax with the following supported operators:</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Operators</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Comparison</td>
+<td><code>==</code>, <code>!=</code>, <code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code></td>
+</tr>
+<tr>
+<td>Boolean</td>
+<td><code>and</code>, <code>or</code>, <code>not</code></td>
+</tr>
+<tr>
+<td>Membership</td>
+<td><code>in</code></td>
+</tr>
+<tr>
+<td>Grouping</td>
+<td><code>()</code></td>
+</tr>
+</tbody>
+</table>
+<p>Allowed functions: <code>len</code>, <code>str</code>, <code>int</code>, <code>float</code>, <code>bool</code>, <code>abs</code>, <code>min</code>, <code>max</code></p>
+<h2 id="usage-examples">Usage Examples<a class="headerlink" href="#usage-examples" title="Permanent link">&para;</a></h2>
+<h3 id="basic-filtering">Basic Filtering<a class="headerlink" href="#basic-filtering" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">causaliq_core.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">evaluate_filter</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># Set seed for reproducibility</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">set_random_seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="c1"># Get generator instance</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="n">gen</span> <span class="o">=</span> <span class="n">random_generator</span><span class="p">()</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="n">value</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>  <span class="c1"># Generate random float [0.0, 1.0)</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;network&quot;</span><span class="p">:</span> <span class="s2">&quot;asia&quot;</span><span class="p">,</span> <span class="s2">&quot;sample_size&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span> <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;completed&quot;</span><span class="p">}</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># Simple equality</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">evaluate_filter</span><span class="p">(</span><span class="s2">&quot;network == &#39;asia&#39;&quot;</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>  <span class="c1"># True</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="c1"># Numeric comparison</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">evaluate_filter</span><span class="p">(</span><span class="s2">&quot;sample_size &gt;= 500&quot;</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>  <span class="c1"># True</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="c1"># Boolean combination</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="n">evaluate_filter</span><span class="p">(</span><span class="s2">&quot;network == &#39;asia&#39; and sample_size &gt; 500&quot;</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>  <span class="c1"># True</span>
 </span></code></pre></div>
-<h3 id="stable-random-sequences">Stable Random Sequences<a class="headerlink" href="#stable-random-sequences" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">causaliq_core.utils.random</span><span class="w"> </span><span class="kn">import</span> <span class="n">stable_random</span><span class="p">,</span> <span class="n">init_stable_random</span>
+<h3 id="validating-expressions">Validating Expressions<a class="headerlink" href="#validating-expressions" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">causaliq_core.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_filter</span><span class="p">,</span> <span class="n">FilterSyntaxError</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># Initialize stable random sequence</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">init_stable_random</span><span class="p">()</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># Valid expression</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">validate_filter</span><span class="p">(</span><span class="s2">&quot;x &gt; 5 and y == &#39;value&#39;&quot;</span><span class="p">)</span>  <span class="c1"># No exception</span>
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="c1"># Generate stable random numbers</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">stable_random</span><span class="p">())</span>  <span class="c1"># Same sequence every run</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="c1"># Invalid syntax</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="k">try</span><span class="p">:</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="n">validate_filter</span><span class="p">(</span><span class="s2">&quot;x ==&quot;</span><span class="p">)</span>  <span class="c1"># Missing right operand</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">except</span> <span class="n">FilterSyntaxError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </span></code></pre></div>
-<h3 id="random-integer-sequences">Random Integer Sequences<a class="headerlink" href="#random-integer-sequences" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">causaliq_core.utils.random</span><span class="w"> </span><span class="kn">import</span> <span class="n">RandomIntegers</span>
+<h3 id="extracting-variables">Extracting Variables<a class="headerlink" href="#extracting-variables" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">causaliq_core.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_filter_variables</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># Create iterator for random integers 1-10</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">rand_ints</span> <span class="o">=</span> <span class="n">RandomIntegers</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">rand_ints</span><span class="p">:</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>  <span class="c1"># Each integer appears exactly once</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># Get variables referenced in expression</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nb">vars</span> <span class="o">=</span> <span class="n">get_filter_variables</span><span class="p">(</span><span class="s2">&quot;network == &#39;asia&#39; and sample_size &gt; 500&quot;</span><span class="p">)</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="nb">print</span><span class="p">(</span><span class="nb">vars</span><span class="p">)</span>  <span class="c1"># {&#39;network&#39;, &#39;sample_size&#39;}</span>
 </span></code></pre></div>
-<h3 id="experiment-randomization-types">Experiment Randomization Types<a class="headerlink" href="#experiment-randomization-types" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">causaliq_core.utils.random</span><span class="w"> </span><span class="kn">import</span> <span class="n">Randomise</span>
+<h3 id="filtering-collections">Filtering Collections<a class="headerlink" href="#filtering-collections" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">causaliq_core.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">filter_entries</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="c1"># Available randomization types for experiments</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">Randomise</span><span class="o">.</span><span class="n">ORDER</span><span class="p">)</span>      <span class="c1"># Randomize variable order</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="nb">print</span><span class="p">(</span><span class="n">Randomise</span><span class="o">.</span><span class="n">NAMES</span><span class="p">)</span>      <span class="c1"># Randomize variable names  </span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="nb">print</span><span class="p">(</span><span class="n">Randomise</span><span class="o">.</span><span class="n">KNOWLEDGE</span><span class="p">)</span>  <span class="c1"># Randomize knowledge</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="nb">print</span><span class="p">(</span><span class="n">Randomise</span><span class="o">.</span><span class="n">ROWS</span><span class="p">)</span>       <span class="c1"># Randomize row order</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="nb">print</span><span class="p">(</span><span class="n">Randomise</span><span class="o">.</span><span class="n">SAMPLE</span><span class="p">)</span>     <span class="c1"># Randomize sample rows</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">entries</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="p">{</span><span class="s2">&quot;network&quot;</span><span class="p">:</span> <span class="s2">&quot;asia&quot;</span><span class="p">,</span> <span class="s2">&quot;sample_size&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">},</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="p">{</span><span class="s2">&quot;network&quot;</span><span class="p">:</span> <span class="s2">&quot;asia&quot;</span><span class="p">,</span> <span class="s2">&quot;sample_size&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">},</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="p">{</span><span class="s2">&quot;network&quot;</span><span class="p">:</span> <span class="s2">&quot;alarm&quot;</span><span class="p">,</span> <span class="s2">&quot;sample_size&quot;</span><span class="p">:</span> <span class="mi">500</span><span class="p">},</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="p">]</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="c1"># Filter to asia entries with sample_size &gt; 500</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="n">result</span> <span class="o">=</span> <span class="n">filter_entries</span><span class="p">(</span><span class="n">entries</span><span class="p">,</span> <span class="s2">&quot;network == &#39;asia&#39; and sample_size &gt; 500&quot;</span><span class="p">)</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="c1"># Returns: [{&quot;network&quot;: &quot;asia&quot;, &quot;sample_size&quot;: 1000}]</span>
 </span></code></pre></div>
-<h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h2>
-<ul>
-<li><strong>Cross-platform reproducibility</strong>: Same sequences on all platforms</li>
-<li><strong>Stable sequences</strong>: Pre-generated sequence for consistent results</li>
-<li><strong>Configurable seeding</strong>: Support for both deterministic and random seeding</li>
-<li><strong>Iterator patterns</strong>: Clean iteration over random integer sequences</li>
-<li><strong>Experiment support</strong>: Built-in randomization types for scientific experiments</li>
-</ul>
+<h2 id="workflow-integration">Workflow Integration<a class="headerlink" href="#workflow-integration" title="Permanent link">&para;</a></h2>
+<p>Filter expressions are commonly used in workflow configurations:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">actions</span><span class="p">:</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">merge_graphs</span><span class="p">:</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nt">input</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">discovery_results.db</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="nt">filter</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">network == &#39;asia&#39; and status == &#39;completed&#39;</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="nt">output</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">merged_graphs.db</span>
+</span></code></pre></div>
+<p>The filter is applied to cache entry metadata before aggregation.</p>
 
 
 
@@ -3272,7 +3135,7 @@ in a range from 0 to specified n.</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../utils_weights/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Weight Computation">
+          <a href="../utils_environment/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Environment">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -3282,20 +3145,20 @@ in a range from 0 to specified n.</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Weight Computation
+                Environment
               </div>
             </div>
           </a>
         
         
           
-          <a href="../utils_timing/" class="md-footer__link md-footer__link--next" aria-label="Next: Timing">
+          <a href="../utils_weights/" class="md-footer__link md-footer__link--next" aria-label="Next: Weight Computation">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Timing
+                Weight Computation
               </div>
             </div>
             <div class="md-footer__button md-icon">
