@@ -13,7 +13,7 @@ from causaliq_core.action import (
 )
 from causaliq_core.cache import TokenCache
 
-__version__ = "0.5.0.dev3"
+__version__ = "0.5.0.dev4"
 __author__ = "CausalIQ"
 __email__ = "info@causaliq.org"
 

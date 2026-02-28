@@ -21,6 +21,12 @@ from .math import ln, rndsf
 from .random import RandomIntegers
 from .same import dicts_same, dists_same, values_same
 from .timing import Timing
+from .weights import (
+    WeightSpecError,
+    compute_weight,
+    get_weight_fields,
+    validate_weight_spec,
+)
 
 
 class EnumWithAttrs(Enum):
@@ -107,8 +113,12 @@ __all__ = [
     "RandomIntegers",
     "Timing",
     "validate_filter",
+    "validate_weight_spec",
     "values_same",
+    "compute_weight",
     "dicts_same",
     "dists_same",
+    "get_weight_fields",
+    "WeightSpecError",
     "write_dataframe",
 ]
