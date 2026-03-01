@@ -19,11 +19,11 @@ CausalIQ Core provides functionality required by several CausalIQ projects. It i
 
 CausalIQ Core provides the following common functionality required by several user-facing CausalIQ packages in the following areas:
 
-- **graph**: support for general graphs, PDAGs and CPDAGs used in causal discovery;
+- **graph**: support for general graphs (SDG), PDAGs, DAGs, and PDGs (Probabilistic Dependency Graphs) for representing uncertainty over graph structures;
 - **bn**: support for Bayesian Networks (BNs);
 - **cache**: SQLite-backed caching infrastructure with pluggable compressors and shared token dictionary;
-- **io**: filesystem io and format conversion, particularly relating to standard formats for graphs (.graphml, .dsc etc) and BNs (.xdsl)
-- **utils**: utility enums, functions and classes, relating to random numbers, mathematical functions, path handling etc.
+- **io**: filesystem io and format conversion, particularly relating to standard formats for graphs (.graphml, .tetrad, .csv) and BNs (.xdsl, .dsc);
+- **utils**: utility enums, functions and classes including timing/timeout utilities, filter expression evaluation, metadata-driven weight computation, random numbers, and mathematical functions.
 
 This site provides detailed documentation, including: development roadmap, architectural vision, design notes, and API reference for contributors. Since this is not a "user-facing" capability a user guide is not provided.
 

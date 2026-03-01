@@ -25,6 +25,13 @@ Fully oriented causal structures:
 - Represents definite causal relationships
 - Topological ordering and string representation
 
+### [PDG - Probabilistic Dependency Graph](graph_pdg.md)
+Probability distributions over graph structures:
+
+- Stores probabilities for each edge state (forward, backward, undirected, none)
+- Used for graph averaging and uncertainty representation
+- Independent of SDG hierarchy (represents distribution over graphs)
+
 ### [Graph Conversion Functions](graph_convert.md)
 Transform between graph representations:
 
@@ -57,12 +64,13 @@ Native Tetrad software format:
 - `write()` - Write graphs to Tetrad format
 - Supports both DAGs and PDAGs
 
-### [Tetrad Format I/O](graph_io_tetrad.md)
-Native Tetrad graph file format:
+### [GraphML Format I/O](graph_io_graphml.md)
+XML-based graph format:
 
-- `read()` - Read graphs from Tetrad format files
-- `write()` - Write graphs to Tetrad format
-- Supports both DAGs and PDAGs
+- `read()` - Read SDG/PDAG/DAG from GraphML
+- `write()` - Write graphs to GraphML format
+- `read_pdg()` / `write_pdg()` - PDG serialisation
+- Supports file paths and file-like objects
 
 ## Constants
 

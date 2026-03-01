@@ -70,11 +70,13 @@ nav:
       - SDG: api/graph_sdg.md
       - PDAG: api/graph_pdag.md
       - DAG: api/graph_dag.md
+      - PDG: api/graph_pdg.md
       - Conversions: api/graph_convert.md
       - I/O:
         - Common Interface: api/graph_io_common.md
         - Bayesys Format: api/graph_io_bayesys.md
         - Tetrad Format: api/graph_io_tetrad.md
+        - GraphML Format: api/graph_io_graphml.md
     - Utils:
       - Overview: api/utils.md
       - Mathematical Functions: api/utils_math.md

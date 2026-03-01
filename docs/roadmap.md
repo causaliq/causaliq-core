@@ -1,6 +1,6 @@
 # CausalIQ Core - Development Roadmap
 
-**Last updated**: February 18, 2026  
+**Last updated**: March 1, 2026  
 
 This project roadmap fits into the [overall ecosystem roadmap](https://causaliq.org/projects/ecosystem_roadmap/)
 
@@ -19,6 +19,8 @@ This project roadmap fits into the [overall ecosystem roadmap](https://causaliq.
   - **0.3.0 Bayesian Networks** [December 2025]: BN class and classes for local probability distributions, and support for DSC and XDSL BN file formats.
 
   - **0.4.0 Caching Infrastructure** [February 2026]: Token-based caching and (de)compression of JSON and GraphML.
+
+  - **0.5.0 Aggregation Workflows** [March 2026]: PDG class, filter expressions and metadata-driven weighting.
 
 
 *See Git commit history for detailed implementation progress*
