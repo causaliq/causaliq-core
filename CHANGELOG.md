@@ -25,6 +25,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - Nothing yet
 
+## [0.5.0 Aggregation Workflows] - 2026-03-01
+
+### Added
+- Probabilistic Dependency Graph (`PDG`) class for representing uncertainty over graph structures
+- `EdgeProbabilities` dataclass for edge state probability distributions
+- GraphML I/O support for PDG (`read_pdg`, `write_pdg`)
+- Filter expression evaluation (`evaluate_filter`, `validate_filter`, `filter_entries`)
+- Metadata-driven weight computation (`compute_weight`, `validate_weight_spec`)
+- Safe expression evaluation using `simpleeval` library
+
 ## [0.4.0 Caching Infrastructure] - 2026-02-18
 
 ### Added
