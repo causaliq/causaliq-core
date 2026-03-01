@@ -1422,6 +1422,34 @@
   
   
     <li class="md-nav__item">
+      <a href="api/graph_pdg/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PDG
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="api/graph_convert/" class="md-nav__link">
         
   
@@ -1465,10 +1493,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5_6" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5_7" >
         
           
-          <label class="md-nav__link" for="__nav_4_5_6" id="__nav_4_5_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4_5_7" id="__nav_4_5_7_label" tabindex="0">
             
   
   
@@ -1486,8 +1514,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_5_6">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_7">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1568,6 +1596,34 @@
     
   
     Tetrad Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api/graph_io_graphml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GraphML Format
   
 
     
@@ -2148,11 +2204,11 @@
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <p>CausalIQ Core provides the following common functionality required by several user-facing CausalIQ packages in the following areas:</p>
 <ul>
-<li><strong>graph</strong>: support for general graphs, PDAGs and CPDAGs used in causal discovery;</li>
+<li><strong>graph</strong>: support for general graphs (SDG), PDAGs, DAGs, and PDGs (Probabilistic Dependency Graphs) for representing uncertainty over graph structures;</li>
 <li><strong>bn</strong>: support for Bayesian Networks (BNs);</li>
 <li><strong>cache</strong>: SQLite-backed caching infrastructure with pluggable compressors and shared token dictionary;</li>
-<li><strong>io</strong>: filesystem io and format conversion, particularly relating to standard formats for graphs (.graphml, .dsc etc) and BNs (.xdsl)</li>
-<li><strong>utils</strong>: utility enums, functions and classes, relating to random numbers, mathematical functions, path handling etc.</li>
+<li><strong>io</strong>: filesystem io and format conversion, particularly relating to standard formats for graphs (.graphml, .tetrad, .csv) and BNs (.xdsl, .dsc);</li>
+<li><strong>utils</strong>: utility enums, functions and classes including timing/timeout utilities, filter expression evaluation, metadata-driven weight computation, random numbers, and mathematical functions.</li>
 </ul>
 <p>This site provides detailed documentation, including: development roadmap, architectural vision, design notes, and API reference for contributors. Since this is not a "user-facing" capability a user guide is not provided.</p>
 <hr />

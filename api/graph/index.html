@@ -1324,6 +1324,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#pdg-probabilistic-dependency-graph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PDG - Probabilistic Dependency Graph
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#graph-conversion-functions" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1385,10 +1396,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tetrad-format-io_1" class="md-nav__link">
+  <a href="#graphml-format-io" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tetrad Format I/O
+        GraphML Format I/O
       
     </span>
   </a>
@@ -1978,6 +1989,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../graph_pdg/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PDG
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../graph_convert/" class="md-nav__link">
         
   
@@ -2021,10 +2060,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5_6" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5_7" >
         
           
-          <label class="md-nav__link" for="__nav_4_5_6" id="__nav_4_5_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4_5_7" id="__nav_4_5_7_label" tabindex="0">
             
   
   
@@ -2042,8 +2081,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_5_6">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_7">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2124,6 +2163,34 @@
     
   
     Tetrad Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../graph_io_graphml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GraphML Format
   
 
     
@@ -2671,6 +2738,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#pdg-probabilistic-dependency-graph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PDG - Probabilistic Dependency Graph
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#graph-conversion-functions" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2732,10 +2810,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tetrad-format-io_1" class="md-nav__link">
+  <a href="#graphml-format-io" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tetrad Format I/O
+        GraphML Format I/O
       
     </span>
   </a>
@@ -3266,6 +3344,13 @@
 <li>Represents definite causal relationships</li>
 <li>Topological ordering and string representation</li>
 </ul>
+<h3 id="pdg-probabilistic-dependency-graph"><a href="../graph_pdg/">PDG - Probabilistic Dependency Graph</a><a class="headerlink" href="#pdg-probabilistic-dependency-graph" title="Permanent link">&para;</a></h3>
+<p>Probability distributions over graph structures:</p>
+<ul>
+<li>Stores probabilities for each edge state (forward, backward, undirected, none)</li>
+<li>Used for graph averaging and uncertainty representation</li>
+<li>Independent of SDG hierarchy (represents distribution over graphs)</li>
+</ul>
 <h3 id="graph-conversion-functions"><a href="../graph_convert/">Graph Conversion Functions</a><a class="headerlink" href="#graph-conversion-functions" title="Permanent link">&para;</a></h3>
 <p>Transform between graph representations:</p>
 <ul>
@@ -3297,12 +3382,13 @@
 <li><code>write()</code> - Write graphs to Tetrad format</li>
 <li>Supports both DAGs and PDAGs</li>
 </ul>
-<h3 id="tetrad-format-io_1"><a href="../graph_io_tetrad/">Tetrad Format I/O</a><a class="headerlink" href="#tetrad-format-io_1" title="Permanent link">&para;</a></h3>
-<p>Native Tetrad graph file format:</p>
+<h3 id="graphml-format-io"><a href="../graph_io_graphml/">GraphML Format I/O</a><a class="headerlink" href="#graphml-format-io" title="Permanent link">&para;</a></h3>
+<p>XML-based graph format:</p>
 <ul>
-<li><code>read()</code> - Read graphs from Tetrad format files</li>
-<li><code>write()</code> - Write graphs to Tetrad format</li>
-<li>Supports both DAGs and PDAGs</li>
+<li><code>read()</code> - Read SDG/PDAG/DAG from GraphML</li>
+<li><code>write()</code> - Write graphs to GraphML format</li>
+<li><code>read_pdg()</code> / <code>write_pdg()</code> - PDG serialisation</li>
+<li>Supports file paths and file-like objects</li>
 </ul>
 <h2 id="constants">Constants<a class="headerlink" href="#constants" title="Permanent link">&para;</a></h2>
 <h3 id="bayesys_versions"><code>BAYESYS_VERSIONS</code><a class="headerlink" href="#bayesys_versions" title="Permanent link">&para;</a></h3>
@@ -3429,7 +3515,7 @@
           </div>
         </li>
         <li class="doc-section-item field-body">
-          <b><code><span title="causaliq_core.graph.pdg">pdg</span></code></b>
+          <b><code><a class="autorefs autorefs-internal" title="causaliq_core.graph.pdg" href="../graph_pdg/#causaliq_core.graph.pdg">pdg</a></code></b>
           –
           <div class="doc-md-description">
             <p>Probabilistic Dependency Graph (PDG)</p>
@@ -3700,7 +3786,7 @@
 
   
       dataclass
-   (causaliq_core.graph.pdg.EdgeProbabilities)" href="#causaliq_core.graph.EdgeProbabilities">EdgeProbabilities</a></span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+   (causaliq_core.graph.pdg.EdgeProbabilities)" href="../graph_pdg/#causaliq_core.graph.pdg.EdgeProbabilities">EdgeProbabilities</a></span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3732,7 +3818,7 @@ different concept: a distribution over graphs rather than a single graph.</p>
 
   
       dataclass
-   (causaliq_core.graph.pdg.EdgeProbabilities)" href="#causaliq_core.graph.EdgeProbabilities">EdgeProbabilities</a>]]</code>, default:
+   (causaliq_core.graph.pdg.EdgeProbabilities)" href="../graph_pdg/#causaliq_core.graph.pdg.EdgeProbabilities">EdgeProbabilities</a>]]</code>, default:
                   <code>None</code>
 )
           –
@@ -3762,7 +3848,7 @@ alphabetically).</p>
 
   
       dataclass
-   (causaliq_core.graph.pdg.EdgeProbabilities)" href="#causaliq_core.graph.EdgeProbabilities">EdgeProbabilities</a>]</code>)
+   (causaliq_core.graph.pdg.EdgeProbabilities)" href="../graph_pdg/#causaliq_core.graph.pdg.EdgeProbabilities">EdgeProbabilities</a>]</code>)
           –
           <div class="doc-md-description">
             <p>Edge probabilities {(source, target): EdgeProbabilities}.</p>
@@ -3829,7 +3915,7 @@ pdg.get_probabilities("A", "B").forward
 
   
       dataclass
-   (causaliq_core.graph.pdg.EdgeProbabilities)" href="#causaliq_core.graph.EdgeProbabilities">EdgeProbabilities</a>]]</code>, default:
+   (causaliq_core.graph.pdg.EdgeProbabilities)" href="../graph_pdg/#causaliq_core.graph.pdg.EdgeProbabilities">EdgeProbabilities</a>]]</code>, default:
                   <code>None</code>
 )
           –
@@ -3960,7 +4046,7 @@ tuples (source, target) where source &lt; target alphabetically.</p>
 
   
       dataclass
-   (causaliq_core.graph.pdg.EdgeProbabilities)" href="#causaliq_core.graph.EdgeProbabilities">EdgeProbabilities</a></span>
+   (causaliq_core.graph.pdg.EdgeProbabilities)" href="../graph_pdg/#causaliq_core.graph.pdg.EdgeProbabilities">EdgeProbabilities</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3999,7 +4085,7 @@ forward/backward relative to alphabetical ordering.</p>
 
   
       dataclass
-   (causaliq_core.graph.pdg.EdgeProbabilities)" href="#causaliq_core.graph.EdgeProbabilities">EdgeProbabilities</a></code>
+   (causaliq_core.graph.pdg.EdgeProbabilities)" href="../graph_pdg/#causaliq_core.graph.pdg.EdgeProbabilities">EdgeProbabilities</a></code>
           –
           <div class="doc-md-description">
             <p>EdgeProbabilities for the node pair. If no explicit probabilities</p>
@@ -4011,7 +4097,7 @@ forward/backward relative to alphabetical ordering.</p>
 
   
       dataclass
-   (causaliq_core.graph.pdg.EdgeProbabilities)" href="#causaliq_core.graph.EdgeProbabilities">EdgeProbabilities</a></code>
+   (causaliq_core.graph.pdg.EdgeProbabilities)" href="../graph_pdg/#causaliq_core.graph.pdg.EdgeProbabilities">EdgeProbabilities</a></code>
           –
           <div class="doc-md-description">
             <p>stored, returns EdgeProbabilities(none=1.0).</p>
@@ -4050,7 +4136,7 @@ forward/backward relative to alphabetical ordering.</p>
 
   
       dataclass
-   (causaliq_core.graph.pdg.EdgeProbabilities)" href="#causaliq_core.graph.EdgeProbabilities">EdgeProbabilities</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+   (causaliq_core.graph.pdg.EdgeProbabilities)" href="../graph_pdg/#causaliq_core.graph.pdg.EdgeProbabilities">EdgeProbabilities</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4084,7 +4170,7 @@ forward/backward relative to alphabetical ordering.</p>
 
   
       dataclass
-   (causaliq_core.graph.pdg.EdgeProbabilities)" href="#causaliq_core.graph.EdgeProbabilities">EdgeProbabilities</a></code>)
+   (causaliq_core.graph.pdg.EdgeProbabilities)" href="../graph_pdg/#causaliq_core.graph.pdg.EdgeProbabilities">EdgeProbabilities</a></code>)
           –
           <div class="doc-md-description">
             <p>Edge probabilities to set.</p>
@@ -4163,7 +4249,7 @@ forward/backward relative to alphabetical ordering.</p>
 
   
       dataclass
-   (causaliq_core.graph.pdg.EdgeProbabilities)" href="#causaliq_core.graph.EdgeProbabilities">EdgeProbabilities</a></span><span class="p">]]</span>
+   (causaliq_core.graph.pdg.EdgeProbabilities)" href="../graph_pdg/#causaliq_core.graph.pdg.EdgeProbabilities">EdgeProbabilities</a></span><span class="p">]]</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4179,7 +4265,7 @@ forward/backward relative to alphabetical ordering.</p>
 
   
       dataclass
-   (causaliq_core.graph.pdg.EdgeProbabilities)" href="#causaliq_core.graph.EdgeProbabilities">EdgeProbabilities</a>]</code>
+   (causaliq_core.graph.pdg.EdgeProbabilities)" href="../graph_pdg/#causaliq_core.graph.pdg.EdgeProbabilities">EdgeProbabilities</a>]</code>
           –
           <div class="doc-md-description">
             <p>Tuples (source, target, probs) where p_exist &gt; 0.</p>
@@ -4347,7 +4433,7 @@ The p_none value is derived as 1.0 - (forward + backward + undirected).</p>
   </span>
 
 <a href="#causaliq_core.graph.PDG.decompress" class="headerlink" title="Permanent link">&para;</a></h6>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">decompress</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="data (causaliq_core.graph.PDG.decompress(data))" href="#causaliq_core.graph.PDG.decompress(data)">data</a></span><span class="p">:</span> <span class="n"><span title="bytes">bytes</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="            PDG (causaliq_core.graph.pdg.PDG)" href="#causaliq_core.graph.PDG">PDG</a></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">decompress</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="data (causaliq_core.graph.PDG.decompress(data))" href="#causaliq_core.graph.PDG.decompress(data)">data</a></span><span class="p">:</span> <span class="n"><span title="bytes">bytes</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="            PDG (causaliq_core.graph.pdg.PDG)" href="../graph_pdg/#causaliq_core.graph.pdg.PDG">PDG</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4371,7 +4457,7 @@ The p_none value is derived as 1.0 - (forward + backward + undirected).</p>
 <p><span class="doc-section-title">Returns:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-              <code><a class="autorefs autorefs-internal" title="            PDG (causaliq_core.graph.pdg.PDG)" href="#causaliq_core.graph.PDG">PDG</a></code>
+              <code><a class="autorefs autorefs-internal" title="            PDG (causaliq_core.graph.pdg.PDG)" href="../graph_pdg/#causaliq_core.graph.pdg.PDG">PDG</a></code>
           –
           <div class="doc-md-description">
             <p>Reconstructed PDG instance.</p>

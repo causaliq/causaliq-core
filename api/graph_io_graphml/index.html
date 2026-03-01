@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../graph_io_bayesys/">
+        <link rel="prev" href="../graph_io_tetrad/">
       
       
-        <link rel="next" href="../graph_io_graphml/">
+        <link rel="next" href="../utils/">
       
       
         
@@ -23,7 +23,7 @@
     
     
       
-        <title>Tetrad Format - causaliq-core</title>
+        <title>GraphML Format - causaliq-core</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#tetrad-format-io" class="md-skip">
+        <a href="#graphml-format-io" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Tetrad Format
+              GraphML Format
             
           </span>
         </div>
@@ -1492,6 +1492,34 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../graph_io_tetrad/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tetrad Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -1511,7 +1539,7 @@
   <span class="md-ellipsis">
     
   
-    Tetrad Format
+    GraphML Format
   
 
     
@@ -1529,7 +1557,7 @@
   <span class="md-ellipsis">
     
   
-    Tetrad Format
+    GraphML Format
   
 
     
@@ -1557,10 +1585,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#format-description" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Format Description
+        Overview
       
     </span>
   </a>
@@ -1580,10 +1608,22 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#readpath-str-uniondag-pdag" class="md-nav__link">
+  <a href="#standard-graph-io" class="md-nav__link">
     <span class="md-ellipsis">
       
-        read(path: str) -&gt; Union[DAG, PDAG]
+        Standard Graph I/O
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Standard Graph I/O">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#read" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        read()
       
     </span>
   </a>
@@ -1591,10 +1631,82 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#writegraph-unionpdag-dag-path-str-none" class="md-nav__link">
+  <a href="#write" class="md-nav__link">
     <span class="md-ellipsis">
       
-        write(graph: Union[PDAG, DAG], path: str) -&gt; None
+        write()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pdg-io" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PDG I/O
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PDG I/O">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#read_pdg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        read_pdg()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#write_pdg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        write_pdg()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#type-alias" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Type Alias
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Type Alias">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#filelike" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FileLike
       
     </span>
   </a>
@@ -1607,10 +1719,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#file-format-details" class="md-nav__link">
+  <a href="#reference" class="md-nav__link">
     <span class="md-ellipsis">
       
-        File Format Details
+        Reference
       
     </span>
   </a>
@@ -1618,13 +1730,147 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#compatibility" class="md-nav__link">
+  <a href="#causaliq_core.graph.io.graphml.read" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Compatibility
+        read
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="read">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#causaliq_core.graph.io.graphml.read(file)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        file
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#causaliq_core.graph.io.graphml.write" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        write
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="write">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#causaliq_core.graph.io.graphml.write(graph)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        graph
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#causaliq_core.graph.io.graphml.write(file)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#causaliq_core.graph.io.graphml.write(graph_id)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        graph_id
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#causaliq_core.graph.io.graphml.read_pdg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        read_pdg
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="read_pdg">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#causaliq_core.graph.io.graphml.read_pdg(file)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        file
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#causaliq_core.graph.io.graphml.write_pdg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        write_pdg
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="write_pdg">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#causaliq_core.graph.io.graphml.write_pdg(pdg)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pdg
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#causaliq_core.graph.io.graphml.write_pdg(file)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        file
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1632,34 +1878,6 @@
   
 </nav>
       
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../graph_io_graphml/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    GraphML Format
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -2154,10 +2372,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#format-description" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Format Description
+        Overview
       
     </span>
   </a>
@@ -2177,10 +2395,22 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#readpath-str-uniondag-pdag" class="md-nav__link">
+  <a href="#standard-graph-io" class="md-nav__link">
     <span class="md-ellipsis">
       
-        read(path: str) -&gt; Union[DAG, PDAG]
+        Standard Graph I/O
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Standard Graph I/O">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#read" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        read()
       
     </span>
   </a>
@@ -2188,10 +2418,82 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#writegraph-unionpdag-dag-path-str-none" class="md-nav__link">
+  <a href="#write" class="md-nav__link">
     <span class="md-ellipsis">
       
-        write(graph: Union[PDAG, DAG], path: str) -&gt; None
+        write()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pdg-io" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PDG I/O
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PDG I/O">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#read_pdg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        read_pdg()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#write_pdg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        write_pdg()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#type-alias" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Type Alias
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Type Alias">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#filelike" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FileLike
       
     </span>
   </a>
@@ -2204,10 +2506,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#file-format-details" class="md-nav__link">
+  <a href="#reference" class="md-nav__link">
     <span class="md-ellipsis">
       
-        File Format Details
+        Reference
       
     </span>
   </a>
@@ -2215,13 +2517,147 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#compatibility" class="md-nav__link">
+  <a href="#causaliq_core.graph.io.graphml.read" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Compatibility
+        read
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="read">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#causaliq_core.graph.io.graphml.read(file)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        file
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#causaliq_core.graph.io.graphml.write" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        write
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="write">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#causaliq_core.graph.io.graphml.write(graph)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        graph
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#causaliq_core.graph.io.graphml.write(file)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#causaliq_core.graph.io.graphml.write(graph_id)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        graph_id
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#causaliq_core.graph.io.graphml.read_pdg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        read_pdg
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="read_pdg">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#causaliq_core.graph.io.graphml.read_pdg(file)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        file
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#causaliq_core.graph.io.graphml.write_pdg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        write_pdg
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="write_pdg">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#causaliq_core.graph.io.graphml.write_pdg(pdg)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pdg
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#causaliq_core.graph.io.graphml.write_pdg(file)" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        file
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2242,65 +2678,448 @@
 
 
 
-<h1 id="tetrad-format-io">Tetrad Format I/O<a class="headerlink" href="#tetrad-format-io" title="Permanent link">&para;</a></h1>
-<p>The <code>causaliq_core.graph.io.tetrad</code> module provides functions for reading and writing graphs in the Tetrad native format.</p>
-<h2 id="format-description">Format Description<a class="headerlink" href="#format-description" title="Permanent link">&para;</a></h2>
-<p>The Tetrad format is a text-based format used by the Tetrad software suite for representing graphs:
-- Each line represents an edge with numbered format
-- Supports directed (<code>--&gt;</code>) and undirected (<code>---</code>) edges<br />
-- Nodes are identified by names, edges by source and target nodes</p>
+<h1 id="graphml-format-io">GraphML Format I/O<a class="headerlink" href="#graphml-format-io" title="Permanent link">&para;</a></h1>
+<p>GraphML I/O functions for reading and writing graphs in GraphML format.
+Supports both standard graphs (SDG, PDAG, DAG) and probabilistic
+dependency graphs (PDG).</p>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>GraphML is an XML-based format for graphs. This module supports:</p>
+<ul>
+<li>Reading and writing SDG, PDAG, and DAG graphs</li>
+<li>Reading and writing PDG (probabilistic) graphs</li>
+<li>Both filesystem paths and file-like objects (e.g., StringIO)</li>
+<li>Interoperability with workflow caches</li>
+</ul>
+<p>Reference: <a href="http://graphml.graphdrawing.org/">GraphML Specification</a></p>
 <h2 id="functions">Functions<a class="headerlink" href="#functions" title="Permanent link">&para;</a></h2>
-<h3 id="readpath-str-uniondag-pdag"><code>read(path: str) -&gt; Union[DAG, PDAG]</code><a class="headerlink" href="#readpath-str-uniondag-pdag" title="Permanent link">&para;</a></h3>
-<p>Read a graph from a Tetrad format file.</p>
-<p><strong>Parameters:</strong>
-- <code>path</code> (str): Full path name of file to read</p>
-<p><strong>Returns:</strong>
-- <code>DAG</code> or <code>PDAG</code>: Graph read from file. Returns DAG if all edges are directed, PDAG otherwise</p>
-<p><strong>Raises:</strong>
-- <code>TypeError</code>: If path is not a string
-- <code>FileNotFoundError</code>: If file is not found<br />
-- <code>FileFormatError</code>: If file format is invalid or contains syntax errors</p>
-<p><strong>Example:</strong></p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">causaliq_core.graph.io.tetrad</span><span class="w"> </span><span class="kn">import</span> <span class="n">read</span>
+<h3 id="standard-graph-io">Standard Graph I/O<a class="headerlink" href="#standard-graph-io" title="Permanent link">&para;</a></h3>
+<h4 id="read"><code>read()</code><a class="headerlink" href="#read" title="Permanent link">&para;</a></h4>
+<p>Read a graph from a GraphML file or file-like object.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">causaliq_core.graph.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">graphml</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># Read graph from Tetrad format file</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">graph</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s2">&quot;data/graph.tetrad&quot;</span><span class="p">)</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># From file path</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">graph</span> <span class="o">=</span> <span class="n">graphml</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;graph.graphml&quot;</span><span class="p">)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="c1"># From file-like object</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">StringIO</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="n">xml_content</span> <span class="o">=</span> <span class="s1">&#39;&lt;graphml&gt;...&lt;/graphml&gt;&#39;</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">graph</span> <span class="o">=</span> <span class="n">graphml</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">StringIO</span><span class="p">(</span><span class="n">xml_content</span><span class="p">))</span>
 </span></code></pre></div>
-<h3 id="writegraph-unionpdag-dag-path-str-none"><code>write(graph: Union[PDAG, DAG], path: str) -&gt; None</code><a class="headerlink" href="#writegraph-unionpdag-dag-path-str-none" title="Permanent link">&para;</a></h3>
-<p>Write a graph to a Tetrad format file.</p>
-<p><strong>Parameters:</strong>
-- <code>graph</code> (PDAG or DAG): Graph to write
-- <code>path</code> (str): Full path name of file to create</p>
-<p><strong>Raises:</strong>
-- <code>TypeError</code>: If graph is not a PDAG or DAG instance, or path is not a string
-- <code>OSError</code>: If file cannot be created</p>
-<p><strong>Example:</strong></p>
+<p>Returns SDG, PDAG, or DAG depending on edge types in the graph.</p>
+<h4 id="write"><code>write()</code><a class="headerlink" href="#write" title="Permanent link">&para;</a></h4>
+<p>Write a graph to a GraphML file or file-like object.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">causaliq_core.graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">DAG</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">causaliq_core.graph.io.tetrad</span><span class="w"> </span><span class="kn">import</span> <span class="n">write</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">causaliq_core.graph.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">graphml</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># Create and write a DAG</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">dag</span> <span class="o">=</span> <span class="n">DAG</span><span class="p">([</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="s1">&#39;Y&#39;</span><span class="p">,</span> <span class="s1">&#39;Z&#39;</span><span class="p">],</span> <span class="p">[(</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="s1">&#39;-&gt;&#39;</span><span class="p">,</span> <span class="s1">&#39;Y&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;Y&#39;</span><span class="p">,</span> <span class="s1">&#39;-&gt;&#39;</span><span class="p">,</span> <span class="s1">&#39;Z&#39;</span><span class="p">)])</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">write</span><span class="p">(</span><span class="n">dag</span><span class="p">,</span> <span class="s2">&quot;output/graph.tetrad&quot;</span><span class="p">)</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">dag</span> <span class="o">=</span> <span class="n">DAG</span><span class="p">([</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">],</span> <span class="p">[(</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;-&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">)])</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="c1"># To file path</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">graphml</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">dag</span><span class="p">,</span> <span class="s2">&quot;output.graphml&quot;</span><span class="p">)</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="c1"># To file-like object</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">StringIO</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="n">buffer</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="n">graphml</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">dag</span><span class="p">,</span> <span class="n">buffer</span><span class="p">)</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="n">xml_content</span> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
 </span></code></pre></div>
-<h2 id="file-format-details">File Format Details<a class="headerlink" href="#file-format-details" title="Permanent link">&para;</a></h2>
-<p>The Tetrad format uses numbered lines to represent edges:
-- Each edge line starts with a number followed by a period
-- Format: <code>{number}. {source} {edge_type} {target}</code>
-- Edge types: <code>--&gt;</code> for directed, <code>---</code> for undirected</p>
-<p>Example Tetrad file content:
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Graph Nodes:
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>X,Y,Z
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>Graph Edges:
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>1. X --&gt; Y
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>2. Y --&gt; Z  
-</span></code></pre></div></p>
-<p>This represents a DAG with nodes X, Y, Z and directed edges X → Y → Z.</p>
-<h2 id="compatibility">Compatibility<a class="headerlink" href="#compatibility" title="Permanent link">&para;</a></h2>
-<p>This module is compatible with graphs exported from:
-- Tetrad software suite
-- PCALG R package (when using Tetrad export format)
-- Other causal discovery tools that support Tetrad format</p>
+<h3 id="pdg-io">PDG I/O<a class="headerlink" href="#pdg-io" title="Permanent link">&para;</a></h3>
+<h4 id="read_pdg"><code>read_pdg()</code><a class="headerlink" href="#read_pdg" title="Permanent link">&para;</a></h4>
+<p>Read a Probabilistic Dependency Graph from GraphML.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">causaliq_core.graph.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">graphml</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">pdg</span> <span class="o">=</span> <span class="n">graphml</span><span class="o">.</span><span class="n">read_pdg</span><span class="p">(</span><span class="s2">&quot;probabilistic_graph.graphml&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="write_pdg"><code>write_pdg()</code><a class="headerlink" href="#write_pdg" title="Permanent link">&para;</a></h4>
+<p>Write a Probabilistic Dependency Graph to GraphML.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">causaliq_core.graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">PDG</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">causaliq_core.graph.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">graphml</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">pdg</span> <span class="o">=</span> <span class="n">PDG</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">)</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">graphml</span><span class="o">.</span><span class="n">write_pdg</span><span class="p">(</span><span class="n">pdg</span><span class="p">,</span> <span class="s2">&quot;output.graphml&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<h2 id="type-alias">Type Alias<a class="headerlink" href="#type-alias" title="Permanent link">&para;</a></h2>
+<h3 id="filelike"><code>FileLike</code><a class="headerlink" href="#filelike" title="Permanent link">&para;</a></h3>
+<p>Type alias for file path or file-like object:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">FileLike</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">,</span> <span class="n">TextIO</span><span class="p">]</span>
+</span></code></pre></div>
+<h2 id="reference">Reference<a class="headerlink" href="#reference" title="Permanent link">&para;</a></h2>
+
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="causaliq_core.graph.io.graphml.read" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">read</span>
+
+
+<a href="#causaliq_core.graph.io.graphml.read" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">read</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="file (causaliq_core.graph.io.graphml.read(file))" href="#causaliq_core.graph.io.graphml.read(file)">file</a></span><span class="p">:</span> <span class="n"><span title="causaliq_core.graph.io.graphml.FileLike">FileLike</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="typing.Union">Union</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="            SDG (causaliq_core.graph.sdg.SDG)" href="../graph_sdg/#causaliq_core.graph.sdg.SDG">SDG</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="            PDAG (causaliq_core.graph.pdag.PDAG)" href="../graph_pdag/#causaliq_core.graph.pdag.PDAG">PDAG</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="            DAG (causaliq_core.graph.dag.DAG)" href="../graph_dag/#causaliq_core.graph.dag.DAG">DAG</a></span><span class="p">]</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents first">
+
+        <p>Read a graph from a GraphML file or file-like object.</p>
+<p>Supports standard GraphML files with optional edge endpoint attributes
+to represent different edge types (directed, undirected, bidirected,
+etc.). Without endpoint attributes, edges default to directed.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+<h3 id="causaliq_core.graph.io.graphml.read(file)" class="doc doc-heading doc-heading-parameter">              <b><code>file</code></b>
+<a href="#causaliq_core.graph.io.graphml.read(file)" class="headerlink" title="Permanent link">&para;</a></h3>              (<code><span title="causaliq_core.graph.io.graphml.FileLike">FileLike</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>File path (str or Path) or file-like object (e.g., StringIO).
+For file paths, suffix must be '.graphml'.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="typing.Union">Union</span>[<a class="autorefs autorefs-internal" title="            SDG (causaliq_core.graph.sdg.SDG)" href="../graph_sdg/#causaliq_core.graph.sdg.SDG">SDG</a>, <a class="autorefs autorefs-internal" title="            PDAG (causaliq_core.graph.pdag.PDAG)" href="../graph_pdag/#causaliq_core.graph.pdag.PDAG">PDAG</a>, <a class="autorefs autorefs-internal" title="            DAG (causaliq_core.graph.dag.DAG)" href="../graph_dag/#causaliq_core.graph.dag.DAG">DAG</a>]</code>
+          –
+          <div class="doc-md-description">
+            <p>SDG, PDAG or DAG depending on edge types in the graph.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="TypeError">TypeError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If argument types incorrect.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><span title="ValueError">ValueError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If file path suffix not '.graphml'.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><span title="FileNotFoundError">FileNotFoundError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If specified file does not exist.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="            FileFormatError (causaliq_core.utils.FileFormatError)" href="../utils_io/#causaliq_core.utils.io.FileFormatError">FileFormatError</a></code>
+            –
+          <div class="doc-md-description">
+            <p>If file contents are not valid GraphML.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<details class="example" open>
+  <summary>Example</summary>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p>from io import StringIO
+xml = '<graphml><graph><node id="A"/></graph></graphml>'
+graph = read(StringIO(xml))</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</details>
+          
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="causaliq_core.graph.io.graphml.write" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">write</span>
+
+
+<a href="#causaliq_core.graph.io.graphml.write" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">write</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="graph (causaliq_core.graph.io.graphml.write(graph))" href="#causaliq_core.graph.io.graphml.write(graph)">graph</a></span><span class="p">:</span> <span class="n"><span title="typing.Union">Union</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="            SDG (causaliq_core.graph.sdg.SDG)" href="../graph_sdg/#causaliq_core.graph.sdg.SDG">SDG</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="            PDAG (causaliq_core.graph.pdag.PDAG)" href="../graph_pdag/#causaliq_core.graph.pdag.PDAG">PDAG</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="            DAG (causaliq_core.graph.dag.DAG)" href="../graph_dag/#causaliq_core.graph.dag.DAG">DAG</a></span><span class="p">],</span> <span class="n"><a class="autorefs autorefs-internal" title="file (causaliq_core.graph.io.graphml.write(file))" href="#causaliq_core.graph.io.graphml.write(file)">file</a></span><span class="p">:</span> <span class="n"><span title="causaliq_core.graph.io.graphml.FileLike">FileLike</span></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="graph_id (causaliq_core.graph.io.graphml.write(graph_id))" href="#causaliq_core.graph.io.graphml.write(graph_id)">graph_id</a></span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">=</span> <span class="s1">&#39;G&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents first">
+
+        <p>Write a graph to a GraphML file or file-like object.</p>
+<p>Exports the graph with node ordering preserved and edge types encoded
+using sourceEndpoint/targetEndpoint data attributes.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+<h3 id="causaliq_core.graph.io.graphml.write(graph)" class="doc doc-heading doc-heading-parameter">              <b><code>graph</code></b>
+<a href="#causaliq_core.graph.io.graphml.write(graph)" class="headerlink" title="Permanent link">&para;</a></h3>              (<code><span title="typing.Union">Union</span>[<a class="autorefs autorefs-internal" title="            SDG (causaliq_core.graph.sdg.SDG)" href="../graph_sdg/#causaliq_core.graph.sdg.SDG">SDG</a>, <a class="autorefs autorefs-internal" title="            PDAG (causaliq_core.graph.pdag.PDAG)" href="../graph_pdag/#causaliq_core.graph.pdag.PDAG">PDAG</a>, <a class="autorefs autorefs-internal" title="            DAG (causaliq_core.graph.dag.DAG)" href="../graph_dag/#causaliq_core.graph.dag.DAG">DAG</a>]</code>)
+          –
+          <div class="doc-md-description">
+            <p>SDG, PDAG or DAG to write.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+<h3 id="causaliq_core.graph.io.graphml.write(file)" class="doc doc-heading doc-heading-parameter">              <b><code>file</code></b>
+<a href="#causaliq_core.graph.io.graphml.write(file)" class="headerlink" title="Permanent link">&para;</a></h3>              (<code><span title="causaliq_core.graph.io.graphml.FileLike">FileLike</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>File path (str or Path) or file-like object (e.g., StringIO).
+For file paths, suffix must be '.graphml'.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+<h3 id="causaliq_core.graph.io.graphml.write(graph_id)" class="doc doc-heading doc-heading-parameter">              <b><code>graph_id</code></b>
+<a href="#causaliq_core.graph.io.graphml.write(graph_id)" class="headerlink" title="Permanent link">&para;</a></h3>              (<code><span title="str">str</span></code>, default:
+                  <code>&#39;G&#39;</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>ID attribute for the graph element. Defaults to "G".</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="TypeError">TypeError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If argument types incorrect.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><span title="ValueError">ValueError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If file path suffix not '.graphml'.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<details class="example" open>
+  <summary>Example</summary>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p>from io import StringIO
+buffer = StringIO()
+write(graph, buffer)
+xml_content = buffer.getvalue()</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</details>
+          
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="causaliq_core.graph.io.graphml.read_pdg" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">read_pdg</span>
+
+
+<a href="#causaliq_core.graph.io.graphml.read_pdg" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">read_pdg</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="file (causaliq_core.graph.io.graphml.read_pdg(file))" href="#causaliq_core.graph.io.graphml.read_pdg(file)">file</a></span><span class="p">:</span> <span class="n"><span title="causaliq_core.graph.io.graphml.FileLike">FileLike</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;PDG&#39;</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents first">
+
+        <p>Read a PDG from a GraphML file or file-like object.</p>
+<p>Reads a Probabilistic Dependency Graph with edge probability attributes.
+The file should have undirected edges with p_forward, p_backward,
+p_undirected, and p_none data attributes.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+<h3 id="causaliq_core.graph.io.graphml.read_pdg(file)" class="doc doc-heading doc-heading-parameter">              <b><code>file</code></b>
+<a href="#causaliq_core.graph.io.graphml.read_pdg(file)" class="headerlink" title="Permanent link">&para;</a></h3>              (<code><span title="causaliq_core.graph.io.graphml.FileLike">FileLike</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>File path (str or Path) or file-like object (e.g., StringIO).
+For file paths, suffix must be '.graphml'.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code>&#39;PDG&#39;</code>
+          –
+          <div class="doc-md-description">
+            <p>PDG instance with edge probabilities.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="TypeError">TypeError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If argument types incorrect.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><span title="ValueError">ValueError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If file path suffix not '.graphml'.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><span title="FileNotFoundError">FileNotFoundError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If specified file does not exist.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="            FileFormatError (causaliq_core.utils.FileFormatError)" href="../utils_io/#causaliq_core.utils.io.FileFormatError">FileFormatError</a></code>
+            –
+          <div class="doc-md-description">
+            <p>If file contents are not valid GraphML or
+missing required probability attributes.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<details class="example" open>
+  <summary>Example</summary>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p>from io import StringIO
+xml = '''<?xml version="1.0"?>
+... <graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+...   <key id="p_forward" for="edge" attr.type="double"/>
+...   <graph edgedefault="undirected">
+...     <node id="A"/><node id="B"/>
+...     <edge source="A" target="B">
+...       <data key="p_forward">0.8</data>
+...       <data key="p_backward">0.1</data>
+...       <data key="p_undirected">0.05</data>
+...       <data key="p_none">0.05</data>
+...     </edge>
+...   </graph>
+... </graphml>'''
+pdg = read_pdg(StringIO(xml))</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</details>
+          
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="causaliq_core.graph.io.graphml.write_pdg" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">write_pdg</span>
+
+
+<a href="#causaliq_core.graph.io.graphml.write_pdg" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">write_pdg</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="pdg (causaliq_core.graph.io.graphml.write_pdg(pdg))" href="#causaliq_core.graph.io.graphml.write_pdg(pdg)">pdg</a></span><span class="p">:</span> <span class="s1">&#39;PDG&#39;</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="file (causaliq_core.graph.io.graphml.write_pdg(file))" href="#causaliq_core.graph.io.graphml.write_pdg(file)">file</a></span><span class="p">:</span> <span class="n"><span title="causaliq_core.graph.io.graphml.FileLike">FileLike</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents first">
+
+        <p>Write a PDG to a GraphML file or file-like object.</p>
+<p>Exports the PDG with undirected edges and probability data attributes
+(p_forward, p_backward, p_undirected, p_none).</p>
+<p>Only edges with p_exist &gt; 0 (i.e., p_none &lt; 1.0) are written.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+<h3 id="causaliq_core.graph.io.graphml.write_pdg(pdg)" class="doc doc-heading doc-heading-parameter">              <b><code>pdg</code></b>
+<a href="#causaliq_core.graph.io.graphml.write_pdg(pdg)" class="headerlink" title="Permanent link">&para;</a></h3>              (<code>&#39;PDG&#39;</code>)
+          –
+          <div class="doc-md-description">
+            <p>PDG to write.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+<h3 id="causaliq_core.graph.io.graphml.write_pdg(file)" class="doc doc-heading doc-heading-parameter">              <b><code>file</code></b>
+<a href="#causaliq_core.graph.io.graphml.write_pdg(file)" class="headerlink" title="Permanent link">&para;</a></h3>              (<code><span title="causaliq_core.graph.io.graphml.FileLike">FileLike</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>File path (str or Path) or file-like object (e.g., StringIO).
+For file paths, suffix must be '.graphml'.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="TypeError">TypeError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If argument types incorrect.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><span title="ValueError">ValueError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If file path suffix not '.graphml'.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<details class="example" open>
+  <summary>Example</summary>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p>from io import StringIO
+from causaliq_core.graph.pdg import PDG, EdgeProbabilities
+pdg = PDG(["A", "B"], {
+...     ("A", "B"): EdgeProbabilities(forward=0.8, none=0.2)
+... })
+buffer = StringIO()
+write_pdg(pdg, buffer)
+print(buffer.getvalue())</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</details>
+          
+
+    </div>
+
+</div>
 
 
 
@@ -2338,7 +3157,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../graph_io_bayesys/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Bayesys Format">
+          <a href="../graph_io_tetrad/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Tetrad Format">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -2348,20 +3167,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Bayesys Format
+                Tetrad Format
               </div>
             </div>
           </a>
         
         
           
-          <a href="../graph_io_graphml/" class="md-footer__link md-footer__link--next" aria-label="Next: GraphML Format">
+          <a href="../utils/" class="md-footer__link md-footer__link--next" aria-label="Next: Overview">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                GraphML Format
+                Overview
               </div>
             </div>
             <div class="md-footer__button md-icon">
