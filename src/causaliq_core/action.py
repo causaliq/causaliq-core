@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from enum import Enum
 from io import StringIO
 from typing import Any, Dict, List, Optional, Set, Tuple
 
@@ -23,6 +24,26 @@ from causaliq_core.graph.io import graphml
 
 # Type alias for action result tuple: (status, metadata, objects)
 ActionResult = Tuple[str, Dict[str, Any], List[Dict[str, Any]]]
+
+
+class ActionPattern(Enum):
+    """Workflow action execution patterns.
+
+    Defines how actions interact with caches and matrix definitions.
+    The workflow executor validates and enforces these patterns.
+
+    Attributes:
+        CREATE: Creates new cache entries. Requires output and matrix,
+            input (for caches) is prohibited.
+        UPDATE: Modifies existing cache entries in place. Requires input,
+            output and matrix are prohibited.
+        AGGREGATE: Combines multiple entries into new summary entries.
+            Requires input, output, and matrix.
+    """
+
+    CREATE = "create"
+    UPDATE = "update"
+    AGGREGATE = "aggregate"
 
 
 @dataclass
@@ -82,12 +103,19 @@ class CausalIQActionProvider(ABC):
     operations. Workflow uses these to build a registry of which provider
     handles compression for each data type.
 
+    Action patterns define how actions interact with workflow caches:
+    - CREATE: Creates new entries (output + matrix required, input prohibited)
+    - UPDATE: Modifies existing entries (input required, output/matrix
+              prohibited)
+    - AGGREGATE: Combines entries (input + output + matrix required)
+
     Attributes:
         name: Provider identifier for workflow 'uses' field.
         version: Provider version string.
         description: Human-readable description.
         author: Provider author/maintainer.
         supported_actions: Set of action names this provider supports.
+        action_patterns: Mapping of action names to their execution patterns.
         supported_types: Set of data types this provider can compress.
         inputs: Input parameter specifications.
         outputs: Output name to description mapping.
@@ -101,6 +129,9 @@ class CausalIQActionProvider(ABC):
 
     # Actions supported by this provider
     supported_actions: Set[str] = set()
+
+    # Action patterns for workflow validation (action name -> pattern)
+    action_patterns: Dict[str, ActionPattern] = {}
 
     # Data types this provider can compress/expand
     supported_types: Set[str] = set()
