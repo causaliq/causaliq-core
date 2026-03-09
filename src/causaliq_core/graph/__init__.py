@@ -14,7 +14,7 @@ from .enums import EdgeMark, EdgeType
 from .pdag import PDAG, NotPDAGError
 
 # Import PDG classes
-from .pdg import PDG, EdgeProbabilities
+from .pdg import PDG, EdgeProbabilities, GreedyDAGResult
 
 # Import graph classes - moved to top to fix E402
 from .sdg import SDG
@@ -34,6 +34,7 @@ __all__ = [
     "NotDAGError",
     "PDG",
     "EdgeProbabilities",
+    "GreedyDAGResult",
     "dag_to_pdag",
     "pdag_to_cpdag",
     "extend_pdag",
