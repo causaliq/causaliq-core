@@ -84,6 +84,22 @@ def test_causaliq_action_provider_is_abstract() -> None:
         CausalIQActionProvider()  # type: ignore
 
 
+# Test validate_parameters raises error for unsupported action.
+def test_validate_parameters_raises_for_unsupported_action() -> None:
+    class TestProvider(CausalIQActionProvider):
+        name = "test-provider"
+        supported_actions = {"allowed"}
+
+        def _execute(
+            self, action, parameters, mode, context, logger
+        ) -> ActionResult:
+            return ("success", {}, [])
+
+    provider = TestProvider()
+    with pytest.raises(ActionValidationError, match="does not support"):
+        provider.validate_parameters("unknown", {})
+
+
 # Test subclass can implement required methods.
 def test_provider_subclass_implementation() -> None:
     class TestProvider(CausalIQActionProvider):
@@ -92,10 +108,9 @@ def test_provider_subclass_implementation() -> None:
         supported_actions = {"test"}
         supported_types = {"json"}
 
-        def run(
-            self, action, parameters, mode="dry-run", context=None, logger=None
+        def _execute(
+            self, action, parameters, mode, context, logger
         ) -> ActionResult:
-            self._execution_metadata = {"action": action}
             return ("success", {"action": action}, [])
 
     provider = TestProvider()
@@ -103,7 +118,7 @@ def test_provider_subclass_implementation() -> None:
     assert provider.supported_actions == {"test"}
     assert provider.supported_types == {"json"}
 
-    status, metadata, objects = provider.run("test", {})
+    status, metadata, objects = provider.run("test", {}, mode="run")
     assert status == "success"
     assert metadata == {"action": "test"}
     assert objects == []
@@ -114,8 +129,8 @@ def test_compress_unsupported_type() -> None:
     class TestProvider(CausalIQActionProvider):
         supported_types = {"json"}
 
-        def run(
-            self, action, parameters, mode="dry-run", context=None, logger=None
+        def _execute(
+            self, action, parameters, mode, context, logger
         ) -> ActionResult:
             return ("success", {}, [])
 
@@ -130,8 +145,8 @@ def test_decompress_unsupported_type() -> None:
     class TestProvider(CausalIQActionProvider):
         supported_types = {"json"}
 
-        def run(
-            self, action, parameters, mode="dry-run", context=None, logger=None
+        def _execute(
+            self, action, parameters, mode, context, logger
         ) -> ActionResult:
             return ("success", {}, [])
 
@@ -155,10 +170,19 @@ def test_core_provider_metadata() -> None:
     assert provider.supported_actions == set()
 
 
-# Test CoreActionProvider run returns skipped status.
+# Test CoreActionProvider run returns skipped status in dry-run mode.
 def test_core_provider_run_returns_skipped() -> None:
     provider = CoreActionProvider()
     status, metadata, objects = provider.run("any", {})
+    assert status == "skipped"
+    assert metadata == {"dry_run": True, "action": "any"}
+    assert objects == []
+
+
+# Test CoreActionProvider _execute returns skipped when mode is run.
+def test_core_provider_execute_returns_skipped() -> None:
+    provider = CoreActionProvider()
+    status, metadata, objects = provider.run("any", {}, mode="run")
     assert status == "skipped"
     assert metadata == {}
     assert objects == []

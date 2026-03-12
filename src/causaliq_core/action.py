@@ -140,7 +140,6 @@ class CausalIQActionProvider(ABC):
     inputs: Dict[str, ActionInput] = {}
     outputs: Dict[str, str] = {}  # name -> description mapping
 
-    @abstractmethod
     def run(
         self,
         action: str,
@@ -149,16 +148,23 @@ class CausalIQActionProvider(ABC):
         context: Optional[Any] = None,
         logger: Optional[Any] = None,
     ) -> ActionResult:
-        """Execute the specified action with validated parameters.
+        """Template method for action execution.
 
-        The action parameter specifies which action to execute.
-        Implementations should validate that action is in supported_actions.
+        This method implements the standard execution flow:
+        1. Validate parameters via validate_parameters()
+        2. If dry-run mode, return via _dry_run_result()
+        3. Otherwise, execute via _execute()
+
+        Subclasses should NOT override this method. Instead override:
+        - validate_parameters() for parameter validation
+        - _dry_run_result() for custom dry-run responses
+        - _execute() for actual execution logic
 
         Args:
             action: Name of the action to execute (must be in
                 supported_actions)
             parameters: Dictionary of parameter values for the action
-            mode: Execution mode ('dry-run', 'run', 'compare')
+            mode: Execution mode ('dry-run', 'run', 'force', 'compare')
             context: Workflow context for optimisation and intelligence
             logger: Optional logger for task execution reporting
 
@@ -173,7 +179,86 @@ class CausalIQActionProvider(ABC):
 
         Raises:
             ActionExecutionError: If action execution fails
-            ActionValidationError: If action is not supported
+            ActionValidationError: If validation fails
+        """
+        self.validate_parameters(action, parameters)
+        if mode == "dry-run":
+            return self._dry_run_result(action, parameters)
+        return self._execute(action, parameters, mode, context, logger)
+
+    def validate_parameters(
+        self,
+        action: str,
+        parameters: Dict[str, Any],
+    ) -> None:
+        """Validate action name and parameters.
+
+        Override this method to add provider-specific parameter validation.
+        Always call super().validate_parameters() first to check the action
+        name is supported.
+
+        This method is called by run() before any execution, ensuring all
+        validation errors are caught early (during workflow parsing).
+
+        Args:
+            action: Name of the action to validate.
+            parameters: Dictionary of parameter values to validate.
+
+        Raises:
+            ActionValidationError: If action is not supported or
+                parameters are invalid.
+        """
+        if self.supported_actions and action not in self.supported_actions:
+            raise ActionValidationError(
+                f"Provider '{self.name}' does not support action '{action}'. "
+                f"Supported: {self.supported_actions}"
+            )
+
+    def _dry_run_result(
+        self,
+        action: str,
+        parameters: Dict[str, Any],
+    ) -> ActionResult:
+        """Return result for dry-run mode without execution.
+
+        Override this method to provide action-specific dry-run responses,
+        such as estimated execution time or resource requirements.
+
+        Args:
+            action: Name of the action.
+            parameters: Dictionary of validated parameter values.
+
+        Returns:
+            ActionResult tuple with status "skipped" and metadata.
+        """
+        return ("skipped", {"dry_run": True, "action": action}, [])
+
+    @abstractmethod
+    def _execute(
+        self,
+        action: str,
+        parameters: Dict[str, Any],
+        mode: str,
+        context: Optional[Any],
+        logger: Optional[Any],
+    ) -> ActionResult:
+        """Execute the action (called only when mode != "dry-run").
+
+        Implement actual execution logic here. Parameters have already
+        been validated by validate_parameters().
+
+        Args:
+            action: Name of the action to execute.
+            parameters: Dictionary of validated parameter values.
+            mode: Execution mode ('run', 'force', 'compare').
+            context: Workflow context for optimisation.
+            logger: Optional logger for task execution reporting.
+
+        Returns:
+            ActionResult tuple (status, metadata, objects).
+
+        Raises:
+            ActionExecutionError: If execution fails.
         """
         pass
 
@@ -280,15 +365,15 @@ class CoreActionProvider(CausalIQActionProvider):
     supported_actions: Set[str] = set()
     supported_types: Set[str] = {"graphml", "json", "pdg"}
 
-    def run(
+    def _execute(
         self,
         action: str,
         parameters: Dict[str, Any],
-        mode: str = "dry-run",
-        context: Optional[Any] = None,
-        logger: Optional[Any] = None,
+        mode: str,
+        context: Optional[Any],
+        logger: Optional[Any],
     ) -> ActionResult:
-        """No-op run method - CoreActionProvider has no actions."""
+        """No-op execute - CoreActionProvider has no actions."""
         return ("skipped", {}, [])
 
     def compress(
