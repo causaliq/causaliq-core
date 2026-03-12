@@ -100,6 +100,24 @@ def test_validate_parameters_raises_for_unsupported_action() -> None:
         provider.validate_parameters("unknown", {})
 
 
+# Test validate_parameters raises error for missing action.
+def test_validate_parameters_raises_for_missing_action() -> None:
+    class TestProvider(CausalIQActionProvider):
+        name = "test-provider"
+        supported_actions = {"allowed"}
+
+        def _execute(
+            self, action, parameters, mode, context, logger
+        ) -> ActionResult:
+            return ("success", {}, [])
+
+    provider = TestProvider()
+    with pytest.raises(ActionValidationError, match="Missing 'action'"):
+        provider.validate_parameters("", {})
+    with pytest.raises(ActionValidationError, match="Missing 'action'"):
+        provider.validate_parameters(None, {})
+
+
 # Test subclass can implement required methods.
 def test_provider_subclass_implementation() -> None:
     class TestProvider(CausalIQActionProvider):

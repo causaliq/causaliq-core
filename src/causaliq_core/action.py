@@ -208,10 +208,11 @@ class CausalIQActionProvider(ABC):
             ActionValidationError: If action is not supported or
                 parameters are invalid.
         """
+        if not action:
+            raise ActionValidationError("Missing 'action' parameter")
         if self.supported_actions and action not in self.supported_actions:
             raise ActionValidationError(
-                f"Provider '{self.name}' does not support action '{action}'. "
-                f"Supported: {self.supported_actions}"
+                f"Provider '{self.name}' does not support action '{action}'"
             )
 
     def _dry_run_result(
