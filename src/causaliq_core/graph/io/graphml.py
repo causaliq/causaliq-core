@@ -725,7 +725,7 @@ def write_pdg(pdg: "PDG", file: FileLike) -> None:
             graph_elem, "edge", id=f"e{edge_id}", source=source, target=target
         )
 
-        # Add probability data elements (4 significant figures)
+        # Add probability data elements (8 significant figures)
         for key_id, value in [
             ("p_forward", probs.forward),
             ("p_backward", probs.backward),
@@ -733,7 +733,7 @@ def write_pdg(pdg: "PDG", file: FileLike) -> None:
             ("p_none", probs.none),
         ]:
             data_elem = ET.SubElement(edge_elem, "data", key=key_id)
-            data_elem.text = f"{value:.4g}"
+            data_elem.text = f"{value:.8g}"
 
     # Write to file with XML declaration and proper formatting
     tree = ET.ElementTree(root)

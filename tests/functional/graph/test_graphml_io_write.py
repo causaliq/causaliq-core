@@ -1,6 +1,8 @@
 """Functional tests for graphml module - writing to files and round-trips."""
 
+import shutil
 from pathlib import Path
+from typing import Generator
 
 import pytest
 
@@ -13,9 +15,13 @@ TEST_OUTPUT_DIR = Path("tests/data/functional/graphs/tmp")
 
 
 @pytest.fixture(autouse=True)
-def setup_output_dir() -> None:
-    """Ensure output directory exists before tests."""
+def setup_and_cleanup_output_dir() -> Generator[None, None, None]:
+    """Create output directory before tests and clean up after."""
     TEST_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    yield
+    # Clean up after test
+    if TEST_OUTPUT_DIR.exists():
+        shutil.rmtree(TEST_OUTPUT_DIR)
 
 
 # =============================================================================

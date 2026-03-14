@@ -184,3 +184,6 @@ ehthumbs.db
 Desktop.ini
 
 # causaliq-core specific
+
+# Test output temporary files
+**/tmp/
