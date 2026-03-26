@@ -34,6 +34,7 @@ Currently implemented:
 - **Release v0.3.0 - Bayesian Networks**: support for Bayesian Networks and their parameterised distributions and I/O support for DSC and XDSL formats
 - **Release v0.4.0 - Caching Infrastructure**: Token-based caching and (de)compression of JSON and GraphML
 - **Release v0.5.0 - Aggregation Workflows**: PDG (Probabilistic Dependency Graph) for uncertainty over graph structures, GraphML I/O for PDG, filter expression evaluation, and metadata-driven weight computation
+- **Release v0.6.0 - Optimal DAG**: Greedy optimal DAG extraction from PDG, ActionPattern enum for workflow execution patterns, and template method pattern for action providers
 
 Upcoming releases:
 
