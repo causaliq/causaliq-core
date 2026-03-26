@@ -1435,6 +1435,39 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#greedydagresult" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GreedyDAGResult
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pdgto_dag_greedythreshold00" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PDG.to_dag_greedy(threshold=0.0)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pdgcompress-pdgdecompressdata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PDG.compress() / PDG.decompress(data)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1474,6 +1507,17 @@
   
     <nav class="md-nav" aria-label="Classes">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#causaliq_core.graph.pdg.GreedyDAGResult" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GreedyDAGResult
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#causaliq_core.graph.pdg.EdgeProbabilities" class="md-nav__link">
@@ -1720,6 +1764,17 @@
     <span class="md-ellipsis">
       
         __repr__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#causaliq_core.graph.pdg.PDG.to_dag_greedy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_dag_greedy
       
     </span>
   </a>
@@ -2504,6 +2559,39 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#greedydagresult" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GreedyDAGResult
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pdgto_dag_greedythreshold00" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PDG.to_dag_greedy(threshold=0.0)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pdgcompress-pdgdecompressdata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PDG.compress() / PDG.decompress(data)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2543,6 +2631,17 @@
   
     <nav class="md-nav" aria-label="Classes">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#causaliq_core.graph.pdg.GreedyDAGResult" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GreedyDAGResult
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#causaliq_core.graph.pdg.EdgeProbabilities" class="md-nav__link">
@@ -2796,6 +2895,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#causaliq_core.graph.pdg.PDG.to_dag_greedy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_dag_greedy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#causaliq_core.graph.pdg.PDG.compress" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2908,7 +3018,8 @@ graphs rather than a single graph.</p>
 <p><strong>Features:</strong></p>
 <ul>
 <li>Stores probability distributions for each node pair</li>
-<li>Supports threshold-based graph extraction</li>
+<li>Greedy DAG extraction with cycle avoidance</li>
+<li>Compact binary compression/decompression</li>
 <li>GraphML I/O for serialisation</li>
 </ul>
 <p><strong>Usage:</strong></p>
@@ -2926,8 +3037,57 @@ graphs rather than a single graph.</p>
 </span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="n">probs</span> <span class="o">=</span> <span class="n">pdg</span><span class="o">.</span><span class="n">get_probabilities</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">)</span>
 </span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="nb">print</span><span class="p">(</span><span class="n">probs</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span>  <span class="c1"># 0.8</span>
 </span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="c1"># Extract graph at threshold</span>
-</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="n">pdag</span> <span class="o">=</span> <span class="n">pdg</span><span class="o">.</span><span class="n">to_pdag</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="c1"># Extract a DAG greedily (edges ranked by probability)</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="n">result</span> <span class="o">=</span> <span class="n">pdg</span><span class="o">.</span><span class="n">to_dag_greedy</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">dag</span><span class="p">)</span>             <span class="c1"># The extracted DAG</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">edges_included</span><span class="p">)</span>  <span class="c1"># Number of edges added</span>
+</span></code></pre></div>
+<h3 id="greedydagresult"><code>GreedyDAGResult</code><a class="headerlink" href="#greedydagresult" title="Permanent link">&para;</a></h3>
+<p>NamedTuple returned by <code>PDG.to_dag_greedy()</code>.</p>
+<p><strong>Fields:</strong></p>
+<ul>
+<li><code>dag</code>: The extracted <code>DAG</code>.</li>
+<li><code>edges_included</code>: Number of edges added to the DAG.</li>
+<li><code>edges_skipped_cycle</code>: Edges skipped to avoid cycles.</li>
+<li><code>edges_skipped_threshold</code>: Edges below the probability threshold.</li>
+<li><code>tie_breaks_applied</code>: Edges where alphabetical tie-breaking was used.</li>
+</ul>
+<h3 id="pdgto_dag_greedythreshold00"><code>PDG.to_dag_greedy(threshold=0.0)</code><a class="headerlink" href="#pdgto_dag_greedythreshold00" title="Permanent link">&para;</a></h3>
+<p>Extract a DAG from the PDG using a greedy algorithm.</p>
+<p><strong>Algorithm:</strong></p>
+<ol>
+<li>For each edge pair, compute effective forward and backward probabilities
+   by splitting the undirected probability equally between directions.</li>
+<li>Choose the direction with the higher effective probability.</li>
+<li>For ties (effective forward equals effective backward), use alphabetical
+   ordering (source &lt; target, i.e. forward direction).</li>
+<li>Sort candidate edges by descending probability.</li>
+<li>Greedily add edges, skipping any that would create a cycle (checked
+   via ancestor tracking with propagation to descendants).</li>
+</ol>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>threshold</code> (float): Minimum <code>p_exist</code> to consider an edge (default 0.0).</li>
+</ul>
+<p><strong>Returns:</strong></p>
+<ul>
+<li><code>GreedyDAGResult</code>: The extracted DAG and extraction statistics.</li>
+</ul>
+<p><strong>Usage:</strong></p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">pdg</span><span class="o">.</span><span class="n">to_dag_greedy</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">edges_included</span><span class="p">)</span>        <span class="c1"># 2</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">edges_skipped_cycle</span><span class="p">)</span>    <span class="c1"># 0</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">tie_breaks_applied</span><span class="p">)</span>     <span class="c1"># 0</span>
+</span></code></pre></div>
+<h3 id="pdgcompress-pdgdecompressdata"><code>PDG.compress()</code> / <code>PDG.decompress(data)</code><a class="headerlink" href="#pdgcompress-pdgdecompressdata" title="Permanent link">&para;</a></h3>
+<p>Compact binary serialisation of a PDG.</p>
+<p><code>compress()</code> encodes the PDG to a compact binary format where each
+probability is stored in 3 bytes (4 significant figures). The <code>p_none</code>
+value is derived as <code>1.0 - (forward + backward + undirected)</code>.
+<code>decompress()</code> reconstructs a <code>PDG</code> from the binary representation.</p>
+<p><strong>Usage:</strong></p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">blob</span> <span class="o">=</span> <span class="n">pdg</span><span class="o">.</span><span class="n">compress</span><span class="p">()</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">pdg2</span> <span class="o">=</span> <span class="n">PDG</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="n">blob</span><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="reference">Reference<a class="headerlink" href="#reference" title="Permanent link">&para;</a></h2>
 
@@ -2964,6 +3124,13 @@ as it represents uncertainty over graphs rather than a single graph.</p>
 <p><span class="doc-section-title">Classes:</span></p>
     <ul>
         <li class="doc-section-item field-body">
+          <b><code><a class="autorefs autorefs-internal" title="            GreedyDAGResult (causaliq_core.graph.pdg.GreedyDAGResult)" href="#causaliq_core.graph.pdg.GreedyDAGResult">GreedyDAGResult</a></code></b>
+          –
+          <div class="doc-md-description">
+            <p>Result from PDG.to_dag_greedy().</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
           <b><code><a class="autorefs autorefs-internal" title="            EdgeProbabilities
 
 
@@ -2999,6 +3166,102 @@ as it represents uncertainty over graphs rather than a single graph.</p>
 
 
 <h3 id="causaliq_core.graph.pdg-classes">Classes<a href="#causaliq_core.graph.pdg-classes" class="headerlink" title="Permanent link">&para;</a></h3>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h4 id="causaliq_core.graph.pdg.GreedyDAGResult" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">GreedyDAGResult</span>
+
+
+<a href="#causaliq_core.graph.pdg.GreedyDAGResult" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+
+        <p>Result from PDG.to_dag_greedy().</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+          <b><code><span title="causaliq_core.graph.pdg.GreedyDAGResult.dag">dag</span></code></b>
+              (<code><a class="autorefs autorefs-internal" title="            DAG (causaliq_core.graph.dag.DAG)" href="../graph_dag/#causaliq_core.graph.dag.DAG">DAG</a></code>)
+          –
+          <div class="doc-md-description">
+            <p>The extracted DAG.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="causaliq_core.graph.pdg.GreedyDAGResult.edges_included">edges_included</span></code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Number of edges added to the DAG.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="causaliq_core.graph.pdg.GreedyDAGResult.edges_skipped_cycle">edges_skipped_cycle</span></code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Edges skipped to avoid cycles.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="causaliq_core.graph.pdg.GreedyDAGResult.edges_skipped_threshold">edges_skipped_threshold</span></code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Edges below threshold.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="causaliq_core.graph.pdg.GreedyDAGResult.tie_breaks_applied">tie_breaks_applied</span></code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Edges where alphabetical tie-break was used.</p>
+          </div>
+        </li>
+    </ul>
+
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
 
 <div class="doc doc-object doc-class">
 
@@ -3501,6 +3764,13 @@ tuples (source, target) where source &lt; target alphabetically.</p>
             </div>
           </li>
           <li class="doc-section-item field-body">
+            <b><code><a class="autorefs autorefs-internal" title="            to_dag_greedy (causaliq_core.graph.pdg.PDG.to_dag_greedy)" href="#causaliq_core.graph.pdg.PDG.to_dag_greedy">to_dag_greedy</a></code></b>
+            –
+            <div class="doc-md-description">
+              <p>Extract a DAG from PDG using greedy algorithm.</p>
+            </div>
+          </li>
+          <li class="doc-section-item field-body">
             <b><code><a class="autorefs autorefs-internal" title="            compress (causaliq_core.graph.pdg.PDG.compress)" href="#causaliq_core.graph.pdg.PDG.compress">compress</a></code></b>
             –
             <div class="doc-md-description">
@@ -3861,6 +4131,77 @@ forward/backward relative to alphabetical ordering.</p>
 
         <p>Return detailed representation of the PDG.</p>
 
+          
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="causaliq_core.graph.pdg.PDG.to_dag_greedy" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">to_dag_greedy</span>
+
+
+<a href="#causaliq_core.graph.pdg.PDG.to_dag_greedy" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">to_dag_greedy</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="threshold (causaliq_core.graph.pdg.PDG.to_dag_greedy(threshold))" href="#causaliq_core.graph.pdg.PDG.to_dag_greedy(threshold)">threshold</a></span><span class="p">:</span> <span class="n"><span title="float">float</span></span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="            GreedyDAGResult (causaliq_core.graph.pdg.GreedyDAGResult)" href="#causaliq_core.graph.pdg.GreedyDAGResult">GreedyDAGResult</a></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Extract a DAG from PDG using greedy algorithm.</p>
+<p>Greedily adds edges in order of probability, choosing directions
+based on effective probability (splitting undirected probability
+equally between forward and backward). Edges that would create
+cycles are skipped.</p>
+<p>For ties where effective forward equals effective backward,
+alphabetical ordering is used (source &lt; target).</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+<h7 id="causaliq_core.graph.pdg.PDG.to_dag_greedy(threshold)" class="doc doc-heading doc-heading-parameter">              <b><code>threshold</code></b>
+<a href="#causaliq_core.graph.pdg.PDG.to_dag_greedy(threshold)" class="headerlink" title="Permanent link">&para;</a></h7>              (<code><span title="float">float</span></code>, default:
+                  <code>0.0</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Minimum p_exist to consider an edge (default 0.0).</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="            GreedyDAGResult (causaliq_core.graph.pdg.GreedyDAGResult)" href="#causaliq_core.graph.pdg.GreedyDAGResult">GreedyDAGResult</a></code>
+          –
+          <div class="doc-md-description">
+            <p>GreedyDAGResult containing the DAG and extraction statistics.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<details class="example" open>
+  <summary>Example</summary>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p>pdg = PDG(["A", "B", "C"], {
+...     ("A", "B"): EdgeProbabilities(forward=0.7, none=0.3),
+...     ("A", "C"): EdgeProbabilities(forward=0.5, none=0.5),
+... })
+result = pdg.to_dag_greedy()
+result.edges_included
+2</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</details>
           
 
     </div>

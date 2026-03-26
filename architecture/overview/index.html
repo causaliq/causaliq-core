@@ -2552,21 +2552,22 @@ multiple related actions.</p>
 </span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>│   ├── sdg.py           # Simple Dependency Graphs (base class)
 </span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>│   ├── dag.py           # Directed Acyclic Graphs
 </span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>│   ├── pdag.py          # Partially Directed Acyclic Graphs
-</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>│   ├── enums.py         # EdgeType, EdgeMark enumerations
-</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>│   ├── convert.py       # Graph type conversions
-</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>│   └── io/              # Graph I/O formats
-</span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>│       ├── common.py    # Unified read_graph/write_graph
-</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>│       ├── graphml.py   # GraphML format support
-</span><span id="__span-3-24"><a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>│       ├── bayesys.py   # BayeSys format support
-</span><span id="__span-3-25"><a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>│       └── tetrad.py    # Tetrad format support
-</span><span id="__span-3-26"><a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>└── utils/               # Core utilities
-</span><span id="__span-3-27"><a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>    ├── __init__.py      # EnumWithAttrs and public exports
-</span><span id="__span-3-28"><a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>    ├── environment.py   # System environment detection
-</span><span id="__span-3-29"><a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a>    ├── io.py            # File and DataFrame I/O utilities
-</span><span id="__span-3-30"><a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a>    ├── math.py          # rndsf, ln mathematical functions
-</span><span id="__span-3-31"><a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a>    ├── random.py        # Stable random generation
-</span><span id="__span-3-32"><a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a>    ├── same.py          # Precision-aware value comparison
-</span><span id="__span-3-33"><a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a>    └── timing.py        # Performance measurement
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>│   ├── pdg.py           # Probabilistic Dependency Graphs
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>│   ├── enums.py         # EdgeType, EdgeMark enumerations
+</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>│   ├── convert.py       # Graph type conversions
+</span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>│   └── io/              # Graph I/O formats
+</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>│       ├── common.py    # Unified read_graph/write_graph
+</span><span id="__span-3-24"><a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>│       ├── graphml.py   # GraphML format support
+</span><span id="__span-3-25"><a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>│       ├── bayesys.py   # BayeSys format support
+</span><span id="__span-3-26"><a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>│       └── tetrad.py    # Tetrad format support
+</span><span id="__span-3-27"><a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>└── utils/               # Core utilities
+</span><span id="__span-3-28"><a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>    ├── __init__.py      # EnumWithAttrs and public exports
+</span><span id="__span-3-29"><a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a>    ├── environment.py   # System environment detection
+</span><span id="__span-3-30"><a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a>    ├── io.py            # File and DataFrame I/O utilities
+</span><span id="__span-3-31"><a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a>    ├── math.py          # rndsf, ln mathematical functions
+</span><span id="__span-3-32"><a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a>    ├── random.py        # Stable random generation
+</span><span id="__span-3-33"><a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a>    ├── same.py          # Precision-aware value comparison
+</span><span id="__span-3-34"><a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a>    └── timing.py        # Performance measurement
 </span></code></pre></div>
 <h3 id="graph-module-architecture">Graph Module Architecture<a class="headerlink" href="#graph-module-architecture" title="Permanent link">&para;</a></h3>
 <p><strong>Design Goal:</strong> Flexible representation of dependency graphs supporting
@@ -2577,6 +2578,8 @@ multiple graph types used in causal discovery.</p>
   marks (head <code>&gt;</code>, tail <code>-</code>, circle <code>o</code>)</li>
 <li><strong>DAG</strong>: Directed Acyclic Graph with parent/child relationships</li>
 <li><strong>PDAG</strong>: Partially Directed Acyclic Graph (CPDAGs, equivalence classes)</li>
+<li><strong>PDG</strong>: Probabilistic Dependency Graph with edge probability distributions
+  and greedy DAG extraction (<code>to_dag_greedy</code>)</li>
 <li><strong>Conversion Functions</strong>: <code>dag_to_pdag</code>, <code>pdag_to_cpdag</code>, <code>extend_pdag</code></li>
 <li><strong>Multi-Format I/O</strong>: GraphML, BayeSys, and Tetrad format support</li>
 </ul>

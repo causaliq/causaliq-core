@@ -1742,6 +1742,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#causaliq_core.graph.PDG.to_dag_greedy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_dag_greedy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#causaliq_core.graph.PDG.compress" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1865,6 +1876,17 @@
         
       </ul>
     </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#causaliq_core.graph.GreedyDAGResult" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GreedyDAGResult
+      
+    </span>
+  </a>
   
 </li>
         
@@ -3156,6 +3178,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#causaliq_core.graph.PDG.to_dag_greedy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_dag_greedy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#causaliq_core.graph.PDG.compress" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3282,6 +3315,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#causaliq_core.graph.GreedyDAGResult" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GreedyDAGResult
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3359,6 +3403,7 @@
 <li><code>extend_pdag()</code> - Extend PDAG to consistent DAG</li>
 <li><code>is_cpdag()</code> - Check if PDAG is completed</li>
 <li><code>dict_to_adjmat()</code> - Convert dictionary to adjacency matrix DataFrame</li>
+<li><code>PDG.to_dag_greedy()</code> - Greedy DAG extraction from PDG</li>
 </ul>
 <h2 id="io-functions">I/O Functions<a class="headerlink" href="#io-functions" title="Permanent link">&para;</a></h2>
 <h3 id="common-io-functions"><a href="../graph_io_common/">Common I/O Functions</a><a class="headerlink" href="#common-io-functions" title="Permanent link">&para;</a></h3>
@@ -3582,6 +3627,13 @@
           –
           <div class="doc-md-description">
             <p>Probability distribution over edge states between two nodes.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><a class="autorefs autorefs-internal" title="            GreedyDAGResult (causaliq_core.graph.GreedyDAGResult)" href="#causaliq_core.graph.GreedyDAGResult">GreedyDAGResult</a></code></b>
+          –
+          <div class="doc-md-description">
+            <p>Result from PDG.to_dag_greedy().</p>
           </div>
         </li>
     </ul>
@@ -3997,6 +4049,13 @@ tuples (source, target) where source &lt; target alphabetically.</p>
             </div>
           </li>
           <li class="doc-section-item field-body">
+            <b><code><a class="autorefs autorefs-internal" title="            to_dag_greedy (causaliq_core.graph.PDG.to_dag_greedy)" href="#causaliq_core.graph.PDG.to_dag_greedy">to_dag_greedy</a></code></b>
+            –
+            <div class="doc-md-description">
+              <p>Extract a DAG from PDG using greedy algorithm.</p>
+            </div>
+          </li>
+          <li class="doc-section-item field-body">
             <b><code><a class="autorefs autorefs-internal" title="            compress (causaliq_core.graph.PDG.compress)" href="#causaliq_core.graph.PDG.compress">compress</a></code></b>
             –
             <div class="doc-md-description">
@@ -4357,6 +4416,77 @@ forward/backward relative to alphabetical ordering.</p>
 
         <p>Return detailed representation of the PDG.</p>
 
+          
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="causaliq_core.graph.PDG.to_dag_greedy" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">to_dag_greedy</span>
+
+
+<a href="#causaliq_core.graph.PDG.to_dag_greedy" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">to_dag_greedy</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="threshold (causaliq_core.graph.PDG.to_dag_greedy(threshold))" href="#causaliq_core.graph.PDG.to_dag_greedy(threshold)">threshold</a></span><span class="p">:</span> <span class="n"><span title="float">float</span></span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="            GreedyDAGResult (causaliq_core.graph.pdg.GreedyDAGResult)" href="../graph_pdg/#causaliq_core.graph.pdg.GreedyDAGResult">GreedyDAGResult</a></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Extract a DAG from PDG using greedy algorithm.</p>
+<p>Greedily adds edges in order of probability, choosing directions
+based on effective probability (splitting undirected probability
+equally between forward and backward). Edges that would create
+cycles are skipped.</p>
+<p>For ties where effective forward equals effective backward,
+alphabetical ordering is used (source &lt; target).</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+<h7 id="causaliq_core.graph.PDG.to_dag_greedy(threshold)" class="doc doc-heading doc-heading-parameter">              <b><code>threshold</code></b>
+<a href="#causaliq_core.graph.PDG.to_dag_greedy(threshold)" class="headerlink" title="Permanent link">&para;</a></h7>              (<code><span title="float">float</span></code>, default:
+                  <code>0.0</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Minimum p_exist to consider an edge (default 0.0).</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="            GreedyDAGResult (causaliq_core.graph.pdg.GreedyDAGResult)" href="../graph_pdg/#causaliq_core.graph.pdg.GreedyDAGResult">GreedyDAGResult</a></code>
+          –
+          <div class="doc-md-description">
+            <p>GreedyDAGResult containing the DAG and extraction statistics.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<details class="example" open>
+  <summary>Example</summary>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p>pdg = PDG(["A", "B", "C"], {
+...     ("A", "B"): EdgeProbabilities(forward=0.7, none=0.3),
+...     ("A", "C"): EdgeProbabilities(forward=0.5, none=0.5),
+... })
+result = pdg.to_dag_greedy()
+result.edges_included
+2</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</details>
           
 
     </div>
@@ -4765,6 +4895,102 @@ probs.p_directed
     </div>
 
 </div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h4 id="causaliq_core.graph.GreedyDAGResult" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">GreedyDAGResult</span>
+
+
+<a href="#causaliq_core.graph.GreedyDAGResult" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+
+        <p>Result from PDG.to_dag_greedy().</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+          <b><code><span title="causaliq_core.graph.GreedyDAGResult.dag">dag</span></code></b>
+              (<code><a class="autorefs autorefs-internal" title="            DAG (causaliq_core.graph.dag.DAG)" href="../graph_dag/#causaliq_core.graph.dag.DAG">DAG</a></code>)
+          –
+          <div class="doc-md-description">
+            <p>The extracted DAG.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="causaliq_core.graph.GreedyDAGResult.edges_included">edges_included</span></code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Number of edges added to the DAG.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="causaliq_core.graph.GreedyDAGResult.edges_skipped_cycle">edges_skipped_cycle</span></code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Edges skipped to avoid cycles.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="causaliq_core.graph.GreedyDAGResult.edges_skipped_threshold">edges_skipped_threshold</span></code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Edges below threshold.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="causaliq_core.graph.GreedyDAGResult.tie_breaks_applied">tie_breaks_applied</span></code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Edges where alphabetical tie-break was used.</p>
+          </div>
+        </li>
+    </ul>
+
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
 
 
 
