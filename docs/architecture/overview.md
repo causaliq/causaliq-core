@@ -138,6 +138,7 @@ causaliq_core/
 │   ├── sdg.py           # Simple Dependency Graphs (base class)
 │   ├── dag.py           # Directed Acyclic Graphs
 │   ├── pdag.py          # Partially Directed Acyclic Graphs
+│   ├── pdg.py           # Probabilistic Dependency Graphs
 │   ├── enums.py         # EdgeType, EdgeMark enumerations
 │   ├── convert.py       # Graph type conversions
 │   └── io/              # Graph I/O formats
@@ -166,6 +167,8 @@ multiple graph types used in causal discovery.
   marks (head `>`, tail `-`, circle `o`)
 - **DAG**: Directed Acyclic Graph with parent/child relationships
 - **PDAG**: Partially Directed Acyclic Graph (CPDAGs, equivalence classes)
+- **PDG**: Probabilistic Dependency Graph with edge probability distributions
+  and greedy DAG extraction (`to_dag_greedy`)
 - **Conversion Functions**: `dag_to_pdag`, `pdag_to_cpdag`, `extend_pdag`
 - **Multi-Format I/O**: GraphML, BayeSys, and Tetrad format support
 

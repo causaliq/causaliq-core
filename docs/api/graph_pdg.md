@@ -64,7 +64,8 @@ Probabilistic Dependency Graph - distribution over SDG structures.
 **Features:**
 
 - Stores probability distributions for each node pair
-- Supports threshold-based graph extraction
+- Greedy DAG extraction with cycle avoidance
+- Compact binary compression/decompression
 - GraphML I/O for serialisation
 
 **Usage:**
@@ -84,8 +85,70 @@ pdg = PDG(nodes, edges)
 probs = pdg.get_probabilities("A", "B")
 print(probs.forward)  # 0.8
 
-# Extract graph at threshold
-pdag = pdg.to_pdag(threshold=0.5)
+# Extract a DAG greedily (edges ranked by probability)
+result = pdg.to_dag_greedy(threshold=0.5)
+print(result.dag)             # The extracted DAG
+print(result.edges_included)  # Number of edges added
+```
+
+### `GreedyDAGResult`
+
+NamedTuple returned by `PDG.to_dag_greedy()`.
+
+**Fields:**
+
+- `dag`: The extracted `DAG`.
+- `edges_included`: Number of edges added to the DAG.
+- `edges_skipped_cycle`: Edges skipped to avoid cycles.
+- `edges_skipped_threshold`: Edges below the probability threshold.
+- `tie_breaks_applied`: Edges where alphabetical tie-breaking was used.
+
+### `PDG.to_dag_greedy(threshold=0.0)`
+
+Extract a DAG from the PDG using a greedy algorithm.
+
+**Algorithm:**
+
+1. For each edge pair, compute effective forward and backward probabilities
+   by splitting the undirected probability equally between directions.
+2. Choose the direction with the higher effective probability.
+3. For ties (effective forward equals effective backward), use alphabetical
+   ordering (source < target, i.e. forward direction).
+4. Sort candidate edges by descending probability.
+5. Greedily add edges, skipping any that would create a cycle (checked
+   via ancestor tracking with propagation to descendants).
+
+**Parameters:**
+
+- `threshold` (float): Minimum `p_exist` to consider an edge (default 0.0).
+
+**Returns:**
+
+- `GreedyDAGResult`: The extracted DAG and extraction statistics.
+
+**Usage:**
+
+```python
+result = pdg.to_dag_greedy(threshold=0.5)
+print(result.edges_included)        # 2
+print(result.edges_skipped_cycle)    # 0
+print(result.tie_breaks_applied)     # 0
+```
+
+### `PDG.compress()` / `PDG.decompress(data)`
+
+Compact binary serialisation of a PDG.
+
+`compress()` encodes the PDG to a compact binary format where each
+probability is stored in 3 bytes (4 significant figures). The `p_none`
+value is derived as `1.0 - (forward + backward + undirected)`.
+`decompress()` reconstructs a `PDG` from the binary representation.
+
+**Usage:**
+
+```python
+blob = pdg.compress()
+pdg2 = PDG.decompress(blob)
 ```
 
 ## Reference

@@ -40,6 +40,7 @@ Transform between graph representations:
 - `extend_pdag()` - Extend PDAG to consistent DAG
 - `is_cpdag()` - Check if PDAG is completed
 - `dict_to_adjmat()` - Convert dictionary to adjacency matrix DataFrame
+- `PDG.to_dag_greedy()` - Greedy DAG extraction from PDG
 
 ## I/O Functions
 
