@@ -9,6 +9,8 @@ from causaliq_core.utils.filter_expr import (
     evaluate_filter,
     filter_entries,
     get_filter_variables,
+    random_set,
+    resolve_random_calls,
     validate_filter,
 )
 
@@ -238,6 +240,168 @@ def test_evaluate_filter_coerces_to_bool() -> None:
     assert evaluate_filter("x", metadata2) is True
     assert evaluate_filter("y", metadata2) is True
     assert evaluate_filter("z", metadata2) is True
+
+
+# --- random_set tests ---
+
+
+# Test random_set selects correct count from integer population.
+def test_random_set_integer_population() -> None:
+    result = random_set(range(25), 10, 0)
+    assert isinstance(result, frozenset)
+    assert len(result) == 10
+    assert result.issubset(set(range(25)))
+
+
+# Test random_set is deterministic with same seed.
+def test_random_set_deterministic() -> None:
+    a = random_set(range(25), 10, 0)
+    b = random_set(range(25), 10, 0)
+    assert a == b
+
+
+# Test random_set produces different results with different seeds.
+def test_random_set_different_seeds() -> None:
+    a = random_set(range(25), 10, 0)
+    b = random_set(range(25), 10, 1)
+    assert a != b
+
+
+# Test random_set works with string population.
+def test_random_set_string_population() -> None:
+    models = ["gpt-4", "claude", "gemini", "llama", "mistral"]
+    result = random_set(models, 3, 0)
+    assert len(result) == 3
+    assert result.issubset(set(models))
+
+
+# Test random_set raises ValueError when count exceeds population.
+def test_random_set_count_exceeds_population() -> None:
+    with pytest.raises(ValueError, match="at least 5"):
+        random_set([1, 2, 3], 5, 0)
+
+
+# Test random_set raises ValueError for empty population.
+def test_random_set_empty_population() -> None:
+    with pytest.raises(ValueError, match="non-empty"):
+        random_set([], 1, 0)
+
+
+# Test random_set deduplicates input values.
+def test_random_set_deduplicates() -> None:
+    result = random_set([1, 1, 2, 2, 3, 3], 3, 0)
+    assert len(result) == 3
+    assert result == frozenset({1, 2, 3})
+
+
+# --- resolve_random_calls tests ---
+
+
+# Test resolve_random_calls with no random() in expression.
+def test_resolve_no_random() -> None:
+    expr, names = resolve_random_calls("x == 1", [{"x": 1}, {"x": 2}])
+    assert expr == "x == 1"
+    assert names == {}
+
+
+# Test resolve_random_calls rewrites expression.
+def test_resolve_rewrites_expression() -> None:
+    metas = [{"seed": i} for i in range(25)]
+    expr, names = resolve_random_calls("seed in random(10, 0)", metas)
+    assert "random(10, 0)" not in expr
+    assert "_random_0" in expr
+    assert len(names) == 1
+    assert len(names["_random_0"]) == 10
+
+
+# Test resolve_random_calls selection is deterministic.
+def test_resolve_deterministic() -> None:
+    metas = [{"seed": i} for i in range(25)]
+    _, n1 = resolve_random_calls("seed in random(10, 0)", metas)
+    _, n2 = resolve_random_calls("seed in random(10, 0)", metas)
+    assert n1["_random_0"] == n2["_random_0"]
+
+
+# Test resolve_random_calls with string variables.
+def test_resolve_string_values() -> None:
+    metas = [
+        {"model": "gpt-4"},
+        {"model": "claude"},
+        {"model": "gemini"},
+        {"model": "llama"},
+    ]
+    expr, names = resolve_random_calls("model in random(2, 0)", metas)
+    assert len(names["_random_0"]) == 2
+    assert names["_random_0"].issubset({"gpt-4", "claude", "gemini", "llama"})
+
+
+# Test resolve_random_calls errors when count exceeds population.
+def test_resolve_count_exceeds_population() -> None:
+    metas = [{"seed": 0}, {"seed": 1}, {"seed": 2}]
+    with pytest.raises(FilterExpressionError, match="at least 5"):
+        resolve_random_calls("seed in random(5, 0)", metas)
+
+
+# Test resolve_random_calls skips None values in population.
+def test_resolve_skips_none_values() -> None:
+    metas = [
+        {"seed": 0},
+        {"seed": None},
+        {"seed": 1},
+        {"seed": 2},
+    ]
+    expr, names = resolve_random_calls("seed in random(3, 0)", metas)
+    assert len(names["_random_0"]) == 3
+    assert None not in names["_random_0"]
+
+
+# Test resolve preserves non-random parts of expression.
+def test_resolve_preserves_other_conditions() -> None:
+    metas = [{"seed": i, "x": "a"} for i in range(10)]
+    expr, names = resolve_random_calls(
+        "x == 'a' and seed in random(5, 0)", metas
+    )
+    assert "x == 'a'" in expr
+    assert "_random_0" in expr
+
+
+# --- Integration: filter_entries with random ---
+
+
+# Test filter_entries with random() selects correct subset.
+def test_filter_entries_with_random() -> None:
+    entries = [{"metadata": {"seed": i, "network": "asia"}} for i in range(25)]
+    result = filter_entries(entries, "seed in random(10, 0)")
+    assert len(result) == 10
+    # All returned entries have seeds in the selected set
+    seeds = {e["metadata"]["seed"] for e in result}
+    assert len(seeds) == 10
+
+
+# Test filter_entries with random() combined with other filters.
+def test_filter_entries_random_with_other_filters() -> None:
+    entries = [
+        {"metadata": {"seed": i, "network": "asia"}} for i in range(25)
+    ] + [{"metadata": {"network": "sports", "model": "gpt"}}]
+    result = filter_entries(
+        entries,
+        "network == 'sports' or seed in random(10, 0)",
+    )
+    # 10 random seeds + 1 sports entry
+    assert len(result) == 11
+
+
+# Test evaluate_filter raises error for unresolved random().
+def test_evaluate_filter_unresolved_random() -> None:
+    with pytest.raises(FilterExpressionError, match="random"):
+        evaluate_filter("seed in random(10, 0)", {"seed": 3})
+
+
+# Test get_filter_variables excludes random function name.
+def test_get_filter_variables_excludes_random() -> None:
+    variables = get_filter_variables("seed in random(10, 0)")
+    assert "random" not in variables
+    assert "seed" in variables
 
 
 # Test validate_filter raises FilterSyntaxError for invalid expression.

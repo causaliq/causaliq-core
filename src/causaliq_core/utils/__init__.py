@@ -14,6 +14,7 @@ from .filter_expr import (
     evaluate_filter,
     filter_entries,
     get_filter_variables,
+    resolve_random_calls,
     validate_filter,
 )
 from .io import FileFormatError, is_valid_path, write_dataframe
@@ -111,6 +112,7 @@ __all__ = [
     "FileFormatError",
     "is_valid_path",
     "RandomIntegers",
+    "resolve_random_calls",
     "Timing",
     "validate_filter",
     "validate_weight_spec",

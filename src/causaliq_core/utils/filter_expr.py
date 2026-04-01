@@ -4,6 +4,12 @@ Provides safe evaluation of Python-like filter expressions against metadata
 dictionaries using the simpleeval library. This enables filtering cache
 entries by metadata values without the security risks of eval().
 
+The ``random(count, seed)`` function enables reproducible random
+selection within filter expressions.  When used as
+``VAR in random(count, seed)``, it selects *count* values from the
+distinct population of VAR across all entries, using the
+hardware-stable RandomIntegers sequence.
+
 Example:
     >>> from causaliq_core.utils.filter_expr import evaluate_filter
     >>> metadata = {"network": "asia", "sample_size": 1000}
@@ -15,7 +21,8 @@ Example:
     True
 """
 
-from typing import Any, Dict, List, Set
+import re
+from typing import Any, Dict, FrozenSet, List, Sequence, Set, Tuple
 
 from simpleeval import (  # type: ignore[import-untyped]
     EvalWithCompoundTypes,
@@ -39,6 +46,54 @@ class FilterSyntaxError(FilterExpressionError):
 # Allowed names in filter expressions (empty - all names come from metadata)
 _ALLOWED_NAMES: Dict[str, Any] = {}
 
+
+def random_set(values: Sequence[Any], count: int, seed: int) -> FrozenSet[Any]:
+    """Select *count* values from a population using stable RNG.
+
+    Uses the hardware-stable ``RandomIntegers`` sequence so that
+    the same *seed* always produces the same selection regardless
+    of platform.
+
+    Args:
+        values: Population of values to select from.
+        count: Number of values to select.
+        seed: Seed for reproducible selection (0-999).
+
+    Returns:
+        Frozen set of selected values.
+
+    Raises:
+        ValueError: If count exceeds the number of distinct
+            values, or if the population is empty.
+
+    Example:
+        >>> sorted(random_set(range(10), 3, 0))
+        [2, 4, 6]
+    """
+    from causaliq_core.utils.random import RandomIntegers
+
+    sorted_vals = sorted(set(values), key=str)
+    n = len(sorted_vals)
+    if n < 1:
+        raise ValueError("random() requires a non-empty population")
+    if count > n:
+        raise ValueError(
+            f"random() requires at least {count} distinct " f"values, got {n}"
+        )
+    indices = list(RandomIntegers(n, subsample=seed))
+    return frozenset(sorted_vals[i] for i in indices[:count])
+
+
+def _random_placeholder(*args: Any) -> None:
+    """Placeholder that raises a helpful error."""
+    raise FilterExpressionError(
+        "random() in filter expressions requires "
+        "pre-resolution via resolve_random_calls(). "
+        "Use filter_entries() or call "
+        "resolve_random_calls() before evaluate_filter()."
+    )
+
+
 # Allowed functions in filter expressions
 _ALLOWED_FUNCTIONS: Dict[str, Any] = {
     "len": len,
@@ -49,7 +104,13 @@ _ALLOWED_FUNCTIONS: Dict[str, Any] = {
     "abs": abs,
     "min": min,
     "max": max,
+    "random": _random_placeholder,
 }
+
+# Regex to find VAR in random(count, seed) patterns
+_RANDOM_PATTERN = re.compile(
+    r"(\w+)\s+in\s+(random\s*\(\s*(\d+)\s*,\s*(\d+)\s*\))"
+)
 
 
 def _create_evaluator(metadata: Dict[str, Any]) -> EvalWithCompoundTypes:
@@ -223,6 +284,80 @@ def get_filter_variables(expression: str) -> Set[str]:
     return variables
 
 
+def resolve_random_calls(
+    expression: str,
+    all_metadata: List[Dict[str, Any]],
+) -> Tuple[str, Dict[str, Any]]:
+    """Pre-resolve ``random()`` calls in a filter expression.
+
+    Finds ``VAR in random(count, seed)`` patterns, collects the
+    distinct values of *VAR* across *all_metadata*, selects
+    *count* of them using the hardware-stable ``RandomIntegers``
+    sequence, and returns a rewritten expression plus a dictionary
+    of pre-computed sets to inject as extra names during
+    evaluation.
+
+    Args:
+        expression: Filter expression, possibly containing
+            ``random(count, seed)`` calls.
+        all_metadata: List of flat metadata dictionaries from
+            all entries in the population.
+
+    Returns:
+        Tuple of *(resolved_expression, extra_names)*.
+        *extra_names* should be merged into each entry's metadata
+        when calling :func:`evaluate_filter`.
+
+    Raises:
+        FilterExpressionError: If fewer distinct values exist
+            than the requested count.
+
+    Example:
+        >>> metas = [{"seed": i} for i in range(25)]
+        >>> expr, names = resolve_random_calls(
+        ...     "seed in random(10, 0)", metas
+        ... )
+        >>> len(names)
+        1
+    """
+    matches = list(_RANDOM_PATTERN.finditer(expression))
+    if not matches:
+        return expression, {}
+
+    extra_names: Dict[str, Any] = {}
+    new_expr = expression
+
+    # Process in reverse order to preserve string positions.
+    for i, m in enumerate(reversed(matches)):
+        var_name = m.group(1)
+        count = int(m.group(3))
+        seed = int(m.group(4))
+
+        # Collect distinct non-None values of var_name.
+        values = {
+            meta[var_name]
+            for meta in all_metadata
+            if var_name in meta and meta[var_name] is not None
+        }
+
+        try:
+            selected = random_set(list(values), count, seed)
+        except ValueError as e:
+            raise FilterExpressionError(
+                f"random() for variable '{var_name}': {e}"
+            ) from e
+
+        # Inject as extra name, replace random(...) in expression.
+        name = f"_random_{i}"
+        extra_names[name] = selected
+
+        call_start = m.start(2)
+        call_end = m.end(2)
+        new_expr = new_expr[:call_start] + name + new_expr[call_end:]
+
+    return new_expr, extra_names
+
+
 def filter_entries(
     entries: List[Dict[str, Any]],
     expression: str,
@@ -262,12 +397,21 @@ def filter_entries(
     # Validate expression once before filtering
     validate_filter(expression)
 
+    # Pre-resolve random() calls if present
+    all_meta = [
+        entry.get(metadata_key, {})
+        for entry in entries
+        if isinstance(entry.get(metadata_key), dict)
+    ]
+    resolved_expr, extra_names = resolve_random_calls(expression, all_meta)
+
     result = []
     for entry in entries:
         metadata = entry.get(metadata_key, {})
         if isinstance(metadata, dict):
             try:
-                if evaluate_filter(expression, metadata):
+                merged = {**metadata, **extra_names}
+                if evaluate_filter(resolved_expr, merged):
                     result.append(entry)
             except FilterExpressionError:
                 # Entry missing required fields - skip it
