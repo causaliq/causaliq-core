@@ -25,6 +25,10 @@ evaluation without security risks of `eval()`.
     options:
       show_source: false
 
+::: causaliq_core.utils.resolve_random_calls
+    options:
+      show_source: false
+
 ## Exceptions
 
 ::: causaliq_core.utils.FilterExpressionError
@@ -46,7 +50,38 @@ Filter expressions use Python syntax with the following supported operators:
 | Membership | `in` |
 | Grouping | `()` |
 
-Allowed functions: `len`, `str`, `int`, `float`, `bool`, `abs`, `min`, `max`
+Allowed functions: `len`, `str`, `int`, `float`, `bool`, `abs`,
+`min`, `max`, `random`
+
+### Random Sampling
+
+The `random(count, seed)` function enables reproducible random
+selection within filter expressions. When used as
+`VAR in random(count, seed)`, it selects *count* values from the
+distinct population of `VAR` across all entries, using a
+hardware-stable random sequence.
+
+```python
+from causaliq_core.utils import filter_entries
+
+entries = [
+    {"seed": 1, "network": "asia"},
+    {"seed": 5, "network": "asia"},
+    {"seed": 10, "network": "asia"},
+    {"seed": 15, "network": "asia"},
+]
+
+# Select 2 random seeds (deterministic with seed=42)
+result = filter_entries(
+    entries, "seed in random(2, 42)"
+)
+# Returns 2 entries with reproducibly chosen seed values
+```
+
+`random()` calls are pre-resolved by `resolve_random_calls()` before
+expression evaluation, replacing them with concrete value sets.
+Use `filter_entries()` for automatic resolution, or call
+`resolve_random_calls()` directly for manual control.
 
 ## Usage Examples
 
@@ -121,3 +156,19 @@ actions:
 ```
 
 The filter is applied to cache entry metadata before aggregation.
+
+### Random Sampling in Workflows
+
+```yaml
+steps:
+  - name: "Evaluate Subset"
+    uses: "causaliq-analysis"
+    with:
+      action: "evaluate_graph"
+      input: "results/graphs.db"
+      filter: "seed in random(5, 42)"
+      output: "results/evaluation.db"
+```
+
+This selects 5 random seed values (deterministically with seed 42)
+from the input cache entries.
