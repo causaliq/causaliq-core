@@ -25,6 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - Nothing yet
 
+## [0.7.0 Randomised Filters] - 2026-04-10
+
+### Added
+- `random()` function support in filter expressions for random sampling
+  of cache entries
+
 ## [0.6.0 Optimal DAG] - 2026-03-26
 
 ### Added

@@ -1,6 +1,6 @@
 # CausalIQ Core - Development Roadmap
 
-**Last updated**: March 1, 2026  
+**Last updated**: April 10, 2026  
 
 This project roadmap fits into the [overall ecosystem roadmap](https://causaliq.org/projects/ecosystem_roadmap/)
 
@@ -21,6 +21,10 @@ This project roadmap fits into the [overall ecosystem roadmap](https://causaliq.
   - **0.4.0 Caching Infrastructure** [February 2026]: Token-based caching and (de)compression of JSON and GraphML.
 
   - **0.5.0 Aggregation Workflows** [March 2026]: PDG class, filter expressions and metadata-driven weighting.
+
+  - **0.6.0 Optimal DAG** [March 2026]: Greedy optimal DAG extraction from PDG, ActionPattern enum, and template method pattern for action providers.
+
+  - **0.7.0 Randomised Filters** [April 2026]: `random()` function support in filter expressions.
 
 
 *See Git commit history for detailed implementation progress*
