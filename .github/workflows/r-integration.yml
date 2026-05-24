@@ -1,0 +1,47 @@
+name: R Integration
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  r-integration:
+    name: R (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - name: Install bnlearn
+        run: Rscript -e "install.packages('bnlearn')"
+
+      - name: Export R library path (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          echo "LD_LIBRARY_PATH=$(R RHOME)/lib:${LD_LIBRARY_PATH}" \
+            >> $GITHUB_ENV
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install causaliq-core with R extras
+        shell: bash
+        run: pip install -e ".[dev,r]"
+
+      - name: Run R integration tests
+        run: python -m pytest -m r_integration -v --no-cov
