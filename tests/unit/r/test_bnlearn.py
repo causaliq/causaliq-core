@@ -1,7 +1,5 @@
 """Unit tests for causaliq_core.r.bnlearn."""
 
-from unittest.mock import MagicMock
-
 import pytest
 
 from causaliq_core.bn import BN
@@ -11,7 +9,7 @@ from causaliq_core.r.bnlearn import (
     bnlearn_cpdag,
     bnlearn_import,
 )
-from causaliq_core.r.exceptions import RPackageNotAvailableError, RRuntimeError
+from causaliq_core.r.exceptions import RNotAvailableError, RRuntimeError
 
 # ---------------------------------------------------------------------------
 # bnlearn_cpdag
@@ -30,13 +28,11 @@ def test_bnlearn_cpdag_raises_valueerror_for_empty_pdag():
         bnlearn_cpdag(PDAG([], []))
 
 
-# Test bnlearn_cpdag returns PDAG with mocked bnlearn.
+# Test bnlearn_cpdag returns PDAG with mocked run_r_script.
 def test_bnlearn_cpdag_returns_pdag_with_mock(monkeypatch):
-    mock_bnl = MagicMock()
-    mock_bnl.arcs.return_value = []  # empty arcs -> empty CPDAG
     monkeypatch.setattr(
-        "causaliq_core.r.bnlearn.import_r_package",
-        lambda pkg: mock_bnl,
+        "causaliq_core.r.bnlearn.run_r_script",
+        lambda s, **kw: "",
     )
     pdag = PDAG(["A", "B"], [])
     result = bnlearn_cpdag(pdag)
@@ -44,62 +40,69 @@ def test_bnlearn_cpdag_returns_pdag_with_mock(monkeypatch):
     assert result.nodes == ["A", "B"]
 
 
-# Test bnlearn_cpdag calls set_arc for a directed edge in the PDAG.
-def test_bnlearn_cpdag_calls_set_arc_for_directed_edge(monkeypatch):
-    mock_bnl = MagicMock()
-    mock_bnl.arcs.return_value = []
-    monkeypatch.setattr(
-        "causaliq_core.r.bnlearn.import_r_package",
-        lambda pkg: mock_bnl,
-    )
+# Test bnlearn_cpdag generates set.arc for a directed edge.
+def test_bnlearn_cpdag_generates_set_arc_for_directed_edge(monkeypatch):
+    captured = []
+
+    def _capture(s: str, **kw: object) -> str:
+        captured.append(s)
+        return ""
+
+    monkeypatch.setattr("causaliq_core.r.bnlearn.run_r_script", _capture)
     pdag = PDAG(["A", "B"], [("A", "->", "B")])
     bnlearn_cpdag(pdag)
-    mock_bnl.set_arc.assert_called_once()
+    assert "set.arc" in captured[0]
 
 
-# Test bnlearn_cpdag calls set_edge for an undirected edge in the PDAG.
-def test_bnlearn_cpdag_calls_set_edge_for_undirected_edge(monkeypatch):
-    mock_bnl = MagicMock()
-    mock_bnl.arcs.return_value = []
-    monkeypatch.setattr(
-        "causaliq_core.r.bnlearn.import_r_package",
-        lambda pkg: mock_bnl,
-    )
+# Test bnlearn_cpdag generates set.edge for an undirected edge.
+def test_bnlearn_cpdag_generates_set_edge_for_undirected_edge(monkeypatch):
+    captured = []
+
+    def _capture(s: str, **kw: object) -> str:
+        captured.append(s)
+        return ""
+
+    monkeypatch.setattr("causaliq_core.r.bnlearn.run_r_script", _capture)
     pdag = PDAG(["A", "B"], [("A", "-", "B")])
     bnlearn_cpdag(pdag)
-    mock_bnl.set_edge.assert_called_once()
+    assert "set.edge" in captured[0]
 
 
-# Test bnlearn_cpdag re-raises RPackageNotAvailableError from try block.
-def test_bnlearn_cpdag_reraises_package_not_available(monkeypatch):
-    def _raise(pkg: str) -> None:
-        raise RPackageNotAvailableError("no bnlearn")
+# Test bnlearn_cpdag re-raises RRuntimeError from run_r_script.
+def test_bnlearn_cpdag_reraises_rruntimeerror(monkeypatch):
+    def _raise(s: str, **kw: object) -> str:
+        raise RRuntimeError("bnlearn error")
 
-    monkeypatch.setattr("causaliq_core.r.bnlearn.import_r_package", _raise)
-    with pytest.raises(RPackageNotAvailableError):
+    monkeypatch.setattr("causaliq_core.r.bnlearn.run_r_script", _raise)
+    with pytest.raises(RRuntimeError):
+        bnlearn_cpdag(PDAG(["A", "B"], []))
+
+
+# Test bnlearn_cpdag re-raises RNotAvailableError from run_r_script.
+def test_bnlearn_cpdag_reraises_rnotavailableerror(monkeypatch):
+    def _raise(s: str, **kw: object) -> str:
+        raise RNotAvailableError("no Rscript")
+
+    monkeypatch.setattr("causaliq_core.r.bnlearn.run_r_script", _raise)
+    with pytest.raises(RNotAvailableError):
         bnlearn_cpdag(PDAG(["A", "B"], []))
 
 
 # Test bnlearn_cpdag wraps unexpected exceptions as RRuntimeError.
 def test_bnlearn_cpdag_wraps_unexpected_exception(monkeypatch):
-    mock_bnl = MagicMock()
-    mock_bnl.cpdag.side_effect = RuntimeError("R failed")
-    monkeypatch.setattr(
-        "causaliq_core.r.bnlearn.import_r_package",
-        lambda pkg: mock_bnl,
-    )
+    def _raise(s: str, **kw: object) -> str:
+        raise RuntimeError("R failed")
+
+    monkeypatch.setattr("causaliq_core.r.bnlearn.run_r_script", _raise)
     with pytest.raises(RRuntimeError):
         bnlearn_cpdag(PDAG(["A", "B"], []))
 
 
-# Test bnlearn_cpdag converts arcs result to directed edges.
+# Test bnlearn_cpdag parses tab-separated arc output as directed edge.
 def test_bnlearn_cpdag_directed_arc_in_result(monkeypatch):
-    mock_bnl = MagicMock()
-    # Column-major: froms=["A"], tos=["B"] => A -> B
-    mock_bnl.arcs.return_value = ["A", "B"]
     monkeypatch.setattr(
-        "causaliq_core.r.bnlearn.import_r_package",
-        lambda pkg: mock_bnl,
+        "causaliq_core.r.bnlearn.run_r_script",
+        lambda s, **kw: "A\tB\n",
     )
     pdag = PDAG(["A", "B"], [])
     result = bnlearn_cpdag(pdag)
@@ -142,23 +145,11 @@ def test_bnlearn_compare_raises_valueerror_for_mismatched_nodes():
         )
 
 
-# Test bnlearn_compare returns dict with expected keys via mock.
+# Test bnlearn_compare parses newline-delimited output correctly.
 def test_bnlearn_compare_returns_dict_with_mock(monkeypatch):
-    mock_metrics = MagicMock()
-    mock_metrics.rx2.side_effect = lambda k: {
-        "tp": [3],
-        "fp": [1],
-        "fn": [2],
-    }[k]
-    mock_shd = [4]
-
-    mock_bnl = MagicMock()
-    mock_bnl.compare.return_value = mock_metrics
-    mock_bnl.shd.return_value = mock_shd
-
     monkeypatch.setattr(
-        "causaliq_core.r.bnlearn.import_r_package",
-        lambda pkg: mock_bnl,
+        "causaliq_core.r.bnlearn.run_r_script",
+        lambda s, **kw: "3\n1\n2\n4\n",
     )
     pdag = PDAG(["A", "B"], [])
     ref = PDAG(["A", "B"], [])
@@ -166,24 +157,22 @@ def test_bnlearn_compare_returns_dict_with_mock(monkeypatch):
     assert result == {"tp": 3, "fp": 1, "fn": 2, "shd": 4}
 
 
-# Test bnlearn_compare re-raises RPackageNotAvailableError from try block.
-def test_bnlearn_compare_reraises_package_not_available(monkeypatch):
-    def _raise(pkg: str) -> None:
-        raise RPackageNotAvailableError("no bnlearn")
+# Test bnlearn_compare re-raises RRuntimeError from run_r_script.
+def test_bnlearn_compare_reraises_rruntimeerror(monkeypatch):
+    def _raise(s: str, **kw: object) -> str:
+        raise RRuntimeError("R error")
 
-    monkeypatch.setattr("causaliq_core.r.bnlearn.import_r_package", _raise)
-    with pytest.raises(RPackageNotAvailableError):
+    monkeypatch.setattr("causaliq_core.r.bnlearn.run_r_script", _raise)
+    with pytest.raises(RRuntimeError):
         bnlearn_compare(PDAG(["A", "B"], []), PDAG(["A", "B"], []))
 
 
 # Test bnlearn_compare wraps unexpected exceptions as RRuntimeError.
 def test_bnlearn_compare_wraps_unexpected_exception(monkeypatch):
-    mock_bnl = MagicMock()
-    mock_bnl.compare.side_effect = RuntimeError("R failed")
-    monkeypatch.setattr(
-        "causaliq_core.r.bnlearn.import_r_package",
-        lambda pkg: mock_bnl,
-    )
+    def _raise(s: str, **kw: object) -> str:
+        raise RuntimeError("R failed")
+
+    monkeypatch.setattr("causaliq_core.r.bnlearn.run_r_script", _raise)
     with pytest.raises(RRuntimeError):
         bnlearn_compare(PDAG(["A", "B"], []), PDAG(["A", "B"], []))
 
@@ -196,7 +185,7 @@ def test_bnlearn_compare_wraps_unexpected_exception(monkeypatch):
 # Test bnlearn_import raises TypeError for non-string path.
 def test_bnlearn_import_raises_typeerror_for_non_string():
     with pytest.raises(TypeError):
-        bnlearn_import(123)
+        bnlearn_import(123)  # type: ignore[arg-type]
 
 
 # Test bnlearn_import raises FileNotFoundError for missing file.
@@ -205,56 +194,17 @@ def test_bnlearn_import_raises_filenotfounderror_for_missing_file():
         bnlearn_import("/nonexistent/path/test.rda")
 
 
-# Test bnlearn_import raises ValueError for invalid BN structure.
+# Test bnlearn_import raises ValueError for missing (Intercept) coef.
 def test_bnlearn_import_raises_valueerror_for_invalid_bn(
     monkeypatch, tmp_path
 ):
     rda_file = tmp_path / "test.rda"
     rda_file.touch()
 
-    # Coefficients don't match parents - missing intercept
-    class _MockCoeffs:
-        names = ["wrong_key"]
+    def _fake(s: str, **kw: object) -> str:
+        return "NODE\tA\nPARENTS\t\n" "COEF\twrong_key\t0.5\nSD\t0.1\n"
 
-        def __iter__(self):
-            return iter([0.5])
-
-        def __len__(self):
-            return 1
-
-    class _MockParents:
-        def __iter__(self):
-            return iter([])
-
-        def __len__(self):
-            return 0
-
-    class _MockSd:
-        def __getitem__(self, i):
-            return 0.1
-
-    def node_rx2(key):
-        return {
-            "parents": _MockParents(),
-            "coefficients": _MockCoeffs(),
-            "sd": _MockSd(),
-        }[key]
-
-    mock_node = MagicMock()
-    mock_node.rx2 = MagicMock(side_effect=node_rx2)
-    mock_bn = MagicMock()
-    mock_bn.names = ["A"]
-    mock_bn.rx2 = MagicMock(return_value=mock_node)
-    mock_ro = MagicMock()
-    mock_ro.globalenv.__getitem__ = MagicMock(return_value=mock_bn)
-
-    monkeypatch.setattr(
-        "causaliq_core.r.bnlearn.get_robjects", lambda: mock_ro
-    )
-    monkeypatch.setattr(
-        "causaliq_core.r.bnlearn.import_r_package",
-        lambda p: MagicMock(),
-    )
+    monkeypatch.setattr("causaliq_core.r.bnlearn.run_r_script", _fake)
     with pytest.raises(ValueError):
         bnlearn_import(str(rda_file))
 
@@ -264,48 +214,10 @@ def test_bnlearn_import_returns_bn_for_valid_rda(monkeypatch, tmp_path):
     rda_file = tmp_path / "test.rda"
     rda_file.touch()
 
-    class _MockCoeffs:
-        names = ["(Intercept)"]
+    def _fake(s: str, **kw: object) -> str:
+        return "NODE\tA\nPARENTS\t\n" "COEF\t(Intercept)\t2.5\nSD\t0.4\n"
 
-        def __iter__(self):
-            return iter([2.5])
-
-        def __len__(self):
-            return 1
-
-    class _MockParents:
-        def __iter__(self):
-            return iter([])
-
-        def __len__(self):
-            return 0
-
-    class _MockSd:
-        def __getitem__(self, i):
-            return 0.4
-
-    def node_rx2(key):
-        return {
-            "parents": _MockParents(),
-            "coefficients": _MockCoeffs(),
-            "sd": _MockSd(),
-        }[key]
-
-    mock_node = MagicMock()
-    mock_node.rx2 = MagicMock(side_effect=node_rx2)
-    mock_bn = MagicMock()
-    mock_bn.names = ["A"]
-    mock_bn.rx2 = MagicMock(return_value=mock_node)
-    mock_ro = MagicMock()
-    mock_ro.globalenv.__getitem__ = MagicMock(return_value=mock_bn)
-
-    monkeypatch.setattr(
-        "causaliq_core.r.bnlearn.get_robjects", lambda: mock_ro
-    )
-    monkeypatch.setattr(
-        "causaliq_core.r.bnlearn.import_r_package",
-        lambda p: MagicMock(),
-    )
+    monkeypatch.setattr("causaliq_core.r.bnlearn.run_r_script", _fake)
     result = bnlearn_import(str(rda_file))
     assert isinstance(result, BN)
 
@@ -314,9 +226,53 @@ def test_bnlearn_import_returns_bn_for_valid_rda(monkeypatch, tmp_path):
 def test_bnlearn_import_wraps_unexpected_exception(monkeypatch, tmp_path):
     rda_file = tmp_path / "test.rda"
     rda_file.touch()
-    monkeypatch.setattr(
-        "causaliq_core.r.bnlearn.get_robjects",
-        lambda: (_ for _ in ()).throw(RuntimeError("boom")),
-    )
+
+    def _raise(s: str, **kw: object) -> str:
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr("causaliq_core.r.bnlearn.run_r_script", _raise)
     with pytest.raises(RRuntimeError):
         bnlearn_import(str(rda_file))
+
+
+# Test bnlearn_import re-raises RRuntimeError from run_r_script.
+def test_bnlearn_import_reraises_rruntimeerror(monkeypatch, tmp_path):
+    rda_file = tmp_path / "test.rda"
+    rda_file.touch()
+
+    def _raise(s: str, **kw: object) -> str:
+        raise RRuntimeError("R error")
+
+    monkeypatch.setattr("causaliq_core.r.bnlearn.run_r_script", _raise)
+    with pytest.raises(RRuntimeError):
+        bnlearn_import(str(rda_file))
+
+
+# Test bnlearn_import handles BN node with non-empty parents list.
+def test_bnlearn_import_handles_parent_nodes(monkeypatch, tmp_path):
+    rda_file = tmp_path / "test.rda"
+    rda_file.touch()
+    output = (
+        "NODE\tA\nPARENTS\t\nCOEF\t(Intercept)\t1.0\nSD\t0.5\n"
+        "NODE\tB\nPARENTS\tA\n"
+        "COEF\t(Intercept)\t0.0\nCOEF\tA\t0.8\nSD\t0.3\n"
+    )
+    monkeypatch.setattr(
+        "causaliq_core.r.bnlearn.run_r_script",
+        lambda s, **kw: output,
+    )
+    result = bnlearn_import(str(rda_file))
+    assert isinstance(result, BN)
+
+
+# Test bnlearn_import skips empty lines in R output.
+def test_bnlearn_import_skips_empty_lines_in_output(monkeypatch, tmp_path):
+    rda_file = tmp_path / "test.rda"
+    rda_file.touch()
+    output = "NODE\tA\nPARENTS\t\n\n" "COEF\t(Intercept)\t2.5\nSD\t0.4\n"
+    monkeypatch.setattr(
+        "causaliq_core.r.bnlearn.run_r_script",
+        lambda s, **kw: output,
+    )
+    result = bnlearn_import(str(rda_file))
+    assert isinstance(result, BN)

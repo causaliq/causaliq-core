@@ -1,7 +1,8 @@
 """R integration layer for CausalIQ Core.
 
-Provides rpy2-based session management, data conversion utilities, and
-bnlearn graph utilities used by downstream CausalIQ repositories.
+Provides subprocess-based session management, data conversion
+utilities, and bnlearn graph utilities used by downstream
+CausalIQ repositories.
 """
 
 from causaliq_core.r.availability import (
@@ -19,13 +20,12 @@ from causaliq_core.r.exceptions import (
     RPackageNotAvailableError,
     RRuntimeError,
 )
-from causaliq_core.r.session import get_robjects, import_r_package
+from causaliq_core.r.session import run_r_script
 
 __all__ = [
     "is_r_available",
     "is_r_package_available",
-    "get_robjects",
-    "import_r_package",
+    "run_r_script",
     "r_arcs_to_edges",
     "data_to_r_dataframe",
     "bnlearn_cpdag",

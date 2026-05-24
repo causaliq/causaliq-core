@@ -1,6 +1,6 @@
 """R integration smoke tests.
 
-These tests require a working R installation with bnlearn and rpy2.
+These tests require a working R installation with bnlearn installed.
 They are auto-skipped when R is not available (see tests/conftest.py).
 Run explicitly with: pytest -m r_integration
 """
@@ -13,10 +13,10 @@ from causaliq_core.r.availability import (
     is_r_package_available,
 )
 from causaliq_core.r.bnlearn import bnlearn_compare, bnlearn_cpdag
-from causaliq_core.r.session import get_robjects, import_r_package
+from causaliq_core.r.session import run_r_script
 
 
-# Test R is reachable via rpy2 in this environment.
+# Test R is reachable via Rscript in this environment.
 @pytest.mark.r_integration
 def test_r_is_available():
     assert is_r_available()
@@ -28,26 +28,11 @@ def test_bnlearn_is_available():
     assert is_r_package_available("bnlearn")
 
 
-# Test get_robjects returns the rpy2 robjects module.
+# Test run_r_script executes a simple R expression via stdin.
 @pytest.mark.r_integration
-def test_get_robjects_returns_module():
-    ro = get_robjects()
-    assert ro is not None
-
-
-# Test import_r_package returns the bnlearn package object.
-@pytest.mark.r_integration
-def test_import_bnlearn_returns_package():
-    bnl = import_r_package("bnlearn")
-    assert bnl is not None
-
-
-# Test bnlearn can construct a simple network in R.
-@pytest.mark.r_integration
-def test_bnlearn_creates_network():
-    bnl = import_r_package("bnlearn")
-    net = bnl.model2network("[A][B|A][C|B]")
-    assert net is not None
+def test_run_r_script_returns_output():
+    output = run_r_script('cat("hello from R\\n")')
+    assert "hello from R" in output
 
 
 # Test bnlearn_cpdag returns a PDAG for a simple DAG.

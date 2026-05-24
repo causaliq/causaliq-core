@@ -1,24 +1,22 @@
 """Data conversion utilities between CausalIQ and R types."""
 
-from typing import Any, Dict, List, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 
-from causaliq_core.r.session import get_robjects
 
+def r_arcs_to_edges(
+    arcs: List[Tuple[str, str]],
+) -> List[Tuple[str, str, str]]:
+    """Convert a list of (from, to) arc pairs to CausalIQ edge tuples.
 
-def r_arcs_to_edges(arcs_r: Any) -> List[Tuple[str, str, str]]:
-    """Convert a bnlearn arcs R matrix to CausalIQ edge tuples.
-
-    The input is the column-major character matrix returned by
-    bnlearn::arcs(). The first half of elements are 'from' nodes;
-    the second half are 'to' nodes. Undirected edges appear as two
-    opposing arcs in bnlearn and are collapsed to a single '-' tuple.
+    Opposing arc pairs — where both (A, B) and (B, A) are present —
+    are collapsed into a single undirected edge. The alphabetically
+    earlier node is used as the tail.
 
     Args:
-        arcs_r: R character matrix from bnlearn.arcs(), or any
-                sequence supporting len() and integer indexing with
-                column-major layout.
+        arcs: List of (from_node, to_node) string pairs, as parsed
+              from bnlearn's write.table(arcs(...)) output.
 
     Returns:
         List of (tail, edge_type, head) tuples where edge_type is
@@ -28,12 +26,9 @@ def r_arcs_to_edges(arcs_r: Any) -> List[Tuple[str, str, str]]:
         >>> r_arcs_to_edges([])
         []
     """
-    n = len(arcs_r) // 2
-    if n == 0:
+    arc_set = set(arcs)
+    if not arc_set:
         return []
-    froms = [str(arcs_r[i]) for i in range(n)]
-    tos = [str(arcs_r[n + i]) for i in range(n)]
-    arc_set = set(zip(froms, tos))
     return [
         (f, "-" if (t, f) in arc_set else "->", t)
         for f, t in arc_set
@@ -45,8 +40,9 @@ def data_to_r_dataframe(
     sample: np.ndarray,
     columns: List[str],
     node_types: Dict[str, str],
-) -> Any:
-    """Convert a NumPy sample array to an R data.frame.
+    varname: str = "df",
+) -> str:
+    """Generate R code that creates a data.frame from a NumPy array.
 
     Categorical columns (node_types value 'DISCRETE') become R
     factors; continuous columns become numeric vectors.
@@ -56,29 +52,28 @@ def data_to_r_dataframe(
         columns: Column names corresponding to sample's second axis.
         node_types: Mapping from column name to type string,
                     'CONTINUOUS' or 'DISCRETE'.
-
-    Raises:
-        RNotAvailableError: If R or rpy2 is not available.
+        varname: Name of the R variable to assign the data.frame to.
 
     Returns:
-        An rpy2 DataFrame representing the data.
+        R code string that assigns the data.frame to varname.
 
     Examples:
         >>> import numpy as np
-        >>> data_to_r_dataframe(
+        >>> code = data_to_r_dataframe(
         ...     np.array([[1.0, 2.0], [3.0, 4.0]]),
         ...     ['A', 'B'],
         ...     {'A': 'CONTINUOUS', 'B': 'CONTINUOUS'},
-        ... )  # doctest: +SKIP
+        ... )
+        >>> 'data.frame' in code
+        True
     """
-    ro = get_robjects()
-    r_cols: Dict[str, object] = {}
+    col_exprs = []
     for i, col in enumerate(columns):
         values = sample[:, i]
+        vals_str = ", ".join(str(v) for v in values)
         if node_types.get(col, "CONTINUOUS") == "DISCRETE":
-            r_cols[col] = ro.FactorVector(
-                ro.StrVector([str(int(v)) for v in values])
-            )
+            col_exprs.append(f"  `{col}` = as.factor(c({vals_str}))")
         else:
-            r_cols[col] = ro.FloatVector(values.tolist())
-    return ro.DataFrame(r_cols)
+            col_exprs.append(f"  `{col}` = c({vals_str})")
+    body = ",\n".join(col_exprs)
+    return f"{varname} <- data.frame(\n{body}\n)"

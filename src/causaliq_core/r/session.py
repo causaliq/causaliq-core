@@ -1,57 +1,70 @@
-"""R session initialisation and shared rpy2 access helpers."""
+"""R session management via Rscript subprocess."""
 
-import importlib
-from typing import Any
+import os
+import shutil
+import subprocess
+from typing import Optional
 
-from causaliq_core.r.availability import (
-    is_r_available,
-    is_r_package_available,
-)
 from causaliq_core.r.exceptions import (
     RNotAvailableError,
-    RPackageNotAvailableError,
+    RRuntimeError,
 )
 
 
-def get_robjects() -> Any:
-    """Return the rpy2.robjects module.
+def _find_rscript() -> Optional[str]:
+    """Return path to the Rscript executable, or None if not found.
 
-    Raises:
-        RNotAvailableError: If R or rpy2 is not available.
+    Searches PATH first, then falls back to the R_HOME environment
+    variable to locate the executable on Windows.
 
     Returns:
-        The rpy2.robjects module.
+        Absolute path to Rscript, or None if not found.
     """
-    if not is_r_available():
-        raise RNotAvailableError(
-            "R is not available. Install R and rpy2 to use this "
-            "functionality."
-        )
-    return importlib.import_module("rpy2.robjects")
+    path = shutil.which("Rscript")
+    if path:
+        return path
+    r_home = os.environ.get("R_HOME", "")
+    if r_home:
+        for candidate in (
+            os.path.join(r_home, "bin", "Rscript.exe"),
+            os.path.join(r_home, "bin", "Rscript"),
+            os.path.join(r_home, "bin", "x64", "Rscript.exe"),
+        ):
+            if os.path.isfile(candidate):
+                return candidate
+    return None
 
 
-def import_r_package(package: str) -> Any:
-    """Import and return an R package via rpy2.
+def run_r_script(script: str, timeout: int = 60) -> str:
+    """Run R code via Rscript subprocess and return stdout.
+
+    The script is piped via stdin to avoid temporary files and
+    file-locking issues under parallel test execution.
 
     Args:
-        package: Name of the R package to import, e.g. 'bnlearn'.
+        script: R source code to execute.
+        timeout: Seconds to wait before raising
+                 subprocess.TimeoutExpired.
 
     Raises:
-        RNotAvailableError: If R or rpy2 is not available.
-        RPackageNotAvailableError: If the package is not installed.
+        RNotAvailableError: If Rscript cannot be found.
+        RRuntimeError: If the script exits with a non-zero status.
 
     Returns:
-        The imported rpy2 R package object.
+        The stdout produced by the R script.
     """
-    if not is_r_available():
+    rscript = _find_rscript()
+    if rscript is None:
         raise RNotAvailableError(
-            "R is not available. Install R and rpy2 to use this "
-            "functionality."
+            "Rscript not found. Install R from " "https://cran.r-project.org/"
         )
-    if not is_r_package_available(package):
-        raise RPackageNotAvailableError(
-            f"R package '{package}' is not installed."
-        )
-    from rpy2.robjects.packages import importr  # noqa: PLC0415
-
-    return importr(package)
+    result = subprocess.run(
+        [rscript, "--vanilla", "-"],
+        input=script,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+    )
+    if result.returncode != 0:
+        raise RRuntimeError(result.stderr.strip())
+    return result.stdout

@@ -57,9 +57,7 @@ dev = [
     "twine>=4.0.0",
     "networkx>=3.0.0",
 ]
-r = [
-    "rpy2>=3.5.0",
-]
+r = []
 test = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
@@ -116,7 +114,7 @@ markers = [
     "unit: Unit tests (fast, no external dependencies)",
     "functional: Functional tests (CLI behavior, mocked external deps)",
     "integration: Integration tests (real external dependencies)",
-    "r_integration: Tests requiring R, rpy2 and bnlearn",
+    "r_integration: Tests requiring R and bnlearn (no rpy2 needed)",
     "slow: Slow tests that take significant time",
 ]
 
@@ -182,7 +180,3 @@ warn_unused_ignores = false
 warn_no_return = true
 warn_unreachable = true
 strict_equality = true
-
-[[tool.mypy.overrides]]
-module = ["rpy2", "rpy2.*"]
-ignore_missing_imports = true

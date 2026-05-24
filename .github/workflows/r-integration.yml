@@ -28,20 +28,14 @@ jobs:
       - name: Install bnlearn
         run: Rscript -e "install.packages('bnlearn')"
 
-      - name: Export R library path (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          echo "LD_LIBRARY_PATH=$(R RHOME)/lib:${LD_LIBRARY_PATH}" \
-            >> $GITHUB_ENV
-
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install causaliq-core with R extras
+      - name: Install causaliq-core
         shell: bash
-        run: pip install -e ".[dev,r]"
+        run: pip install -e ".[dev]"
 
       - name: Run R integration tests
         run: python -m pytest -m r_integration -v --no-cov
