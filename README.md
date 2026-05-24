@@ -36,10 +36,41 @@ Currently implemented:
 - **Release v0.5.0 - Aggregation Workflows**: PDG (Probabilistic Dependency Graph) for uncertainty over graph structures, GraphML I/O for PDG, filter expression evaluation, and metadata-driven weight computation
 - **Release v0.6.0 - Optimal DAG**: Greedy optimal DAG extraction from PDG, ActionPattern enum for workflow execution patterns, and template method pattern for action providers
 - **Release v0.7.0 - Randomised Filters**: `random()` function support in filter expressions for random sampling of cache entries
+- **Release v0.8.0 - R Language Integration**: Subprocess-based Rscript session management, data conversion utilities, and bnlearn graph utilities (CPDAG conversion, structural comparison, BN import) — see [R Integration](#r-integration) below for prerequisites
 
 Upcoming releases:
 
 - none planned
+
+## R Integration
+
+The `causaliq_core.r` module provides subprocess-based
+R session management, data conversion, and bnlearn graph utilities used by
+`causaliq-discovery` and other CausalIQ packages that call R.
+
+```bash
+pip install causaliq-core
+```
+
+**Prerequisites** — R integration works automatically when R is on your
+system. No additional Python packages are required:
+
+1. **R installed.** Use the official CRAN installer for your platform from
+   <https://cran.r-project.org/>. On Windows this is a standard `.exe`
+   installer (~80 MB). No Rtools, no `make`, no compiler is needed.
+2. **Rscript on `PATH`** (or `R_HOME` set). After installing R, add its
+   `bin` (Linux/macOS) or `bin\x64` (Windows) directory to your `PATH`, or
+   set the `R_HOME` environment variable to the R installation root.
+3. **bnlearn installed in R.** From an R console:
+
+   ```r
+   install.packages("bnlearn")
+   ```
+
+Without R installed, the core package works normally and any code that
+calls `causaliq_core.r` functions is guarded by `is_r_available()`, which
+returns `False` rather than raising. Integration tests marked
+`r_integration` are auto-skipped when R is absent.
 
 ## Quick Start
 

@@ -23,7 +23,8 @@ CausalIQ Core provides the following common functionality required by several us
 - **bn**: support for Bayesian Networks (BNs);
 - **cache**: SQLite-backed caching infrastructure with pluggable compressors and shared token dictionary;
 - **io**: filesystem io and format conversion, particularly relating to standard formats for graphs (.graphml, .tetrad, .csv) and BNs (.xdsl, .dsc);
-- **utils**: utility enums, functions and classes including timing/timeout utilities, filter expression evaluation, metadata-driven weight computation, random numbers, and mathematical functions.
+- **utils**: utility enums, functions and classes including timing/timeout utilities, filter expression evaluation, metadata-driven weight computation, random numbers, and mathematical functions;
+- **r**: subprocess-based R language integration providing Rscript session management, data conversion utilities, and bnlearn graph utilities (CPDAG conversion, structural comparison, BN import).
 
 This site provides detailed documentation, including: development roadmap, architectural vision, design notes, and API reference for contributors. Since this is not a "user-facing" capability a user guide is not provided.
 

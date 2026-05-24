@@ -47,6 +47,7 @@ nav:
   - Architecture: 
     - Architectural Overview: architecture/overview.md
     - Caching System: architecture/caching.md
+    - R Language Integration: architecture/r_integration.md
   - API Reference: 
     - API Overview: api/overview.md
     - Main Package: api/main.md
@@ -89,6 +90,13 @@ nav:
     - Cache:
       - TokenCache: api/cache.md
       - Compressors: api/cache_compressors.md
+    - R Integration:
+      - Overview: api/r.md
+      - Session Management: api/r_session.md
+      - Availability: api/r_availability.md
+      - Data Conversion: api/r_convert.md
+      - bnlearn Utilities: api/r_bnlearn.md
+      - Exceptions: api/r_exceptions.md
   - Testing: testing.md
 
 plugins:

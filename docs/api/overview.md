@@ -33,6 +33,17 @@ Command-line interface functionality for CausalIQ Core.
 Graph-related enumerations and utilities for edge types and marks used in
 causal discovery.
 
+### [R Integration](r.md)
+
+Subprocess-based R session management, data conversion, and bnlearn graph
+utilities:
+
+- [Session Management](r_session.md): `run_r_script`, Rscript discovery
+- [Availability](r_availability.md): `is_r_available`, `is_r_package_available`
+- [Data Conversion](r_convert.md): `data_to_r_dataframe`, `r_arcs_to_edges`
+- [bnlearn Utilities](r_bnlearn.md): `bnlearn_cpdag`, `bnlearn_compare`, `bnlearn_import`
+- [Exceptions](r_exceptions.md): `RNotAvailableError`, `RPackageNotAvailableError`, `RRuntimeError`
+
 ### [Utils](utils.md)
 
 Comprehensive utility module with specialized functional areas:

@@ -146,6 +146,12 @@ causaliq_core/
 │       ├── graphml.py   # GraphML format support
 │       ├── bayesys.py   # BayeSys format support
 │       └── tetrad.py    # Tetrad format support
+├── r/                   # R language integration
+│   ├── session.py       # Rscript subprocess management
+│   ├── availability.py  # R and package availability checks
+│   ├── convert.py       # Data conversion utilities
+│   ├── bnlearn.py       # bnlearn graph utilities
+│   └── exceptions.py    # R-specific exceptions
 └── utils/               # Core utilities
     ├── __init__.py      # EnumWithAttrs and public exports
     ├── environment.py   # System environment detection
@@ -204,6 +210,54 @@ and probability distributions.
 - `dicts_same`: Deep dictionary comparison with numeric precision
 - `dists_same`: Probability distribution comparison
 
+### R Language Integration Architecture
+
+**Design Goal:** Call R packages (initially bnlearn) from Python without
+requiring rpy2, Rtools, or a C compiler — a plain CRAN R installation is
+sufficient.
+
+**Implementation:**
+
+- **Subprocess driver**: `run_r_script(script, timeout)` pipes R code
+  through stdin to `Rscript --vanilla -`; stdout is returned as a string
+- **Rscript discovery**: `_find_rscript()` checks `shutil.which("Rscript")`
+  first, then falls back to platform-specific candidates under `R_HOME`
+- **Text-based data exchange**: Python serialises data to R code strings
+  (via `data_to_r_dataframe`); R results are returned as tab-separated or
+  newline-separated text and parsed in Python
+- **Availability guards**: `is_r_available()` and
+  `is_r_package_available(package)` allow callers to skip gracefully when
+  R or a required package is absent; these functions never raise
+
+**Call flow:**
+
+```
+Python caller
+    │
+    ├─ data_to_r_dataframe()   # Python → R code string
+    │
+    └─ run_r_script(script)    # subprocess.run(["Rscript","--vanilla","-"])
+           │                     #   input=script (stdin)
+           │
+           └─ R process
+                  │
+                  └─ stdout text  →  parsed by Python (arcs, metrics, BN)
+```
+
+**Error handling:**
+
+- `RNotAvailableError`: Rscript could not be found on the system
+- `RRuntimeError`: R process exited with a non-zero exit code; stderr is
+  included in the exception message
+- `RPackageNotAvailableError`: a required R package is not installed
+
+**Test strategy:** All R-dependent tests are marked `r_integration` and
+skipped automatically when R is unavailable. Unit tests use monkeypatched
+`subprocess.run` calls so the full Python logic is covered without R.
+
+See [R Language Integration](r_integration.md) for the full architecture
+note.
+
 ### Package Organisation Rationale
 
 The package structure balances functionality distribution:
@@ -214,6 +268,7 @@ The package structure balances functionality distribution:
 - **BN package**: Bayesian Network modelling
 - **Utils package**: Mathematical functions and core utilities
 - **Action module**: Workflow integration framework
+- **R package**: Subprocess-based R session management and bnlearn utilities
 
 This structure supports both convenience imports
 (`from causaliq_core.utils import rndsf`) and modular usage patterns while
