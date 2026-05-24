@@ -57,6 +57,9 @@ dev = [
     "twine>=4.0.0",
     "networkx>=3.0.0",
 ]
+r = [
+    "rpy2>=3.5.0",
+]
 test = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
@@ -113,6 +116,7 @@ markers = [
     "unit: Unit tests (fast, no external dependencies)",
     "functional: Functional tests (CLI behavior, mocked external deps)",
     "integration: Integration tests (real external dependencies)",
+    "r_integration: Tests requiring R, rpy2 and bnlearn",
     "slow: Slow tests that take significant time",
 ]
 
@@ -165,7 +169,7 @@ known_first_party = ["causaliq_core"]
 skip = [".git", ".tox", "venv", ".venv", ".eggs", "_build", "buck-out", "build", ".bzr", ".direnv", ".hg", ".mypy_cache", ".nox", ".pants.d", ".pytype", ".svn", "node_modules", "__pypackages__"]
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -180,5 +184,5 @@ warn_unreachable = true
 strict_equality = true
 
 [[tool.mypy.overrides]]
-module = "tests.*"
-disallow_untyped_defs = false
+module = ["rpy2", "rpy2.*"]
+ignore_missing_imports = true
