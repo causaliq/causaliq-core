@@ -115,6 +115,7 @@ markers = [
     "functional: Functional tests (CLI behavior, mocked external deps)",
     "integration: Integration tests (real external dependencies)",
     "r_integration: Tests requiring R and bnlearn (no rpy2 needed)",
+    "java_integration: Tests requiring Java and Java tools",
     "slow: Slow tests that take significant time",
 ]
 

@@ -6,6 +6,7 @@ tests requiring external language runtimes.
 
 import pytest
 
+from causaliq_core.java.availability import is_java_available
 from causaliq_core.r.availability import (
     is_r_available,
     is_r_package_available,
@@ -18,15 +19,25 @@ def pytest_configure(config: pytest.Config) -> None:
         "markers",
         "r_integration: marks tests requiring R, rpy2 and bnlearn",
     )
+    config.addinivalue_line(
+        "markers",
+        "java_integration: marks tests requiring Java and Java tools",
+    )
 
 
 def pytest_collection_modifyitems(
     config: pytest.Config,
     items: list,
 ) -> None:
-    """Auto-skip r_integration tests when R or bnlearn is unavailable."""
+    """Auto-skip external-runtime integration tests when unavailable."""
     if not is_r_available() or not is_r_package_available("bnlearn"):
         skip = pytest.mark.skip(reason="R, rpy2 or bnlearn not available")
         for item in items:
             if "r_integration" in item.keywords:
+                item.add_marker(skip)
+
+    if not is_java_available():
+        skip = pytest.mark.skip(reason="Java runtime not available")
+        for item in items:
+            if "java_integration" in item.keywords:
                 item.add_marker(skip)
