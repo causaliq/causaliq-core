@@ -30,8 +30,18 @@ def pytest_collection_modifyitems(
     items: list,
 ) -> None:
     """Auto-skip external-runtime integration tests when unavailable."""
-    if not is_r_available() or not is_r_package_available("bnlearn"):
-        skip = pytest.mark.skip(reason="R, rpy2 or bnlearn not available")
+    r_available = is_r_available()
+    bnlearn_available = (
+        is_r_package_available("bnlearn") if r_available else False
+    )
+
+    if not r_available:
+        skip = pytest.mark.skip(reason="R runtime not available")
+        for item in items:
+            if "r_integration" in item.keywords:
+                item.add_marker(skip)
+    elif not bnlearn_available:
+        skip = pytest.mark.skip(reason="R package 'bnlearn' not available")
         for item in items:
             if "r_integration" in item.keywords:
                 item.add_marker(skip)
