@@ -96,8 +96,9 @@ class LinGauss():
             # Just need to determine mean and sd for univariate Gaussian
 
             values = data.values((node, ))
-            lg = {'mean': values.mean().item(), 'sd': values.std().item(),
-                  'coeffs': {}}
+            lg: Dict[str, Any] = {
+                'mean': values.mean().item(), 'sd': values.std().item(),
+                'coeffs': {}}
 
         else:
 
