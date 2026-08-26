@@ -39,11 +39,15 @@ class ActionPattern(Enum):
             output and matrix are prohibited.
         AGGREGATE: Combines multiple entries into new summary entries.
             Requires input, output, and matrix.
+        NOCACHES: Operates on files without using workflow caches or the
+            matrix. Neither input nor output are workflow caches, so no
+            matrix definition is required and the step runs once.
     """
 
     CREATE = "create"
     UPDATE = "update"
     AGGREGATE = "aggregate"
+    NOCACHES = "nocaches"
 
 
 @dataclass
@@ -108,6 +112,7 @@ class CausalIQActionProvider(ABC):
     - UPDATE: Modifies existing entries (input required, output/matrix
               prohibited)
     - AGGREGATE: Combines entries (input + output + matrix required)
+    - NOCACHES: Operates on files without caches or matrix (no constraints)
 
     Attributes:
         name: Provider identifier for workflow 'uses' field.
