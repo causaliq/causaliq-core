@@ -25,12 +25,13 @@ class CND(ABC):
 
     @classmethod
     @abstractmethod
-    def fit(cls,
-            node: str,
-            parents: Optional[Tuple[str, ...]],
-            data: Any,
-            autocomplete: bool = True
-            ) -> Tuple[Tuple[type, Dict[str, Any]], Optional[int]]:
+    def fit(
+        cls,
+        node: str,
+        parents: Optional[Tuple[str, ...]],
+        data: Any,
+        autocomplete: bool = True,
+    ) -> Tuple[Tuple[type, Dict[str, Any]], Optional[int]]:
         """Constructs a CND (Conditional Node Distribution) from data.
 
         Args:
@@ -112,10 +113,12 @@ class CND(ABC):
         pass
 
     @abstractmethod
-    def validate_parents(self,
-                         node: str,
-                         parents: Dict[str, List[str]],
-                         node_values: Dict[str, List[str]]) -> None:
+    def validate_parents(
+        self,
+        node: str,
+        parents: Dict[str, List[str]],
+        node_values: Dict[str, List[str]],
+    ) -> None:
         """Checks every CND's parents and (categorical) parental values
         are consistent.
 
@@ -130,10 +133,12 @@ class CND(ABC):
         pass
 
     @classmethod
-    def validate_cnds(cls,
-                      nodes: List[str],
-                      cnds: Dict[str, 'CND'],
-                      parents: Dict[str, List[str]]) -> None:
+    def validate_cnds(
+        cls,
+        nodes: List[str],
+        cnds: Dict[str, "CND"],
+        parents: Dict[str, List[str]],
+    ) -> None:
         """Checks that all CNDs in graph are consistent with one another
         and with graph structure.
 
@@ -150,14 +155,13 @@ class CND(ABC):
         # check 1:1 mapping between node and CNDs keys
 
         if sorted(list(cnds.keys())) != sorted(nodes):
-            raise ValueError('CND.validate_cnds() bad/missing nodes in cnds')
+            raise ValueError("CND.validate_cnds() bad/missing nodes in cnds")
 
         # collect values (states) for all categorical nodes
 
         values = {}
         for node, cnd in cnds.items():
-            if (cnd.__class__.__name__ == 'CPT' and
-                    hasattr(cnd, 'values')):
+            if cnd.__class__.__name__ == "CPT" and hasattr(cnd, "values"):
                 values[node] = cnd.values
 
         # check each node's CPT consistent with parents and parent values
@@ -166,9 +170,9 @@ class CND(ABC):
             cnd.validate_parents(node, parents, values)
 
     @classmethod
-    def _map_keys(cls,
-                  odict: Dict[str, Any],
-                  name_map: Dict[str, str]) -> Dict[str, Any]:
+    def _map_keys(
+        cls, odict: Dict[str, Any], name_map: Dict[str, str]
+    ) -> Dict[str, Any]:
         """Renames some keys in a dict, re-ordering it by new key names.
 
         Args:
@@ -178,6 +182,7 @@ class CND(ABC):
         Returns:
             dict: With keys renamed, and re-ordered.
         """
-        ndict = {name_map[k] if k in name_map else k: v
-                 for k, v in odict.items()}
+        ndict = {
+            name_map[k] if k in name_map else k: v for k, v in odict.items()
+        }
         return {k: ndict[k] for k in sorted(ndict)}

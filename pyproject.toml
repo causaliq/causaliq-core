@@ -146,17 +146,28 @@ exclude_lines = [
 line-length = 79
 target-version = ['py39']
 include = '\.pyi?$'
-extend-exclude = '''
+# 'dist' is intentionally omitted so package directories named dist are
+# formatted; build artefacts contain no .py files.
+exclude = '''
 /(
-  # directories
-  \.eggs
+  \.direnv
+  | \.eggs
   | \.git
   | \.hg
+  | \.ipynb_checkpoints
   | \.mypy_cache
+  | \.nox
+  | \.pytest_cache
+  | \.ruff_cache
+  | \.svn
   | \.tox
   | \.venv
+  | \.vscode
+  | __pypackages__
+  | _build
+  | buck-out
   | build
-  | dist
+  | venv
 )/
 '''
 

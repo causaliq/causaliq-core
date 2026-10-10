@@ -36,37 +36,46 @@ class CPT(CND):
         TypeError: If arguments are of wrong type.
         ValueError: If arguments have invalid or conflicting values.
     """
-    def __init__(self,
-                 pmfs: Union[Dict[str, float],
-                             List[Tuple[Dict[str, str], Dict[str, float]]]],
-                 estimated: int = 0) -> None:
+
+    def __init__(
+        self,
+        pmfs: Union[
+            Dict[str, float], List[Tuple[Dict[str, str], Dict[str, float]]]
+        ],
+        estimated: int = 0,
+    ) -> None:
 
         def _check_pmf(pmf: Dict[str, float]) -> None:  # check a PMF
             if len(pmf) < 2:
-                raise ValueError('PMF too few entries')
+                raise ValueError("PMF too few entries")
             for prob in pmf.values():
                 if not isinstance(prob, float) or prob < 0.0 or prob > 1.0:
-                    raise ValueError('Bad PMF probability')
+                    raise ValueError("Bad PMF probability")
             total = sum(pmf.values())
             if 0.999999 > total or total > 1.000001:
-                raise ValueError('PMF probability does not sum to 1')
+                raise ValueError("PMF probability does not sum to 1")
 
         def _check_parental_values(
-                p_vals: Dict[str, str]
-                ) -> None:  # check parental values specified
-            if not len(p_vals) or \
-                    not all([isinstance(v, str) for v in p_vals.values()]):
-                raise ValueError('bad parental values')
+            p_vals: Dict[str, str],
+        ) -> None:  # check parental values specified
+            if not len(p_vals) or not all(
+                [isinstance(v, str) for v in p_vals.values()]
+            ):
+                raise ValueError("bad parental values")
 
         self.estimated = estimated
-        if ((not isinstance(pmfs, dict) and not isinstance(pmfs, list))
-                or not isinstance(estimated, int)
-                or isinstance(estimated, bool)):
-            raise TypeError('bad arg type for CPT')
-        if (estimated < 0
-                or (isinstance(pmfs, list) and estimated > len(pmfs))
-                or (isinstance(pmfs, dict) and estimated > 1)):
-            raise ValueError('CPT has bad estimated value')
+        if (
+            (not isinstance(pmfs, dict) and not isinstance(pmfs, list))
+            or not isinstance(estimated, int)
+            or isinstance(estimated, bool)
+        ):
+            raise TypeError("bad arg type for CPT")
+        if (
+            estimated < 0
+            or (isinstance(pmfs, list) and estimated > len(pmfs))
+            or (isinstance(pmfs, dict) and estimated > 1)
+        ):
+            raise ValueError("CPT has bad estimated value")
 
         if isinstance(pmfs, dict):  # parentless node with simple CPT
             _check_pmf(pmfs)
@@ -77,7 +86,7 @@ class CPT(CND):
 
         else:  # node with parents - multi-entry CPT
             if len(pmfs) < 2:
-                raise ValueError('CPT has fewer than two entries')
+                raise ValueError("CPT has fewer than two entries")
             prev_parents = None
             prev_values = None
             self.cpt = {}
@@ -86,10 +95,13 @@ class CPT(CND):
 
                 # check types of variables in CPT entry
 
-                if not isinstance(entry, tuple) or len(entry) != 2 \
-                        or not isinstance(entry[0], dict) \
-                        or not isinstance(entry[1], dict):
-                    raise ValueError('Invalid CPT entry types')
+                if (
+                    not isinstance(entry, tuple)
+                    or len(entry) != 2
+                    or not isinstance(entry[0], dict)
+                    or not isinstance(entry[1], dict)
+                ):
+                    raise ValueError("Invalid CPT entry types")
 
                 # check values in each CPT entry
 
@@ -101,11 +113,11 @@ class CPT(CND):
                 if prev_parents is None:
                     prev_parents = frozenset(entry[0].keys())
                 elif prev_parents != frozenset(entry[0].keys()):
-                    raise ValueError('Parents in CPT entries vary')
+                    raise ValueError("Parents in CPT entries vary")
                 if prev_values is None:
                     prev_values = frozenset(entry[1].keys())
                 elif prev_values != frozenset(entry[1].keys()):
-                    raise ValueError('Values in CPT entries vary')
+                    raise ValueError("Values in CPT entries vary")
 
                 # make parental values a frozenset so it can be a dict key
 
@@ -114,17 +126,19 @@ class CPT(CND):
 
             # compute number of free params
 
-            self.free_params = ((len(prev_values) - 1) *  # type: ignore
-                                len(self.cpt))
+            self.free_params = (len(prev_values) - 1) * len(  # type: ignore
+                self.cpt
+            )
             self.values = prev_values  # type: ignore
 
     @classmethod
-    def fit(cls,
-            node: str,
-            parents: Optional[Tuple[str, ...]],
-            data: Union[BNFit, Any],
-            autocomplete: bool = True) -> Tuple[
-                Tuple[type, Dict[str, Any]], Optional[int]]:
+    def fit(
+        cls,
+        node: str,
+        parents: Optional[Tuple[str, ...]],
+        data: Union[BNFit, Any],
+        autocomplete: bool = True,
+    ) -> Tuple[Tuple[type, Dict[str, Any]], Optional[int]]:
         """Constructs a CPT (Conditional Probability Table) from data.
 
         Args:
@@ -140,7 +154,7 @@ class CPT(CND):
             estimated_pmfs is int, # estimated pmfs.
         """
         if not isinstance(data, BNFit if Pandas is None else (Pandas, BNFit)):
-            raise TypeError('CPT.fit() bad arg type')
+            raise TypeError("CPT.fit() bad arg type")
 
         estimated_pmfs = 0
         if parents is not None:
@@ -160,8 +174,10 @@ class CPT(CND):
 
             for j in range(counts.shape[1]):
                 N_ij = counts[:, j].sum()  # total count for jth parent combo
-                cond_pmf = {rowval[k]: counts[k, j] / N_ij
-                            for k in range(counts.shape[0])}
+                cond_pmf = {
+                    rowval[k]: counts[k, j] / N_ij
+                    for k in range(counts.shape[0])
+                }
                 cptdata.append((colval[j], cond_pmf))
 
             # It is unlikely that all possible parental combinations will
@@ -170,9 +186,12 @@ class CPT(CND):
             # frequencies across all the observed combinations
 
             if autocomplete:
-                pmf = {k: v/data.N for k, v in data.node_values[node].items()}
-                parent_values = {p: list(data.node_values[p].keys())
-                                 for p in parents}
+                pmf = {
+                    k: v / data.N for k, v in data.node_values[node].items()
+                }
+                parent_values = {
+                    p: list(data.node_values[p].keys()) for p in parents
+                }
                 pvs_in_data = [c[0] for c in cptdata]
                 for pvs in NodeValueCombinations(parent_values):
                     if pvs not in pvs_in_data:
@@ -183,14 +202,15 @@ class CPT(CND):
             # This is a parentless node so a simple CPT based on observed
             # frequencies of the node's values
 
-            cptdata = {k: v/data.N for k, v
-                       in data.node_values[node].items()}  # type: ignore
+            cptdata = {
+                k: v / data.N for k, v in data.node_values[node].items()
+            }  # type: ignore
 
         return ((CPT, cptdata), estimated_pmfs)  # type: ignore[return-value]
 
-    def cdist(self,
-              parental_values: Optional[Dict[str, str]] = None
-              ) -> Dict[str, float]:
+    def cdist(
+        self, parental_values: Optional[Dict[str, str]] = None
+    ) -> Dict[str, float]:
         """Return conditional probabilities of node values for specified
         parental values.
 
@@ -202,17 +222,19 @@ class CPT(CND):
             TypeError: If args are of wrong type.
             ValueError: If args have invalid or conflicting values.
         """
-        if ((not self.has_parents and parental_values is not None) or
-                (self.has_parents and not isinstance(parental_values, dict))):
-            raise TypeError('CPT.cdist() CPT/parental values mismatch')
+        if (not self.has_parents and parental_values is not None) or (
+            self.has_parents and not isinstance(parental_values, dict)
+        ):
+            raise TypeError("CPT.cdist() CPT/parental values mismatch")
 
         if not self.has_parents:
             return self.cpt
         else:
-            pvs = frozenset([(k, v) for k, v
-                             in parental_values.items()])  # type: ignore
+            pvs = frozenset(
+                [(k, v) for k, v in parental_values.items()]  # type: ignore
+            )
             if pvs not in self.cpt:  # type: ignore
-                raise ValueError('Unknown parental values for cdist call')
+                raise ValueError("Unknown parental values for cdist call")
             return self.cpt[pvs]  # type: ignore
 
     def random_value(self, pvs: Optional[Dict[str, str]]) -> str:
@@ -240,8 +262,13 @@ class CPT(CND):
         Returns:
             Node values in alphabetical order.
         """
-        return sorted(list(self.cpt.keys())) if not self.has_parents else \
-            sorted(list(next(iter(self.cpt.values())).keys()))  # type: ignore
+        return (
+            sorted(list(self.cpt.keys()))
+            if not self.has_parents
+            else sorted(
+                list(next(iter(self.cpt.values())).keys())  # type: ignore
+            )
+        )
 
     def parents(self) -> List[str]:
         """Return parents of node CPT relates to.
@@ -254,9 +281,7 @@ class CPT(CND):
         else:
             return sorted([t[0] for t in (list(self.cpt.keys()))[0]])
 
-    def to_spec(self,
-                name_map: Dict[str, str]
-                ) -> Dict[str, Any]:
+    def to_spec(self, name_map: Dict[str, str]) -> Dict[str, Any]:
         """Returns external specification format of CPT,
         renaming nodes according to a name map.
 
@@ -270,41 +295,52 @@ class CPT(CND):
             TypeError: If bad arg type.
             ValueError: If bad arg value, e.g. coeff keys not in map.
         """
-        if (not isinstance(name_map, dict)
-                or not all([isinstance(k, str) for k in name_map])
-                or not all([isinstance(v, str) for v in name_map.values()])):
-            raise TypeError('CPT.to_spec() bad arg type')
+        if (
+            not isinstance(name_map, dict)
+            or not all([isinstance(k, str) for k in name_map])
+            or not all([isinstance(v, str) for v in name_map.values()])
+        ):
+            raise TypeError("CPT.to_spec() bad arg type")
 
         if self.has_parents:
             print({nv[0] for nv in tuple(self.cpt)[0]})
 
-        if self.has_parents and len({nv[0] for nv in tuple(self.cpt)[0]}
-                                    - set(name_map)) != 0:
-            raise ValueError('CPT.to_spec() bad arg value')
+        if (
+            self.has_parents
+            and len({nv[0] for nv in tuple(self.cpt)[0]} - set(name_map)) != 0
+        ):
+            raise ValueError("CPT.to_spec() bad arg value")
 
         if self.has_parents is False:
             spec = self.cpt
         else:
-            spec = [(self._map_keys({t[0]: t[1] for t in pvs},
-                                    name_map), pmf)  # type: ignore
-                    for pvs, pmf in self.cpt.items()]
+            spec = [
+                (
+                    self._map_keys({t[0]: t[1] for t in pvs}, name_map),
+                    pmf,
+                )  # type: ignore
+                for pvs, pmf in self.cpt.items()
+            ]
         return spec
 
     def param_ratios(self) -> None:
         """
-            Returns distribution of parameter ratios across all parental
-            values for each combination of possible node values.
+        Returns distribution of parameter ratios across all parental
+        values for each combination of possible node values.
 
-            :returns dict: {(node value pair): (param ratios across parents)
+        :returns dict: {(node value pair): (param ratios across parents)
         """
         pairs = tuple(combinations(iterable=self.node_values(), r=2))
 
         ratios = {}
-        for pvs, pmf in (self.cpt if self.has_parents
-                         else {None: self.cdist()}).items():  # type: ignore
+        for pvs, pmf in (
+            self.cpt
+            if self.has_parents
+            else {None: self.cdist()}  # type: ignore
+        ).items():
             _ratios = {p: pmf[p[0]] / pmf[p[1]] for p in pairs}  # type: ignore
             ratios[pvs] = pmf
-            print('*** {} --> {}: ratios {}'.format(pvs, pmf, _ratios))
+            print("*** {} --> {}: ratios {}".format(pvs, pmf, _ratios))
 
     def __str__(self) -> str:
         """Human-friendly description of the contents of the CPT.
@@ -313,48 +349,63 @@ class CPT(CND):
             String representation of the CPT contents.
         """
         if not self.has_parents:
-            return '{}'.format({v: round(p, 6) for v, p in self.cpt.items()})
+            return "{}".format({v: round(p, 6) for v, p in self.cpt.items()})
         else:
-            str = ['{} -> {}'.format({t[0]: t[1] for t in pvs},
-                                     {v: round(p, 6)
-                                      for v, p in pmf.items()})  # type: ignore
-                   for pvs, pmf in self.cpt.items()]
-            return '\n'.join(str)
+            str = [
+                "{} -> {}".format(
+                    {t[0]: t[1] for t in pvs},
+                    {v: round(p, 6) for v, p in pmf.items()},  # type: ignore
+                )
+                for pvs, pmf in self.cpt.items()
+            ]
+            return "\n".join(str)
 
     def __eq__(self, other: object) -> bool:
         """
-            Return whether two CPTs are the same allowing for probability
-            rounding errors
+        Return whether two CPTs are the same allowing for probability
+        rounding errors
 
-            :param other: CPT to compared to self
-            :type other: CPT
+        :param other: CPT to compared to self
+        :type other: CPT
 
-            :returns: whether CPTs are PRACTICALLY the same
-            :rtype: bool
+        :returns: whether CPTs are PRACTICALLY the same
+        :rtype: bool
         """
 
-        def _pmfs_same(pmf1: Dict[str, float],
-                       pmf2: Dict[str, float]
-                       ) -> bool:  # compare two PMFs to 6 sig. figures
-            return pmf1.keys() == pmf2.keys() and \
-                all([values_same(v, pmf2[k], sf=6) for k, v in pmf1.items()])
+        def _pmfs_same(
+            pmf1: Dict[str, float], pmf2: Dict[str, float]
+        ) -> bool:  # compare two PMFs to 6 sig. figures
+            return pmf1.keys() == pmf2.keys() and all(
+                [values_same(v, pmf2[k], sf=6) for k, v in pmf1.items()]
+            )
 
         if not isinstance(other, CPT):
             return False
 
-        if self.has_parents != other.has_parents \
-                or self.free_params != other.free_params \
-                or self.cpt.keys() != other.cpt.keys():
+        if (
+            self.has_parents != other.has_parents
+            or self.free_params != other.free_params
+            or self.cpt.keys() != other.cpt.keys()
+        ):
             return False
 
-        return _pmfs_same(self.cpt, other.cpt) if not self.has_parents else \
-            all([_pmfs_same(v, other.cpt[k])  # type: ignore
-                 for k, v in self.cpt.items()])
+        return (
+            _pmfs_same(self.cpt, other.cpt)
+            if not self.has_parents
+            else all(
+                [
+                    _pmfs_same(v, other.cpt[k])  # type: ignore
+                    for k, v in self.cpt.items()
+                ]
+            )
+        )
 
-    def validate_parents(self,
-                         node: str,
-                         parents: Dict[str, List[str]],
-                         node_values: Dict[str, List[str]]) -> None:
+    def validate_parents(
+        self,
+        node: str,
+        parents: Dict[str, List[str]],
+        node_values: Dict[str, List[str]],
+    ) -> None:
         """Checks every CPT's parents and parental values are consistent
         with other relevant CPTs and the DAG structure.
 
@@ -371,12 +422,16 @@ class CPT(CND):
         # Check parents defined in CPT keys match those defined in parents
         # arg (i.e. tha DAG)
 
-        if ((node not in parents and self.has_parents is True)
+        if (
+            (node not in parents and self.has_parents is True)
             or (node in parents and self.has_parents is False)
-            or (node in parents and self.has_parents is True
-                and set(parents[node])
-                != set(self.parents()))):
-            raise ValueError('CPT.validate_parents() parent mismatch')
+            or (
+                node in parents
+                and self.has_parents is True
+                and set(parents[node]) != set(self.parents())
+            )
+        ):
+            raise ValueError("CPT.validate_parents() parent mismatch")
 
         if self.has_parents:
 
@@ -385,8 +440,9 @@ class CPT(CND):
             for pvs, pmf in self.cpt.items():
                 for parent, value in {t[0]: t[1] for t in pvs}.items():
                     if value not in node_values[parent]:
-                        raise ValueError('CPT.validate_parents()' +
-                                         ' bad parent value')
+                        raise ValueError(
+                            "CPT.validate_parents()" + " bad parent value"
+                        )
 
             # Check CPT has expected number of entries - one for each possible
             # combination of parental Values
@@ -395,31 +451,38 @@ class CPT(CND):
             for parent in parents[node]:
                 cpt_num_rows *= len(node_values[parent])
             if len(self.cpt) != cpt_num_rows:
-                raise ValueError('CPT.validate_parents() non-orphan' +
-                                 ' has missing parental value combos')
+                raise ValueError(
+                    "CPT.validate_parents() non-orphan"
+                    + " has missing parental value combos"
+                )
 
 
-class NodeValueCombinations():
+class NodeValueCombinations:
     """
-        Iterable over all combinations of node values
+    Iterable over all combinations of node values
 
-        :param dict node_values: allowed values for each node {node: [values]}
-        :param bool sort: whether to sort node names and values into
-                          alphabetic order
+    :param dict node_values: allowed values for each node {node: [values]}
+    :param bool sort: whether to sort node names and values into
+                      alphabetic order
     """
-    def __init__(self,
-                 node_values: Dict[str, List[str]],
-                 sort: bool = True) -> None:
+
+    def __init__(
+        self, node_values: Dict[str, List[str]], sort: bool = True
+    ) -> None:
 
         # store node values, optionally sorting them
 
-        self.node_values = {n: sorted(s) if sort else s
-                            for n, s in node_values.items()}
+        self.node_values = {
+            n: sorted(s) if sort else s for n, s in node_values.items()
+        }
 
         # store node names, optionally sorting them
 
-        self.nodes = sorted(list(node_values.keys())) if sort \
+        self.nodes = (
+            sorted(list(node_values.keys()))
+            if sort
             else list(node_values.keys())
+        )
 
         # store number of possible values for each node
 
@@ -427,9 +490,9 @@ class NodeValueCombinations():
 
     def __iter__(self) -> "NodeValueCombinations":
         """
-            Returns the initialised iterator
+        Returns the initialised iterator
 
-            :returns NodeValueCombinations: the iterator
+        :returns NodeValueCombinations: the iterator
         """
 
         # Initialises indices which define current combination of values -
@@ -441,11 +504,11 @@ class NodeValueCombinations():
 
     def __next__(self) -> Dict[str, str]:
         """
-            Generate the next node value combination
+        Generate the next node value combination
 
-            :raises StopIteration: when all combinations have been returned
+        :raises StopIteration: when all combinations have been returned
 
-            :returns dict: next node value combination {node: value}
+        :returns dict: next node value combination {node: value}
         """
 
         # move on to next combination by incrementing lowest order index
@@ -474,5 +537,7 @@ class NodeValueCombinations():
 
         # Convert the indices to a dictionary {parent: value} and return
 
-        return {self.nodes[p]: self.node_values[self.nodes[p]][v]
-                for p, v in enumerate(self.indices)}
+        return {
+            self.nodes[p]: self.node_values[self.nodes[p]][v]
+            for p, v in enumerate(self.indices)
+        }
