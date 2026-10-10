@@ -10,7 +10,7 @@ Tests cover:
 import pandas as pd
 import pytest
 
-from causaliq_core.graph import EdgeMark, EdgeType
+from causaliq_core.graph import BAYESYS_VERSIONS, EdgeMark, EdgeType
 from causaliq_core.graph.convert import dict_to_adjmat
 
 
@@ -69,6 +69,11 @@ def test_edge_type_edge_mark_references():
         _, mark1, mark2, _ = edge_type.value
         assert isinstance(mark1, EdgeMark)
         assert isinstance(mark2, EdgeMark)
+
+
+# Test that only supported Bayesys versions are listed (v1.3 removed)
+def test_bayesys_versions():
+    assert BAYESYS_VERSIONS == ["v1.5+"]
 
 
 # Test adjmat function with valid input

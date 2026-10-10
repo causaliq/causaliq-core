@@ -20,7 +20,7 @@ from .pdg import PDG, EdgeProbabilities, GreedyDAGResult
 from .sdg import SDG
 
 # Supported BayeSys versions for graph comparison semantics
-BAYESYS_VERSIONS = ["v1.3", "v1.5+"]
+BAYESYS_VERSIONS = ["v1.5+"]
 
 
 # Export public interface

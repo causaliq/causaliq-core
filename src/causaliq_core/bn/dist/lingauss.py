@@ -38,7 +38,7 @@ class LinGauss():
 
     MAX_SF = 10  # max no of significant
 
-    _model = None
+    _model: Any = None
 
     def __init__(self, lg: Dict[str, Any]) -> None:
 
