@@ -3,7 +3,7 @@
 #
 
 import re
-from typing import Union
+from typing import List, Optional, Tuple, Union
 
 from causaliq_core.utils import FileFormatError, is_valid_path
 
@@ -11,6 +11,153 @@ from ..dag import DAG
 from ..pdag import PDAG
 
 EDGE = re.compile(r"^\d+\.\s(\w+)\s(\-\-[\>\-])\s(\w+)$")
+
+
+def _is_ignorable_line(line: str) -> bool:
+    """Return whether a line carries no structural information.
+
+    Args:
+        line: Line of the file with the terminator removed.
+
+    Returns:
+        bool: Whether the line can be ignored.
+    """
+    if line.startswith(("Score: ", "BIC: ")):
+        return True
+    return line in ["Graph Attributes:", "Graph Node Attributes:"]
+
+
+def _has_bad_section_header(num_line: int, line: str) -> bool:
+    """Return whether a line should be a section header but is not.
+
+    Args:
+        num_line: One-based number of the structural line.
+        line: Line of the file with the terminator removed.
+
+    Returns:
+        bool: Whether the expected section header is missing or malformed.
+    """
+    if num_line == 1:
+        return line != "Graph Nodes:"
+    if num_line == 3:
+        return line != "Graph Edges:"
+    return False
+
+
+def _parse_edge_line(
+    line: str,
+) -> Optional[Tuple[Tuple[str, str, str], bool]]:
+    """Return the edge described by a Tetrad edge line.
+
+    Args:
+        line: Line of the file with the terminator removed.
+
+    Returns:
+        Tuple of (edge triple, is undirected), or None when the line is
+        not a valid edge.
+    """
+    match = EDGE.match(line)
+    if not match:
+        return None
+    triple = (
+        match.group(1),
+        ("->" if match.group(2) == "-->" else "-"),
+        match.group(3),
+    )
+    return (triple, match.group(2) == "---")
+
+
+class _TetradReader:
+    """Accumulate the graph described by a Tetrad file.
+
+    The reader consumes structural lines in turn and records the first
+    problem it encounters, matching the validation performed when the
+    file is read.
+
+    Attributes:
+        nodes: Nodes found in the file.
+        edges: Edge triples found in the file.
+        is_pdag: Whether any undirected edge was found.
+        num_lines: Number of structural lines consumed.
+        error: Description of the first problem found, if any.
+    """
+
+    def __init__(self) -> None:
+        self.nodes: List[str] = []
+        self.edges: List[Tuple[str, str, str]] = []
+        self.is_pdag = False
+        self.num_lines = 0
+        self.error = ""
+
+    def consume(self, line: str) -> bool:
+        """Consume one line, returning whether parsing should continue.
+
+        Args:
+            line: Raw line from the file.
+
+        Returns:
+            bool: False when the line was malformed and parsing stops.
+        """
+        line = line.rstrip("\r\n")
+        if not line or _is_ignorable_line(line):
+            return True
+        self.num_lines += 1
+        if _has_bad_section_header(self.num_lines, line):
+            self.error = " invalid section header"
+            return False
+        if self.num_lines == 2:
+            self.nodes = line.replace(";", ",").split(",")
+        if self.num_lines > 3:
+            return self._consume_edge(line)
+        return True
+
+    def _consume_edge(self, line: str) -> bool:
+        """Consume an edge line, returning whether it was well formed.
+
+        Args:
+            line: Structural line from the file.
+
+        Returns:
+            bool: False when the line is not a valid edge.
+        """
+        parsed = _parse_edge_line(line)
+        if parsed is None:
+            self.error = " invalid edge: " + line
+            return False
+        self.edges.append(parsed[0])
+        self.is_pdag = self.is_pdag or parsed[1]
+        return True
+
+    def finish(self) -> None:
+        """Record an error when the file held no structural lines."""
+        if self.num_lines < 1 and not self.error:
+            self.error = " is empty"
+
+
+def _consume_open_tetrad_file(path: str, reader: "_TetradReader") -> None:
+    """Feed the lines of an open Tetrad file to a reader.
+
+    Args:
+        path: Path of the Tetrad file.
+        reader: Reader accumulating the parsed graph.
+    """
+    with open(path, newline="", encoding="utf-8") as f:
+        for line in f:
+            if not reader.consume(line):
+                break
+
+
+def _consume_tetrad_file(path: str, reader: "_TetradReader") -> None:
+    """Feed every line of a Tetrad file to a reader.
+
+    Args:
+        path: Path of the Tetrad file.
+        reader: Reader accumulating the parsed graph.
+    """
+    try:
+        _consume_open_tetrad_file(path, reader)
+    except UnicodeDecodeError:
+        reader.error = " not text"
 
 
 def read(path: str) -> Union[DAG, PDAG]:
@@ -36,61 +183,16 @@ def read(path: str) -> Union[DAG, PDAG]:
 
     is_valid_path(path)
 
-    pdag = False
-    try:
-        with open(path, newline="", encoding="utf-8") as f:
-            num_line = 0
-            error = ""
-            edges = []
-            for line in f:
-                line = line.rstrip("\r\n")
-                if not line:  # ignore blank lines
-                    continue
-                num_line += 1
+    reader = _TetradReader()
+    _consume_tetrad_file(path, reader)
+    reader.finish()
 
-                # ignore these non-structural elements of the file
+    if reader.error:
+        raise FileFormatError("file {}{}".format(path, reader.error))
 
-                if (
-                    line in ["Graph Attributes:", "Graph Node Attributes:"]
-                    or line.startswith("Score: ")
-                    or line.startswith("BIC: ")
-                ):
-                    continue
-
-                if (num_line == 1 and line != "Graph Nodes:") or (
-                    num_line == 3 and line != "Graph Edges:"
-                ):
-                    error = " invalid section header"
-                    break
-
-                if num_line == 2:
-                    nodes = line.replace(";", ",").split(",")
-
-                if num_line > 3:
-                    match = EDGE.match(line)
-                    if not match:
-                        error = " invalid edge: " + line
-                        break
-                    edges.append(
-                        (
-                            match.group(1),
-                            ("->" if match.group(2) == "-->" else "-"),
-                            match.group(3),
-                        )
-                    )
-                    if match.group(2) == "---":
-                        pdag = True
-
-        if num_line < 1:
-            error = " is empty"
-
-    except UnicodeDecodeError:
-        error = " not text"
-
-    if error:
-        raise FileFormatError("file {}{}".format(path, error))
-
-    return PDAG(nodes, edges) if pdag else DAG(nodes, edges)
+    if reader.is_pdag:
+        return PDAG(reader.nodes, reader.edges)
+    return DAG(reader.nodes, reader.edges)
 
 
 def write(pdag: PDAG, path: str) -> None:

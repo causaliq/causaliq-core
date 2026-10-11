@@ -26,6 +26,13 @@ from typing import (
     Tuple,
 )
 
+from .pdg_codec import (  # noqa: F401
+    _decode_probability,
+    _encode_probability,
+    decode_pdg,
+    encode_pdg,
+)
+
 if TYPE_CHECKING:  # pragma: no cover
     from .dag import DAG
 
@@ -178,51 +185,8 @@ class PDG:
             edges: Optional dictionary of edge probabilities. Keys must be
                 tuples (source, target) where source < target alphabetically.
         """
-        if not isinstance(nodes, list):
-            raise TypeError("PDG nodes must be a list")
-        for node in nodes:
-            if not isinstance(node, str):
-                raise TypeError("PDG node names must be strings")
-            if not node:
-                raise ValueError("PDG node names cannot be empty")
-
-        # Store nodes in alphabetical order
-        self.nodes: List[str] = sorted(set(nodes))
-
-        if len(self.nodes) != len(nodes):
-            raise ValueError("PDG has duplicate node names")
-
-        # Validate and store edges
-        self.edges: Dict[Tuple[str, str], EdgeProbabilities] = {}
-
-        if edges is not None:
-            if not isinstance(edges, dict):
-                raise TypeError("PDG edges must be a dictionary")
-
-            node_set = set(self.nodes)
-            for (source, target), probs in edges.items():
-                # Validate node pair
-                if source not in node_set:
-                    raise ValueError(f"Unknown source node: {source}")
-                if target not in node_set:
-                    raise ValueError(f"Unknown target node: {target}")
-                if source == target:
-                    raise ValueError(f"Self-loop not allowed: {source}")
-
-                # Validate canonical order
-                if source > target:
-                    raise ValueError(
-                        f"Edge ({source}, {target}) not in canonical order. "
-                        f"Use ({target}, {source}) instead."
-                    )
-
-                if not isinstance(probs, EdgeProbabilities):
-                    raise TypeError(
-                        f"Edge ({source}, {target}) value must be "
-                        "EdgeProbabilities"
-                    )
-
-                self.edges[(source, target)] = probs
+        self.nodes = _validate_pdg_nodes(nodes)
+        self.edges = _validate_pdg_edges(self.nodes, edges)
 
     def get_probabilities(self, node_a: str, node_b: str) -> EdgeProbabilities:
         """Get edge probabilities between two nodes.
@@ -241,32 +205,16 @@ class PDG:
         Raises:
             ValueError: If either node is not in the graph.
         """
-        if node_a not in self.nodes:
-            raise ValueError(f"Unknown node: {node_a}")
-        if node_b not in self.nodes:
-            raise ValueError(f"Unknown node: {node_b}")
-        if node_a == node_b:
-            raise ValueError("Cannot get probabilities for self-loop")
+        _check_get_probability_nodes(self.nodes, node_a, node_b)
 
         # Canonicalise order
+        probs = self.edges.get(_canonical_pair(node_a, node_b))
+        if probs is None:
+            return EdgeProbabilities()  # Default: no edge
         if node_a < node_b:
-            key = (node_a, node_b)
-            probs = self.edges.get(key)
-            if probs is None:
-                return EdgeProbabilities()  # Default: no edge
             return probs
-        else:
-            key = (node_b, node_a)
-            probs = self.edges.get(key)
-            if probs is None:
-                return EdgeProbabilities()  # Default: no edge
-            # Swap forward/backward for reversed order
-            return EdgeProbabilities(
-                forward=probs.backward,
-                backward=probs.forward,
-                undirected=probs.undirected,
-                none=probs.none,
-            )
+        # Swap forward/backward for reversed order
+        return _reversed_probabilities(probs)
 
     def set_probabilities(
         self, node_a: str, node_b: str, probs: EdgeProbabilities
@@ -377,95 +325,22 @@ class PDG:
         # Import here to avoid circular import
         from .dag import DAG
 
-        # Collect candidate edges with effective probabilities
-        candidates = []
-        edges_skipped_threshold = 0
-
-        for (source, target), probs in self.edges.items():
-            p_exist = probs.p_exist
-            if p_exist < threshold:
-                edges_skipped_threshold += 1
-                continue
-
-            # Split undirected probability equally between directions
-            eff_forward = probs.forward + probs.undirected / 2
-            eff_backward = probs.backward + probs.undirected / 2
-
-            # Determine direction and whether tie-break was needed
-            if eff_forward > eff_backward:
-                direction = "forward"
-                max_prob = eff_forward
-                is_tie = False
-            elif eff_backward > eff_forward:
-                direction = "backward"
-                max_prob = eff_backward
-                is_tie = False
-            else:
-                # Tie - use alphabetical (forward means source -> target)
-                direction = "forward"
-                max_prob = eff_forward
-                is_tie = True
-
-            candidates.append((max_prob, source, target, direction, is_tie))
-
-        # Sort by probability descending (stable sort preserves order for ties)
-        candidates.sort(key=lambda x: -x[0])
-
-        # Greedily build DAG
-        dag_edges: List[Tuple[str, str, str]] = []
-        ancestors: Dict[str, set] = {node: set() for node in self.nodes}
-        edges_included = 0
-        edges_skipped_cycle = 0
-        tie_breaks_applied = 0
-
-        for _, source, target, direction, is_tie in candidates:
-            # Determine actual edge direction
-            if direction == "forward":
-                from_node, to_node = source, target
-            else:
-                from_node, to_node = target, source
-
-            # Check if adding this edge would create a cycle
-            # A cycle occurs if to_node is already an ancestor of from_node
-            # (i.e., there's already a path from to_node to from_node)
-            if to_node in ancestors[from_node] or from_node == to_node:
-                edges_skipped_cycle += 1
-                continue
-
-            # Add edge
-            dag_edges.append((from_node, "->", to_node))
-            edges_included += 1
-            if is_tie:
-                tie_breaks_applied += 1
-
-            # Update ancestors: to_node gains from_node and all its ancestors
-            new_ancestors = ancestors[from_node] | {from_node}
-            ancestors[to_node] = ancestors[to_node] | new_ancestors
-
-            # Propagate to all descendants of to_node
-            to_visit = [to_node]
-            visited = set()
-            while to_visit:
-                current = to_visit.pop()
-                if current in visited:
-                    continue
-                visited.add(current)
-                # Find children of current
-                for edge in dag_edges:
-                    if edge[0] == current:
-                        child = edge[2]
-                        ancestors[child] = ancestors[child] | new_ancestors
-                        to_visit.append(child)
+        candidates, edges_skipped_threshold = _candidate_edges(
+            self.edges, threshold
+        )
+        dag_edges, included, skipped_cycle, tie_breaks = _build_greedy_dag(
+            self.nodes, candidates
+        )
 
         # Create DAG
         dag = DAG(self.nodes, dag_edges)
 
         return GreedyDAGResult(
             dag=dag,
-            edges_included=edges_included,
-            edges_skipped_cycle=edges_skipped_cycle,
+            edges_included=included,
+            edges_skipped_cycle=skipped_cycle,
             edges_skipped_threshold=edges_skipped_threshold,
-            tie_breaks_applied=tie_breaks_applied,
+            tie_breaks_applied=tie_breaks,
         )
 
     def compress(self) -> bytes:
@@ -492,37 +367,11 @@ class PDG:
         Raises:
             ValueError: If graph has more than 65535 nodes or edge pairs.
         """
-        if len(self.nodes) > 65535:
-            raise ValueError("PDG.compress() graph has too many nodes")
-        if len(self.edges) > 65535:
-            raise ValueError("PDG.compress() graph has too many edge pairs")
-
-        # Build node index for edge compression
-        node_index = {node: i for i, node in enumerate(self.nodes)}
-
-        # Compress number of nodes
-        data = len(self.nodes).to_bytes(2, "big")
-
-        # Compress each node name
-        for node in self.nodes:
-            name_bytes = node.encode("utf-8")
-            if len(name_bytes) > 65535:
-                raise ValueError("PDG.compress() node name too long")
-            data += len(name_bytes).to_bytes(2, "big")
-            data += name_bytes
-
-        # Compress number of edge pairs
-        data += len(self.edges).to_bytes(2, "big")
-
-        # Compress each edge pair (source idx, target idx, 3 probabilities)
-        for (source, target), probs in self.edges.items():
-            data += node_index[source].to_bytes(2, "big")
-            data += node_index[target].to_bytes(2, "big")
-            data += _encode_probability(probs.forward)
-            data += _encode_probability(probs.backward)
-            data += _encode_probability(probs.undirected)
-
-        return data
+        probabilities = {
+            pair: (p.forward, p.backward, p.undirected, p.none)
+            for pair, p in self.edges.items()
+        }
+        return encode_pdg(self.nodes, probabilities)
 
     @classmethod
     def decompress(cls, data: bytes) -> "PDG":
@@ -538,159 +387,347 @@ class PDG:
             TypeError: If data is not bytes.
             ValueError: If data is invalid or corrupted.
         """
-        if not isinstance(data, bytes):
-            raise TypeError("PDG.decompress() data must be bytes")
-
-        if len(data) < 2:
-            raise ValueError("PDG.decompress() data too short")
-
-        pos = 0
-
-        # Decompress number of nodes
-        num_nodes = int.from_bytes(data[pos : pos + 2], "big")
-        pos += 2
-
-        # Decompress node names
-        nodes = []
-        for _ in range(num_nodes):
-            if pos + 2 > len(data):
-                raise ValueError("PDG.decompress() data truncated")
-            name_len = int.from_bytes(data[pos : pos + 2], "big")
-            pos += 2
-            if pos + name_len > len(data):
-                raise ValueError("PDG.decompress() data truncated")
-            node = data[pos : pos + name_len].decode("utf-8")
-            pos += name_len
-            nodes.append(node)
-
-        # Decompress number of edge pairs
-        if pos + 2 > len(data):
-            raise ValueError("PDG.decompress() data truncated")
-        num_edges = int.from_bytes(data[pos : pos + 2], "big")
-        pos += 2
-
-        # Decompress edge pairs
-        edges: Dict[Tuple[str, str], EdgeProbabilities] = {}
-        for _ in range(num_edges):
-            if pos + 13 > len(data):  # 2+2+3+3+3 = 13 bytes per edge
-                raise ValueError("PDG.decompress() data truncated")
-
-            source_idx = int.from_bytes(data[pos : pos + 2], "big")
-            pos += 2
-            target_idx = int.from_bytes(data[pos : pos + 2], "big")
-            pos += 2
-
-            if source_idx >= len(nodes) or target_idx >= len(nodes):
-                raise ValueError("PDG.decompress() invalid node index")
-
-            p_forward = _decode_probability(data[pos : pos + 3])
-            pos += 3
-            p_backward = _decode_probability(data[pos : pos + 3])
-            pos += 3
-            p_undirected = _decode_probability(data[pos : pos + 3])
-            pos += 3
-
-            # Derive p_none from the constraint that probabilities sum to 1.0
-            p_none = 1.0 - (p_forward + p_backward + p_undirected)
-
-            # Handle floating point precision issues
-            if p_none < 0:
-                if p_none > -1e-9:  # pragma: no cover
-                    p_none = 0.0
-                else:
-                    raise ValueError(
-                        "PDG.decompress() probabilities sum to more than 1.0"
-                    )
-
-            source = nodes[source_idx]
-            target = nodes[target_idx]
-            edges[(source, target)] = EdgeProbabilities(
-                forward=p_forward,
-                backward=p_backward,
-                undirected=p_undirected,
-                none=p_none,
+        nodes, probabilities = decode_pdg(data)
+        edges = {
+            pair: EdgeProbabilities(
+                forward=probs[0],
+                backward=probs[1],
+                undirected=probs[2],
+                none=probs[3],
             )
-
+            for pair, probs in probabilities.items()
+        }
         return cls(nodes, edges)
 
 
-def _encode_probability(value: float) -> bytes:
-    """Encode probability to 3 bytes with 4 significant figures.
-
-    Format: 2 bytes mantissa (uint16) + 1 byte exponent (int8).
-    Value = mantissa × 10^exponent.
+def _validate_pdg_nodes(nodes: List[str]) -> List[str]:
+    """Return the node names of a PDG in alphabetical order.
 
     Args:
-        value: Probability value in range [0.0, 1.0].
+        nodes: Node names supplied to the PDG constructor.
 
     Returns:
-        3-byte encoding.
+        Sorted unique node names.
 
-    Example:
-        >>> _encode_probability(0.9876)  # mantissa=9876, exp=-4
-        >>> _encode_probability(0.001234)  # mantissa=1234, exp=-6
-        >>> _encode_probability(0.0)  # mantissa=0, exp=0
+    Raises:
+        TypeError: If nodes is not a list or holds a non-string name.
+        ValueError: If a name is empty or names are duplicated.
     """
-    if value == 0.0:
-        return b"\x00\x00\x00"
+    if not isinstance(nodes, list):
+        raise TypeError("PDG nodes must be a list")
+    for node in nodes:
+        if not isinstance(node, str):
+            raise TypeError("PDG node names must be strings")
+        if not node:
+            raise ValueError("PDG node names cannot be empty")
 
-    if value < 0 or value > 1.0:
-        raise ValueError(f"Probability must be in [0, 1], got {value}")
+    # Store nodes in alphabetical order
+    ordered = sorted(set(nodes))
 
-    # Special case for exactly 1.0
-    if value == 1.0:
-        # 1.0 = 1000 × 10^-3
-        mantissa = 1000
-        exponent = -3
-        return mantissa.to_bytes(2, "big") + exponent.to_bytes(
-            1, "big", signed=True
+    if len(ordered) != len(nodes):
+        raise ValueError("PDG has duplicate node names")
+    return ordered
+
+
+def _validate_pdg_edges(
+    nodes: List[str],
+    edges: Optional[Dict[Tuple[str, str], EdgeProbabilities]],
+) -> Dict[Tuple[str, str], EdgeProbabilities]:
+    """Return the validated edge probabilities of a PDG.
+
+    Args:
+        nodes: Validated node names of the graph.
+        edges: Edge probabilities supplied to the PDG constructor.
+
+    Returns:
+        Validated edge probabilities keyed by node pair.
+
+    Raises:
+        TypeError: If edges is not a dictionary or a value is not
+            EdgeProbabilities.
+        ValueError: If a pair names an unknown node, is a self-loop or is
+            not in canonical order.
+    """
+    validated: Dict[Tuple[str, str], EdgeProbabilities] = {}
+    if edges is None:
+        return validated
+    if not isinstance(edges, dict):
+        raise TypeError("PDG edges must be a dictionary")
+
+    node_set = set(nodes)
+    for (source, target), probs in edges.items():
+        _validate_pdg_edge_pair(node_set, source, target, probs)
+        validated[(source, target)] = probs
+    return validated
+
+
+def _validate_pdg_edge_pair(
+    node_set: set, source: str, target: str, probs: EdgeProbabilities
+) -> None:
+    """Validate one node pair of a PDG's edge probabilities.
+
+    Args:
+        node_set: Nodes known to the graph.
+        source: Source node name.
+        target: Target node name.
+        probs: Value supplied for the pair.
+
+    Raises:
+        TypeError: If probs is not EdgeProbabilities.
+        ValueError: If the pair names an unknown node, is a self-loop or is
+            not in canonical order.
+    """
+    if source not in node_set:
+        raise ValueError(f"Unknown source node: {source}")
+    if target not in node_set:
+        raise ValueError(f"Unknown target node: {target}")
+    if source == target:
+        raise ValueError(f"Self-loop not allowed: {source}")
+
+    # Validate canonical order
+    if source > target:
+        raise ValueError(
+            f"Edge ({source}, {target}) not in canonical order. "
+            f"Use ({target}, {source}) instead."
         )
 
-    # Find exponent: we want mantissa in range [1000, 9999] for 4 s.f.
-    import math
+    if not isinstance(probs, EdgeProbabilities):
+        raise TypeError(
+            f"Edge ({source}, {target}) value must be " "EdgeProbabilities"
+        )
 
-    log_val = math.log10(value)
-    # Exponent to get mantissa in [1000, 9999]
-    exponent = int(math.floor(log_val)) - 3
 
-    # Calculate mantissa
-    mantissa = round(value / (10**exponent))
+def _check_get_probability_nodes(
+    nodes: List[str], node_a: str, node_b: str
+) -> None:
+    """Validate the node pair requested from a PDG.
 
-    # Ensure mantissa is in valid range
-    if mantissa >= 10000:
-        mantissa = mantissa // 10
-        exponent += 1
-    elif mantissa < 1000 and mantissa > 0:  # pragma: no cover
-        mantissa = mantissa * 10
-        exponent -= 1
+    Args:
+        nodes: Nodes known to the graph.
+        node_a: First node name.
+        node_b: Second node name.
 
-    # Clamp mantissa to uint16 range
-    mantissa = max(0, min(9999, mantissa))
+    Raises:
+        ValueError: If a node is unknown or the pair is a self-loop.
+    """
+    if node_a not in nodes:
+        raise ValueError(f"Unknown node: {node_a}")
+    if node_b not in nodes:
+        raise ValueError(f"Unknown node: {node_b}")
+    if node_a == node_b:
+        raise ValueError("Cannot get probabilities for self-loop")
 
-    # Clamp exponent to int8 range
-    exponent = max(-128, min(127, exponent))
 
-    return bytes(
-        mantissa.to_bytes(2, "big") + exponent.to_bytes(1, "big", signed=True)
+def _canonical_pair(node_a: str, node_b: str) -> Tuple[str, str]:
+    """Return a node pair in alphabetical (canonical) order.
+
+    Args:
+        node_a: First node name.
+        node_b: Second node name.
+
+    Returns:
+        The pair with the alphabetically smaller name first.
+    """
+    return (node_a, node_b) if node_a < node_b else (node_b, node_a)
+
+
+def _reversed_probabilities(
+    probs: EdgeProbabilities,
+) -> EdgeProbabilities:
+    """Return edge probabilities with forward and backward swapped.
+
+    Args:
+        probs: Probabilities stored in canonical order.
+
+    Returns:
+        Probabilities relative to the reversed node order.
+    """
+    return EdgeProbabilities(
+        forward=probs.backward,
+        backward=probs.forward,
+        undirected=probs.undirected,
+        none=probs.none,
     )
 
 
-def _decode_probability(data: bytes) -> float:
-    """Decode probability from 3-byte format.
+# Candidate edge: (probability, source, target, direction, is tie break)
+Candidate = Tuple[float, str, str, str, bool]
+
+
+def _candidate_for(
+    source: str, target: str, probs: EdgeProbabilities
+) -> Candidate:
+    """Return the ranked candidate edge for one node pair.
+
+    The undirected probability is split equally between the two possible
+    directions and ties are broken in favour of the canonical forward
+    direction.
 
     Args:
-        data: 3 bytes (mantissa uint16 + exponent int8).
+        source: Canonical source node.
+        target: Canonical target node.
+        probs: Edge probabilities for the pair.
 
     Returns:
-        Decoded probability value.
+        Candidate edge tuple.
     """
-    if len(data) != 3:
-        raise ValueError("Probability encoding must be 3 bytes")
+    eff_forward = probs.forward + probs.undirected / 2
+    eff_backward = probs.backward + probs.undirected / 2
+    if eff_backward > eff_forward:
+        return (eff_backward, source, target, "backward", False)
+    is_tie = eff_forward == eff_backward
+    return (eff_forward, source, target, "forward", is_tie)
 
-    mantissa = int.from_bytes(data[0:2], "big")
-    exponent = int.from_bytes(data[2:3], "big", signed=True)
 
-    if mantissa == 0:
-        return 0.0
+def _candidate_edges(
+    edges: Dict[Tuple[str, str], EdgeProbabilities], threshold: float
+) -> Tuple[List[Candidate], int]:
+    """Return ranked candidate edges and those below the threshold.
 
-    return float(mantissa * (10**exponent))
+    Args:
+        edges: Edge probabilities of the graph.
+        threshold: Minimum p_exist for an edge to be considered.
+
+    Returns:
+        Tuple of (candidates ordered by descending probability, number of
+        edges skipped because they fall below the threshold).
+    """
+    candidates = []
+    skipped = 0
+    for (source, target), probs in edges.items():
+        if probs.p_exist < threshold:
+            skipped += 1
+            continue
+        candidates.append(_candidate_for(source, target, probs))
+
+    # Sort by probability descending (stable sort preserves order for ties)
+    candidates.sort(key=lambda x: -x[0])
+    return candidates, skipped
+
+
+def _edge_ends(source: str, target: str, direction: str) -> Tuple[str, str]:
+    """Return the (from, to) nodes for a candidate edge direction.
+
+    Args:
+        source: Canonical source node.
+        target: Canonical target node.
+        direction: "forward" or "backward".
+
+    Returns:
+        Tuple of (from node, to node).
+    """
+    if direction == "forward":
+        return source, target
+    return target, source
+
+
+def _pass_ancestors_to_children(
+    ancestors: Dict[str, set],
+    dag_edges: List[Tuple[str, str, str]],
+    current: str,
+    new_ancestors: set,
+    to_visit: List[str],
+) -> None:
+    """Add new ancestors to a node and queue its children for updating.
+
+    Args:
+        ancestors: Ancestors of each node, updated in place.
+        dag_edges: Edge triples added so far.
+        current: Node to update.
+        new_ancestors: Ancestors to add to the node and its descendants.
+        to_visit: Queue of nodes still to update.
+    """
+    ancestors[current] = ancestors[current] | new_ancestors
+    for edge in dag_edges:
+        if edge[0] == current:
+            child = edge[2]
+            ancestors[child] = ancestors[child] | new_ancestors
+            to_visit.append(child)
+
+
+def _propagate_ancestors(
+    ancestors: Dict[str, set],
+    dag_edges: List[Tuple[str, str, str]],
+    from_node: str,
+    to_node: str,
+) -> None:
+    """Add from_node and its ancestors to to_node and its descendants.
+
+    Args:
+        ancestors: Ancestors of each node, updated in place.
+        dag_edges: Edge triples added so far.
+        from_node: Node the new edge starts from.
+        to_node: Node the new edge points to.
+    """
+    new_ancestors = ancestors[from_node] | {from_node}
+    to_visit = [to_node]
+    visited: set = set()
+    while to_visit:
+        current = to_visit.pop()
+        if current in visited:
+            continue
+        visited.add(current)
+        _pass_ancestors_to_children(
+            ancestors, dag_edges, current, new_ancestors, to_visit
+        )
+
+
+def _add_candidate_edge(
+    dag_edges: List[Tuple[str, str, str]],
+    ancestors: Dict[str, set],
+    source: str,
+    target: str,
+    direction: str,
+) -> Tuple[int, int]:
+    """Add one candidate edge when it does not create a cycle.
+
+    A cycle would arise when the target is already an ancestor of the
+    source, i.e. there is already a path from the target to the source.
+
+    Args:
+        dag_edges: Edge triples added so far, extended in place.
+        ancestors: Ancestors of each node, updated in place.
+        source: Canonical source node of the candidate.
+        target: Canonical target node of the candidate.
+        direction: "forward" or "backward".
+
+    Returns:
+        Tuple of (1 if the edge was added else 0, 1 if it was skipped to
+        avoid a cycle else 0).
+    """
+    from_node, to_node = _edge_ends(source, target, direction)
+    if to_node in ancestors[from_node] or from_node == to_node:
+        return 0, 1
+    dag_edges.append((from_node, "->", to_node))
+    _propagate_ancestors(ancestors, dag_edges, from_node, to_node)
+    return 1, 0
+
+
+def _build_greedy_dag(
+    nodes: List[str], candidates: List[Candidate]
+) -> Tuple[List[Tuple[str, str, str]], int, int, int]:
+    """Return the DAG built greedily from ranked candidate edges.
+
+    Args:
+        nodes: Nodes of the graph.
+        candidates: Candidate edges ordered by descending probability.
+
+    Returns:
+        Tuple of (dag edge triples, edges included, edges skipped to avoid
+        a cycle, tie breaks applied).
+    """
+    dag_edges: List[Tuple[str, str, str]] = []
+    ancestors: Dict[str, set] = {node: set() for node in nodes}
+    included = 0
+    skipped_cycle = 0
+    tie_breaks = 0
+
+    for _, source, target, direction, is_tie in candidates:
+        added, skipped = _add_candidate_edge(
+            dag_edges, ancestors, source, target, direction
+        )
+        included += added
+        skipped_cycle += skipped
+        tie_breaks += 1 if is_tie and added else 0
+
+    return dag_edges, included, skipped_cycle, tie_breaks

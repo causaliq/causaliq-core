@@ -11,6 +11,107 @@ from .enums import EdgeType
 from .pdag import PDAG
 
 
+def _process_incoming_to_x(
+    x: str,
+    y: str,
+    edges: List[Tuple[str, str, str]],
+    parents: Dict[str, List[str]],
+) -> Tuple[List[Tuple[str, str, str]], bool]:
+    """
+    Compel the edges required by steps 5 to 7 of Chickering (1995).
+
+    :param str x: first node of the unknown edge under consideration
+    :param str y: second node of the unknown edge under consideration
+    :param edges: ordered edge triples, unknown edges marked "?"
+    :param parents: parents of each node {node: [parents]}
+
+    :returns: updated edges and whether the algorithm should restart
+    """
+    if not len(parents[x]):  # nothing to do if no parents of x
+        return (edges, False)
+
+    for w in parents[x]:  # Step 5 - Loop over inbound edges to x ...
+        if (w, "->", x) in edges:  # ... that are compelled
+            if w not in parents[y]:
+                # Step 6 - if w is not a parent of y then label all
+                #          inbound to y as compelled and exit
+                return (
+                    [(e[0], "->", e[2]) if e[2] == y else e for e in edges],
+                    True,
+                )
+            # Step 7 - if w is parent of y then compel w -> y
+            edges = [
+                (e[0], "->", e[2]) if e[0] == w and e[2] == y else e
+                for e in edges
+            ]
+    return (edges, False)
+
+
+def _process_incoming_to_y(
+    x: str,
+    y: str,
+    edges: List[Tuple[str, str, str]],
+    parents: Dict[str, List[str]],
+) -> List[Tuple[str, str, str]]:
+    """
+    Compel the edges required by steps 8 and 9 of Chickering (1995).
+
+    :param str x: first node of the unknown edge under consideration
+    :param str y: second node of the unknown edge under consideration
+    :param edges: ordered edge triples, unknown edges marked "?"
+    :param parents: parents of each node {node: [parents]}
+
+    :returns: updated edge triples
+    """
+    # Step 8 - if there is an edge z -> y where z is not x or a parent
+    #          of x, label x -> y all unknown inbound to y as compelled
+
+    for z in parents[y]:
+        if z != x and z not in parents[x]:
+            return [
+                (
+                    (e[0], "->", e[2])
+                    if (e[0] == x or e[1] == "?") and e[2] == y
+                    else e
+                )
+                for e in edges
+            ]
+
+    # Step 9 - set x -> y and unknown inbound arcs to y to reversible
+
+    return [
+        ((e[0], "-", e[2]) if (e[0] == x or e[1] == "?") and e[2] == y else e)
+        for e in edges
+    ]
+
+
+def _orient_unknown_edges(
+    edges: List[Tuple[str, str, str]], parents: Dict[str, List[str]]
+) -> List[Tuple[str, str, str]]:
+    """
+    Orientate every unknown edge, following Chickering (1995).
+
+    :param edges: ordered edge triples, unknown edges marked "?"
+    :param parents: parents of each node {node: [parents]}
+
+    :returns: edge triples with no unknown edges remaining
+    """
+    while any([t == "?" for (_, t, _) in edges]):  # 3 some edges unknown
+        for i, (x, _, y) in enumerate(edges):
+            if edges[i][1] != "?":  # 4 dynamic lowest unknown edge
+                continue
+
+            edges, restart = _process_incoming_to_x(x, y, edges, parents)
+            if restart:  # 5-7 incoming to x
+                break
+
+            edges = _process_incoming_to_y(  # 8&9, edges incoming to y
+                x, y, edges, parents
+            )
+
+    return edges
+
+
 def dag_to_pdag(dag: DAG) -> PDAG:
     """
     Generates PDAG representing equivalence class DAG belongs to.
@@ -29,74 +130,6 @@ def dag_to_pdag(dag: DAG) -> PDAG:
         PDAG for equivalence class that dag belongs to
     """
 
-    def _process_x(  # process incoming edges to x
-        x: str, y: str, edges: List[Tuple[str, str, str]]
-    ) -> Tuple[List[Tuple[str, str, str]], bool]:
-
-        if not len(parents[x]):  # nothing to do if no parents of x
-            # print('#5 no incoming to {} so no op'.format(x))
-            return (edges, False)
-
-        for w in parents[x]:  # Step 5 - Loop over inbound edges to x ...
-            if (w, "->", x) in edges:  # ... that are compelled
-                if w not in parents[y]:
-
-                    # Step 6 - if w is not a parent of y then label all
-                    #          inbound to y as compelled and exit
-
-                    # print(('#6 {}->{} compelled, not parent of {}' +
-                    #        ', so compel all inbound to {}')
-                    #       .format(w, x, y, y))
-                    return (
-                        [
-                            (e[0], "->", e[2]) if e[2] == y else e
-                            for e in edges
-                        ],
-                        True,
-                    )
-                else:
-
-                    # Step 7 - if w is parent of y then compel w -> y
-
-                    # print('#7 {}->{} so compel it'.format(w, y))
-                    edges = [
-                        (e[0], "->", e[2]) if e[0] == w and e[2] == y else e
-                        for e in edges
-                    ]
-        return (edges, False)
-
-    def _process_y(  # process incoming edges to y
-        x: str, y: str, edges: List[Tuple[str, str, str]]
-    ) -> List[Tuple[str, str, str]]:
-
-        # Step 8 - if there is an edge z -> y where z is not x or a parent
-        #          of x, label x -> y all unknown inbound to y as compelled
-
-        for z in parents[y]:
-            if z != x and z not in parents[x]:
-                # print('#8 {} not -> {} so compel all inbound to {}'
-                #       .format(z, x, y))
-                return [
-                    (
-                        (e[0], "->", e[2])
-                        if (e[0] == x or e[1] == "?") and e[2] == y
-                        else e
-                    )
-                    for e in edges
-                ]
-
-        # Step 9 - set x -> y and unknown inbound arcs to y to reversible
-
-        # print('#9 set inbound to {} as "-"'.format(y))
-        return [
-            (
-                (e[0], "-", e[2])
-                if (e[0] == x or e[1] == "?") and e[2] == y
-                else e
-            )
-            for e in edges
-        ]
-
     if not isinstance(dag, DAG):
         raise TypeError("dag arg in dag_to_pdag not a DAG")
 
@@ -114,17 +147,7 @@ def dag_to_pdag(dag: DAG) -> PDAG:
     edges = [e for e in reversed(edges)]
     # print('dag_to_pdag: reversed ordered edges are: {}'.format(edges))
 
-    while any([t == "?" for (_, t, _) in edges]):  # 3 some edges unknown
-        for i, (x, _, y) in enumerate(edges):
-            if edges[i][1] != "?":  # 4 dynamic lowest unknown edge
-                continue
-            # print('#4 processing {} ? {} edge in {}'.format(x, y, edges))
-
-            edges, restart = _process_x(x, y, edges)  # 5-7 incoming to x
-            if restart:
-                break
-
-            edges = _process_y(x, y, edges)  # 8&9, edges incoming to y
+    edges = _orient_unknown_edges(edges, parents)  # 3-9 unknown edges
 
     return PDAG(dag.nodes, edges)
 
@@ -158,6 +181,129 @@ def is_cpdag(pdag: PDAG) -> bool:
     return result == pdag if result is not None else False
 
 
+def _adjacency_set(n: str, s: PDAG, pc: bool = True) -> Set[str]:
+    """
+    Return the nodes adjacent to a node through directed or undirected edges.
+
+    :param str n: node whose adjacency set is required
+    :param PDAG s: graph in which adjacency is tested
+    :param bool pc: if True, include directed as well as undirected edges
+
+    :returns set: nodes adjacent to n through the requested edge types
+    """
+    et = (
+        [EdgeType.UNDIRECTED, EdgeType.DIRECTED]
+        if pc
+        else [EdgeType.UNDIRECTED]
+    )
+    return {
+        e[0] if e[1] == n else e[1]
+        for e, t in s.edges.items()
+        if (e[0] == n or e[1] == n) and t in et
+    }
+
+
+def _is_sink_node(x: str, s: PDAG) -> bool:
+    """
+    Whether a node is a sink, i.e. has no outbound directed edges.
+
+    :param str x: node to test
+    :param PDAG s: graph containing the node
+
+    :returns bool: True if x has no outbound directed edges
+    """
+    return not any(
+        [e[0] == x and t == EdgeType.DIRECTED for e, t in s.edges.items()]
+    )
+
+
+def _is_valid_x_candidate(x: str, s: PDAG) -> bool:
+    """
+    Whether a node satisfies condition b of the Dor-Tarsi algorithm.
+
+    All nodes, y, attached to x by an undirected edge must be adjacent to
+    all neighbours of x.
+
+    :param str x: node to test
+    :param PDAG s: graph containing the node
+
+    :returns bool: True if condition b holds for x
+    """
+    adj_x = _adjacency_set(x, s)
+    for y in _adjacency_set(x, s, False):
+        if not (adj_x - {y}).issubset(_adjacency_set(y, s) - {x}):
+            return False
+    return True
+
+
+def _valid_x(s: PDAG) -> Union[str, None]:
+    """
+    Return a node of s satisfying conditions a and b, or None.
+
+    Condition a is that the node is a sink, condition b that all nodes
+    attached to it by an undirected edge are adjacent to all of its
+    neighbours.
+
+    :param PDAG s: graph in which to search for an eligible node
+
+    :returns str/None: eligible node or None if there is none
+    """
+    for x in s.nodes:
+        if not _is_sink_node(x, s):
+            continue
+        if _is_valid_x_candidate(x, s):
+            return x
+    return None
+
+
+def _orient_edges_into_node(
+    dag_edges: Dict[Tuple[str, str], EdgeType],
+    pdag_edges: Dict[Tuple[str, str], EdgeType],
+    x: str,
+) -> List[Tuple[str, str, str]]:
+    """
+    Return edge triples with every edge incident to x oriented into x.
+
+    Edges that are not in the PDAG are left with their existing
+    orientation.
+
+    :param dag_edges: edges of the DAG being constructed
+    :param pdag_edges: edges remaining in the PDAG
+    :param str x: node into which incident edges are oriented
+
+    :returns: updated edge triples
+    """
+    return [
+        (
+            (e[0] if e[1] == x else e[1], "->", x)
+            if (e[0] == x or e[1] == x) and e in pdag_edges
+            else (e[0], "->" if t == EdgeType.DIRECTED else "-", e[1])
+        )
+        for e, t in dag_edges.items()
+    ]
+
+
+def _remove_node(
+    nodes: List[str], edges: Dict[Tuple[str, str], EdgeType], x: str
+) -> Tuple[List[str], List[Tuple[str, str, str]]]:
+    """
+    Return the nodes and edge triples left after removing a node.
+
+    :param nodes: nodes of the graph
+    :param edges: edges of the graph {pair: EdgeType}
+    :param str x: node to remove
+
+    :returns: remaining nodes and remaining edge triples
+    """
+    remaining = list(set(nodes) - {x})
+    triples = [
+        (e[0], "->" if t == EdgeType.DIRECTED else "-", e[1])
+        for e, t in edges.items()
+        if e[0] != x and e[1] != x
+    ]
+    return remaining, triples
+
+
 def extend_pdag(pdag: PDAG) -> DAG:
     """
     Generates a DAG which extends a PDAG (i.e. is a member of the
@@ -175,58 +321,6 @@ def extend_pdag(pdag: PDAG) -> DAG:
 
     :returns DAG: extension of pdag
     """
-
-    def _adj(n: str, s: PDAG, pc: bool = True) -> Set[str]:
-        et = (
-            [EdgeType.UNDIRECTED, EdgeType.DIRECTED]
-            if pc
-            else [EdgeType.UNDIRECTED]
-        )
-        return {
-            e[0] if e[1] == n else e[1]
-            for e, t in s.edges.items()
-            if (e[0] == n or e[1] == n) and t in et
-        }
-
-    def _valid_x(s: PDAG) -> Union[str, None]:
-
-        # Looking for a node in s which satisfies properties a and b
-
-        for x in s.nodes:
-
-            # a. x is a sink node, i.e. no outbound directed edges
-
-            is_sink = not any(
-                [
-                    e[0] == x and t == EdgeType.DIRECTED
-                    for e, t in s.edges.items()
-                ]
-            )
-            if not is_sink:
-                continue
-            # print('{} is{} a sink'.format(x, '' if is_sink else ' not'))
-
-            # b. - all nodes, y, attached to n by an undirected edge
-            #      are adjacent to all neighbours (nb) of node n
-
-            cond_b = True
-            adj_x = _adj(x, s)
-            # print('Neighbours of {} are {}'.f#ormat(x, adj_x))
-            # print('Peers of {} are {}'.format(x, _adj(x, s, False)))
-            for y in _adj(x, s, False):
-                adj_y = _adj(y, s) - {x}
-                # print('{} are adjacent to {}'.format(adj_y, y))
-                # print('{} is a subset of {}: {}'
-                #       .format(adj_x - {y}, adj_y,
-                #               (adj_x - {y}).issubset(adj_y)))
-                if not (adj_x - {y}).issubset(adj_y):
-                    cond_b = False
-                    break
-
-            if cond_b:  # found node n that has properties a and b
-                return x
-
-        return None  # no node found that has properties a and b
 
     if not isinstance(pdag, PDAG):
         raise TypeError("pdag arg in extend_pdag not a PDAG")
@@ -253,27 +347,13 @@ def extend_pdag(pdag: PDAG) -> DAG:
 
         # orientate all edges incident to x in pdag to go into x in dag
 
-        edges = [
-            (
-                (e[0] if e[1] == x else e[1], "->", x)
-                if (e[0] == x or e[1] == x) and e in pdag.edges
-                else
-                # if (e[0] == x or e[1] == x) else
-                (e[0], "->" if t == EdgeType.DIRECTED else "-", e[1])
-            )
-            for e, t in dag.edges.items()
-        ]
+        edges = _orient_edges_into_node(dag.edges, pdag.edges, x)
         dag = PDAG(dag.nodes, edges)
         # print('DAG is:\n{}'.format(dag))
 
         # remove x and its incident edges from pdag for next iteration
 
-        nodes = list(set(pdag.nodes) - {x})
-        edges = [
-            (e[0], "->" if t == EdgeType.DIRECTED else "-", e[1])
-            for e, t in pdag.edges.items()
-            if e[0] != x and e[1] != x
-        ]
+        nodes, edges = _remove_node(pdag.nodes, pdag.edges, x)
         pdag = PDAG(nodes, edges)
         # print('PDAG is:\n{}\n\n'.format(pdag))
 

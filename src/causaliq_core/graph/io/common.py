@@ -74,15 +74,14 @@ def write_graph(graph: PDAG, path: str) -> None:
     suffix = path.lower().split(".")[-1]
 
     if suffix == "csv":
-        bayesys.write(graph, path)
-    elif suffix == "graphml":
-        graphml.write(graph, path)
-    elif suffix == "tetrad":
-        tetrad.write(graph, path)
-    else:
-        raise ValueError(
-            f"common.write_graph() unsupported file suffix: .{suffix}"
-        )
+        return bayesys.write(graph, path)
+    if suffix == "graphml":
+        return graphml.write(graph, path)
+    if suffix == "tetrad":
+        return tetrad.write(graph, path)
+    raise ValueError(
+        f"common.write_graph() unsupported file suffix: .{suffix}"
+    )
 
 
 def read_pdg(path: str) -> "PDG":

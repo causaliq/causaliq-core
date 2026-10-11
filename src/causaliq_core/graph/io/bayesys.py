@@ -3,12 +3,143 @@
 #
 
 import csv
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 from causaliq_core.utils import FileFormatError, is_valid_path
 
 from ..dag import DAG
 from ..pdag import PDAG
+
+
+class _BayesysReader:
+    """Accumulate the graph described by a Bayesys CSV file.
+
+    The reader consumes CSV rows in turn and records the first problem it
+    encounters, matching the validation performed when the file is read.
+
+    Args:
+        all_nodes: Optional specification of nodes.
+
+    Attributes:
+        all_nodes: Optional specification of the permitted nodes.
+        nodes: Nodes found in the file.
+        edges: Edge triples found in the file.
+        num_lines: Number of rows consumed.
+        error: Description of the first problem found, if any.
+    """
+
+    def __init__(self, all_nodes: Optional[List[str]]) -> None:
+        self.all_nodes = all_nodes
+        self.nodes: List[str] = list(all_nodes) if all_nodes else []
+        self.edges: List[Tuple[str, str, str]] = []
+        self.num_lines = 0
+        self.error = ""
+
+    def consume(self, row: List[str], path: str, strict: bool) -> bool:
+        """Consume one CSV row, returning whether reading should continue.
+
+        Args:
+            row: Values of the CSV row.
+            path: Path of the file, used in error messages.
+            strict: Whether strict validation should be applied.
+
+        Returns:
+            bool: False when the row was invalid and reading stops.
+        """
+        self.num_lines += 1
+        if len(row) != 4:
+            self.error = ", line {} has not got 4 values".format(
+                self.num_lines
+            )
+            return False
+        if self.num_lines == 1:
+            return self._consume_header(row, strict)
+        if row[0] != "{}".format(self.num_lines - 1):
+            self.error = ", line {} has bad id".format(self.num_lines)
+            return False
+        return self._consume_edge(row, path)
+
+    def _consume_header(self, row: List[str], strict: bool) -> bool:
+        """Consume the header row, returning whether it was valid.
+
+        Args:
+            row: Values of the header row, corrected in place if not strict.
+            strict: Whether strict validation should be applied.
+
+        Returns:
+            bool: Whether the header row is valid.
+        """
+        if not strict:  # fix some known content problems
+            row[0] = row[0].replace("Id", "ID")
+            row[1] = row[1].replace("e.1", "e 1")
+            row[3] = row[3].replace("e.2", "e 2")
+        if row != ["ID", "Variable 1", "Dependency", "Variable 2"]:
+            self.error = " has bad header ({})".format(row)
+            return False
+        return True
+
+    def _consume_edge(self, row: List[str], path: str) -> bool:
+        """Consume an edge row, returning whether it was valid.
+
+        Args:
+            row: Values of the CSV row.
+            path: Path of the file, used in error messages.
+
+        Returns:
+            bool: Whether the row was a valid edge specification.
+        """
+        if self.all_nodes and (
+            row[1] not in self.all_nodes or row[3] not in self.all_nodes
+        ):
+            raise FileFormatError(
+                "file {} contains node not in {}".format(path, self.all_nodes)
+            )
+        if row[1] not in self.nodes:
+            self.nodes.append(row[1])
+        if row[3] not in self.nodes:
+            self.nodes.append(row[3])
+        self.edges.append((row[1], row[2], row[3]))
+        return True
+
+    def finish(self) -> None:
+        """Record an error when the file held no rows."""
+        if self.num_lines < 1 and not self.error:
+            self.error = " is empty"
+
+
+def _consume_open_bayesys_file(
+    path: str, reader: "_BayesysReader", strict: bool
+) -> None:
+    """Feed the rows of an open Bayesys CSV file to a reader.
+
+    Args:
+        path: Path of the CSV file.
+        reader: Reader accumulating the parsed graph.
+        strict: Whether strict validation should be applied.
+    """
+    with open(path, newline="", encoding="utf-8") as f:
+        for row in csv.reader(f):
+            if not reader.consume(row, path, strict):
+                break
+
+
+def _consume_bayesys_file(
+    path: str, reader: "_BayesysReader", strict: bool
+) -> None:
+    """Feed every row of a Bayesys CSV file to a reader.
+
+    Args:
+        path: Path of the CSV file.
+        reader: Reader accumulating the parsed graph.
+        strict: Whether strict validation should be applied.
+
+    Raises:
+        FileFormatError: If the file cannot be decoded as CSV text.
+    """
+    try:
+        _consume_open_bayesys_file(path, reader, strict)
+    except UnicodeDecodeError:
+        raise FileFormatError("file {} not in CSV format".format(path))
 
 
 def read(
@@ -31,56 +162,15 @@ def read(
     """
     is_valid_path(path)
 
-    with open(path, newline="", encoding="utf-8") as f:
-        reader = csv.reader(f)
-        num_line = 0
-        error = ""
-        nodes = list(all_nodes) if all_nodes else []
-        edges = []
-        try:
-            for row in reader:
-                num_line += 1
-                if len(row) != 4:
-                    error = ", line {} has not got 4 values".format(num_line)
-                    break
-                if num_line == 1:
-                    if not strict:  # fix some known content problems
-                        row[0] = row[0].replace("Id", "ID")
-                        row[1] = row[1].replace("e.1", "e 1")
-                        row[3] = row[3].replace("e.2", "e 2")
-                    if row != ["ID", "Variable 1", "Dependency", "Variable 2"]:
-                        error = " has bad header ({})".format(row)
-                        break
-                    continue
-                if num_line > 1 and row[0] != "{}".format(num_line - 1):
-                    error = ", line {} has bad id".format(num_line)
-                    break
+    reader = _BayesysReader(all_nodes)
+    _consume_bayesys_file(path, reader, strict)
+    reader.finish()
 
-                if all_nodes and (
-                    row[1] not in all_nodes or row[3] not in all_nodes
-                ):
-                    raise FileFormatError(
-                        "file {} contains node not in {}".format(
-                            path, all_nodes
-                        )
-                    )
-                if row[1] not in nodes:
-                    nodes.append(row[1])
-                if row[3] not in nodes:
-                    nodes.append(row[3])
-                edges.append((row[1], row[2], row[3]))
+    if reader.error:
+        raise FileFormatError("file {}{}".format(path, reader.error))
 
-        except UnicodeDecodeError:
-            raise FileFormatError("file {} not in CSV format".format(path))
-
-        if num_line < 1:
-            error = " is empty"
-
-        if error:
-            raise FileFormatError("file {}{}".format(path, error))
-        else:
-            graph = PDAG(nodes, edges)
-            return graph if not graph.is_DAG() else DAG(nodes, edges)
+    graph = PDAG(reader.nodes, reader.edges)
+    return graph if not graph.is_DAG() else DAG(reader.nodes, reader.edges)
 
 
 def write(pdag: PDAG, path: str) -> None:

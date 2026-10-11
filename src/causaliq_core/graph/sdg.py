@@ -20,6 +20,15 @@ from typing import Dict, List, Optional, Set, Tuple, Union
 from numpy import zeros
 from pandas import DataFrame
 
+from .enums import EdgeType
+from .sdg_codec import decode_sdg, encode_sdg
+from .sdg_traversal import (
+    grow_component,
+    grow_undirected_tree,
+    layout_partial_order,
+    undirected_edge_pairs,
+)
+
 
 class SDG:
     """Base class for simple dependency graphs (one edge between vertices).
@@ -64,26 +73,12 @@ class SDG:
             edges: List of edge tuples in format
                 (node1, edge_type_symbol, node2).
         """
-        # Import EdgeType locally to avoid circular imports
-        from causaliq_core.graph import EdgeType
-
         if type(nodes) is not list or type(edges) is not list:
             raise TypeError("graph edges and nodes not both lists")
 
         # Validate nodes specified
 
-        self.nodes: List[str] = []
-        for node in nodes:
-            if type(node) is not str:
-                raise TypeError("graph has non-string node name")
-            if not node:
-                raise ValueError("graph has empty node name")
-            if node in self.nodes:
-                raise ValueError("graph has duplicate node names")
-            self.nodes.append(node)
-        self.nodes.sort()
-
-        # Validate edges specified
+        self.nodes: List[str] = _validate_sdg_nodes(nodes)
 
         self.edges: Dict[Tuple[str, str], EdgeType] = {}
         edge_types = {e.value[3]: e for e in EdgeType}
@@ -93,70 +88,59 @@ class SDG:
         self.has_directed_cycles: bool = False
 
         for edge in edges:
-            if type(edge) is not tuple or len(edge) != 3:
-                raise TypeError("graph has non-triple edge")
-            for part in edge:
-                if type(part) is not str:
-                    raise TypeError("graph has non-string edge triple")
-            if edge[0] == edge[2]:
-                raise ValueError("graph has cyclic edge")
-            if edge[1] not in edge_types:
-                raise TypeError(
-                    'graph edge has unknown type symbol: "{}"'.format(edge[1])
-                )
-            if edge[0] not in self.nodes or edge[2] not in self.nodes:
-                raise ValueError("graph edge has unknown node")
-            if (edge[0], edge[2]) in self.edges or (
-                edge[2],
-                edge[0],
-            ) in self.edges:
-                raise ValueError("graph has duplicate edges")
+            self._add_edge(edge, edge_types)
 
-            # Check if graph directed or partially directed
-            edge_type = edge_types[edge[1]]
-            if edge_type != EdgeType.DIRECTED:
-                self.is_directed = False
-                if edge_type != EdgeType.UNDIRECTED:
-                    self.is_partially_directed = False
+    def _add_edge(
+        self, edge: Tuple[str, str, str], edge_types: Dict[str, EdgeType]
+    ) -> None:
+        """Validate and store one edge of the graph.
 
-            if edge_type == EdgeType.DIRECTED:
+        Args:
+            edge: Edge tuple (node1, edge_type_symbol, node2).
+            edge_types: Mapping of edge type symbol to EdgeType.
 
-                # collect parents for directional links
+        Raises:
+            TypeError: If the edge or its parts have invalid types.
+            ValueError: If the edge is cyclic, unknown or duplicated.
+        """
+        _validate_sdg_edge(edge, edge_types, self.nodes, self.edges)
 
-                if edge[2] in self.parents:
-                    self.parents[edge[2]].append(edge[0])
-                else:
-                    self.parents[edge[2]] = [edge[0]]
+        # Check if graph directed or partially directed
+        edge_type = edge_types[edge[1]]
+        if edge_type != EdgeType.DIRECTED:
+            self.is_directed = False
+            if edge_type != EdgeType.UNDIRECTED:
+                self.is_partially_directed = False
 
-            elif (
-                edge_type
-                in (
-                    EdgeType.UNDIRECTED,
-                    EdgeType.BIDIRECTED,
-                    EdgeType.NONDIRECTED,
-                )
-                and edge[0] > edge[2]
-            ):
+        if edge_type == EdgeType.DIRECTED:
+            # collect parents for directional links
+            self._add_parent(edge[2], edge[0])
+        elif _is_reversed_non_directed(edge_type, edge):
+            # ensure nodes in alphabetical order for non-directional edges
+            edge = (edge[2], edge[1], edge[0])
 
-                # ensure nodes in alphabetical order for non-directional edges
+        # parents held in alphabetical order
+        self.parents = {k: sorted(v) for k, v in self.parents.items()}
 
-                edge = (edge[2], edge[1], edge[0])
+        # store the edge in dictionary {(node1, node2): edge_type}
+        self.edges[(edge[0], edge[2])] = edge_type
 
-            # parents held in alphabetical order
+        # see whether has directed cycles
+        self.has_directed_cycles = (
+            self.partial_order(self.parents, self.nodes) is None
+        )
 
-            self.parents = {k: sorted(v) for k, v in self.parents.items()}
+    def _add_parent(self, node: str, parent: str) -> None:
+        """Record a parent for a node.
 
-            # store the edge in dictionary {(node1, node2): edge_type}
-
-            self.edges[(edge[0], edge[2])] = edge_type
-
-            # see whether has directed cycles
-
-            self.has_directed_cycles = (
-                True
-                if self.partial_order(self.parents, self.nodes) is None
-                else False
-            )
+        Args:
+            node: Node that gains a parent.
+            parent: Name of the parent node.
+        """
+        if node in self.parents:
+            self.parents[node].append(parent)
+            return
+        self.parents[node] = [parent]
 
     def rename(self, name_map: Dict[str, str]) -> None:
         """Rename nodes in place according to name map.
@@ -227,32 +211,7 @@ class SDG:
             Nodes in a partial topological order as list of sets or None if
             there is no ordering which means the graph is cyclic.
         """
-        if not isinstance(parents, dict) or (
-            nodes is not None
-            and not isinstance(nodes, list)
-            and not isinstance(nodes, set)
-        ):
-            raise TypeError("DAG.partial_order bad arg type")
-
-        parents_copy = {n: set(p) for n, p in parents.items()}
-        if nodes is not None:
-            parents_copy.update({n: set() for n in nodes if n not in parents})
-        if new_arc is not None:
-            parents_copy[new_arc[0]] = parents_copy[new_arc[0]] - {new_arc[1]}
-            parents_copy[new_arc[1]] = parents_copy[new_arc[1]] | {new_arc[0]}
-
-        order = []
-        while len(parents_copy):
-            roots = {n for n in parents_copy if not parents_copy[n]}
-            if not len(roots):
-                return None
-            order.append(roots)
-            for root in roots:
-                parents_copy.pop(root)
-            for node in list(parents_copy.keys()):
-                parents_copy[node].difference_update(roots)
-
-        return order
+        return layout_partial_order(parents, nodes, new_arc)
 
     def is_DAG(self) -> bool:
         """Return whether graph is a Directed Acyclic Graph (DAG).
@@ -295,38 +254,21 @@ class SDG:
             (n1, n2) or a single isolated node (n1, None).
         """
         trees = []
-        edges = {
-            (e[0], e[1]) if e[1] > e[0] else (e[1], e[0])
-            for e in self.edges.keys()
-        }
+        edges = undirected_edge_pairs(self.edges.keys())
         isolated = set(self.nodes)
         while len(edges):
             # Start with the lexicographically smallest edge for determinism
             first_edge = min(edges)
-            tree: Set[Union[Tuple[str, str], Tuple[str, None]]] = {first_edge}
-            t_nodes = {first_edge[0], first_edge[1]}
-
-            # Keep adding connected edges until no more can be added
-            growing = True
-            while growing:
-                growing = False
-                for edge in sorted(edges):  # Sort for deterministic iteration
-                    if edge not in tree and (
-                        (edge[0] in t_nodes and edge[1] not in t_nodes)
-                        or (edge[1] in t_nodes and edge[0] not in t_nodes)
-                    ):
-                        t_nodes = t_nodes | {edge[0], edge[1]}
-                        tree = tree | {edge}
-                        growing = True
+            tree, t_nodes = grow_undirected_tree(first_edge, edges)
 
             # Remove only the actual edges (not isolated nodes) from edges set
             tree_edges = {edge for edge in tree if edge[1] is not None}
             edges = edges - tree_edges
             isolated = isolated - t_nodes
             trees.append(tree)
-        trees.extend(
-            [{(n, None)} for n in sorted(isolated)]
-        )  # Sort for determinism
+
+        # Sort for determinism
+        trees.extend([{(n, None)} for n in sorted(isolated)])
         return sorted(trees, key=lambda t: min(t))
 
     def components(self) -> List[List[str]]:
@@ -340,26 +282,14 @@ class SDG:
             List of lists, each a list of sorted nodes in component.
         """
         components = []
-        edges = {
-            (e[0], e[1]) if e[1] > e[0] else (e[1], e[0])
-            for e in self.edges.keys()
-        }  # skeleton of graph
+        edges = undirected_edge_pairs(self.edges.keys())  # skeleton
         nodes = set(self.nodes)  # nodes yet to be included in components
 
         while len(nodes):
-            c_nodes = {list(nodes)[0]}  # put 1st arbitrary node in component
-            growing = True
-            while growing:
-                growing = False
-                for edge in edges:  # look for edges across component boundary
-                    if (edge[0] in c_nodes and edge[1] not in c_nodes) or (
-                        edge[1] in c_nodes and edge[0] not in c_nodes
-                    ):
-                        c_nodes = c_nodes | {edge[0], edge[1]}
-                        growing = True
+            # put 1st arbitrary node in component, then grow the component
+            c_nodes = grow_component({list(nodes)[0]}, edges)
 
             # component identified, remove its nodes from consideration
-
             nodes = nodes - c_nodes
             components.append(sorted(c_nodes))
 
@@ -456,35 +386,7 @@ class SDG:
         Raises:
             ValueError: If graph has more than 65535 nodes or edges.
         """
-        if len(self.nodes) > 65535:
-            raise ValueError("SDG.compress() graph has too many nodes")
-        if len(self.edges) > 65535:
-            raise ValueError("SDG.compress() graph has too many edges")
-
-        # Build node index for edge compression
-        node_index = {node: i for i, node in enumerate(self.nodes)}
-
-        # Compress number of nodes
-        data = len(self.nodes).to_bytes(2, "big")
-
-        # Compress each node name
-        for node in self.nodes:
-            name_bytes = node.encode("utf-8")
-            if len(name_bytes) > 65535:
-                raise ValueError("SDG.compress() node name too long")
-            data += len(name_bytes).to_bytes(2, "big")
-            data += name_bytes
-
-        # Compress number of edges
-        data += len(self.edges).to_bytes(2, "big")
-
-        # Compress each edge (source index, target index, edge type)
-        for (source, target), edge_type in self.edges.items():
-            data += node_index[source].to_bytes(2, "big")
-            data += node_index[target].to_bytes(2, "big")
-            data += edge_type.value[0].to_bytes(1, "big")
-
-        return data
+        return encode_sdg(self.nodes, self.edges)
 
     @classmethod
     def decompress(cls, data: bytes) -> "SDG":
@@ -500,62 +402,87 @@ class SDG:
             TypeError: If data is not bytes.
             ValueError: If data is invalid or corrupted.
         """
-        from causaliq_core.graph import EdgeType
-
-        if not isinstance(data, bytes):
-            raise TypeError("SDG.decompress() data must be bytes")
-
-        if len(data) < 2:
-            raise ValueError("SDG.decompress() data too short")
-
-        pos = 0
-
-        # Decompress number of nodes
-        num_nodes = int.from_bytes(data[pos : pos + 2], "big")
-        pos += 2
-
-        # Decompress node names
-        nodes = []
-        for _ in range(num_nodes):
-            if pos + 2 > len(data):
-                raise ValueError("SDG.decompress() data truncated")
-            name_len = int.from_bytes(data[pos : pos + 2], "big")
-            pos += 2
-            if pos + name_len > len(data):
-                raise ValueError("SDG.decompress() data truncated")
-            node = data[pos : pos + name_len].decode("utf-8")
-            pos += name_len
-            nodes.append(node)
-
-        # Decompress number of edges
-        if pos + 2 > len(data):
-            raise ValueError("SDG.decompress() data truncated")
-        num_edges = int.from_bytes(data[pos : pos + 2], "big")
-        pos += 2
-
-        # Build edge type lookup
-        edge_type_lookup = {et.value[0]: et for et in EdgeType}
-
-        # Decompress edges
-        edges = []
-        for _ in range(num_edges):
-            if pos + 5 > len(data):
-                raise ValueError("SDG.decompress() data truncated")
-            source_idx = int.from_bytes(data[pos : pos + 2], "big")
-            pos += 2
-            target_idx = int.from_bytes(data[pos : pos + 2], "big")
-            pos += 2
-            edge_type_id = int.from_bytes(data[pos : pos + 1], "big")
-            pos += 1
-
-            if source_idx >= len(nodes) or target_idx >= len(nodes):
-                raise ValueError("SDG.decompress() invalid node index")
-            if edge_type_id not in edge_type_lookup:
-                raise ValueError("SDG.decompress() invalid edge type")
-
-            edge_type = edge_type_lookup[edge_type_id]
-            edges.append(
-                (nodes[source_idx], edge_type.value[3], nodes[target_idx])
-            )
-
+        nodes, edges = decode_sdg(data)
         return cls(nodes, edges)
+
+
+def _validate_sdg_nodes(nodes: List[str]) -> List[str]:
+    """Return the validated, alphabetically sorted node names.
+
+    Args:
+        nodes: Node names supplied to the graph.
+
+    Returns:
+        Sorted node names.
+
+    Raises:
+        TypeError: If a node name is not a string.
+        ValueError: If a node name is empty or duplicated.
+    """
+    validated: List[str] = []
+    for node in nodes:
+        if type(node) is not str:
+            raise TypeError("graph has non-string node name")
+        if not node:
+            raise ValueError("graph has empty node name")
+        if node in validated:
+            raise ValueError("graph has duplicate node names")
+        validated.append(node)
+    validated.sort()
+    return validated
+
+
+def _validate_sdg_edge(
+    edge: Tuple[str, str, str],
+    edge_types: Dict[str, EdgeType],
+    nodes: List[str],
+    edges: Dict[Tuple[str, str], EdgeType],
+) -> None:
+    """Validate one edge of a simple dependency graph.
+
+    Args:
+        edge: Edge tuple (node1, edge_type_symbol, node2).
+        edge_types: Mapping of edge type symbol to EdgeType.
+        nodes: Nodes already accepted into the graph.
+        edges: Edges already accepted into the graph.
+
+    Raises:
+        TypeError: If the edge or its parts have invalid types.
+        ValueError: If the edge is cyclic, unknown or duplicated.
+    """
+    if type(edge) is not tuple or len(edge) != 3:
+        raise TypeError("graph has non-triple edge")
+    for part in edge:
+        if type(part) is not str:
+            raise TypeError("graph has non-string edge triple")
+    if edge[0] == edge[2]:
+        raise ValueError("graph has cyclic edge")
+    if edge[1] not in edge_types:
+        raise TypeError(
+            'graph edge has unknown type symbol: "{}"'.format(edge[1])
+        )
+    if edge[0] not in nodes or edge[2] not in nodes:
+        raise ValueError("graph edge has unknown node")
+    if (edge[0], edge[2]) in edges or (edge[2], edge[0]) in edges:
+        raise ValueError("graph has duplicate edges")
+
+
+def _is_reversed_non_directed(
+    edge_type: EdgeType, edge: Tuple[str, str, str]
+) -> bool:
+    """Return whether a non-directed edge needs its nodes reordering.
+
+    Args:
+        edge_type: Type of the edge.
+        edge: Edge tuple (node1, edge_type_symbol, node2).
+
+    Returns:
+        bool: Whether the edge nodes are not in alphabetical order.
+    """
+    if edge_type not in (
+        EdgeType.UNDIRECTED,
+        EdgeType.BIDIRECTED,
+        EdgeType.NONDIRECTED,
+    ):
+        return False
+    return edge[0] > edge[2]

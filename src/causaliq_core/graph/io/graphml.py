@@ -12,46 +12,46 @@
 from __future__ import annotations
 
 import xml.etree.ElementTree as ET
-from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Optional, TextIO, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
-from causaliq_core.utils import FileFormatError, is_valid_path
+from causaliq_core.utils import FileFormatError
 
 from ..dag import DAG
 from ..enums import EdgeMark, EdgeType
 from ..pdag import PDAG
 from ..sdg import SDG
+from .graphml_common import (  # noqa: F401
+    _MARKS_TO_EDGE_TYPE,
+    ENDPOINT_TO_MARK,
+    GRAPHML_NS,
+    NS,
+    VALID_EDGE_SYMBOLS,
+    FileLike,
+    _check_graphml_write_target,
+    _describe_graphml_source,
+    _edge_endpoints,
+    _endpoint_to_mark,
+    _graph_element,
+    _marks_to_symbol,
+    _open_graphml_root,
+    _parse_key_definitions,
+    _parse_nodes,
+    _validate_edge_symbol,
+    _write_graphml_document,
+    add_edge_key_definitions,
+    is_valid_path,
+)
+from .graphml_pdg import read_pdg, write_pdg  # noqa: F401
 
 if TYPE_CHECKING:  # pragma: no cover
-    from ..pdg import PDG, EdgeProbabilities  # noqa: F401
+    from ..pdg import PDG  # noqa: F401
 
-# Type alias for file path or file-like object
-FileLike = Union[str, Path, TextIO]
-
-# GraphML namespace
-GRAPHML_NS = "http://graphml.graphdrawing.org/xmlns"
-NS = {"g": GRAPHML_NS}
-
-# Map GraphML endpoint strings to EdgeMark enum
-ENDPOINT_TO_MARK = {
-    "arrow": EdgeMark.ARROW,
-    "target": EdgeMark.ARROW,
-    "head": EdgeMark.ARROW,
-    "circle": EdgeMark.CIRCLE,
-    "none": EdgeMark.LINE,
-    "source": EdgeMark.LINE,
-    "tail": EdgeMark.LINE,
-    "line": EdgeMark.LINE,
+# Map EdgeMark to GraphML endpoint value
+_MARK_TO_ENDPOINT = {
+    EdgeMark.LINE: "none",
+    EdgeMark.ARROW: "arrow",
+    EdgeMark.CIRCLE: "circle",
 }
-
-# Build lookup from (source_mark, target_mark) to EdgeType
-_MARKS_TO_EDGE_TYPE: Dict[tuple, EdgeType] = {}
-for et in EdgeType:
-    if et != EdgeType.NONE:
-        _MARKS_TO_EDGE_TYPE[(et.value[1], et.value[2])] = et
-
-# Valid edge type symbols from EdgeType enum
-VALID_EDGE_SYMBOLS = {et.value[3] for et in EdgeType if et != EdgeType.NONE}
 
 
 def read(file: FileLike) -> Union[SDG, PDAG, DAG]:
@@ -79,48 +79,9 @@ def read(file: FileLike) -> Union[SDG, PDAG, DAG]:
         >>> xml = '<graphml><graph><node id="A"/></graph></graphml>'
         >>> graph = read(StringIO(xml))
     """
-    # Validate file argument type
-    is_path = isinstance(file, (str, Path))
-    is_file_like = hasattr(file, "read")
-
-    if not is_path and not is_file_like:
-        raise TypeError(
-            "graphml.read() file arg must be str, Path, or file-like object"
-        )
-
-    source_desc = str(file) if is_path else "<file-like object>"
-
-    if is_path:
-        path_str = str(file)
-        if path_str.lower().split(".")[-1] != "graphml":
-            raise ValueError("graphml.read() bad file suffix")
-        is_valid_path(path_str)
-
-    try:
-        if is_path:
-            tree = ET.parse(str(file))
-        else:
-            # File-like object - read content and parse
-            tree = ET.parse(file)  # type: ignore[arg-type]
-        root = tree.getroot()
-    except ET.ParseError as e:
-        raise FileFormatError(f"file {source_desc} invalid XML: {e}")
-
-    # Handle namespaced and non-namespaced GraphML
-    if root.tag == f"{{{GRAPHML_NS}}}graphml":
-        ns = NS
-    elif root.tag == "graphml":
-        ns = {}
-    else:
-        raise FileFormatError(
-            f"file {source_desc} not a GraphML file "
-            f"(root element: {root.tag})"
-        )
-
-    # Find the graph element
-    graph_elem = root.find("g:graph", ns) if ns else root.find("graph")
-    if graph_elem is None:
-        raise FileFormatError(f"file {source_desc} has no graph element")
+    is_path, source_desc = _describe_graphml_source(file, "read")
+    root, ns = _open_graphml_root(file, is_path, "read", source_desc)
+    graph_elem = _graph_element(root, ns, source_desc)
 
     # Collect key definitions for edge attributes
     edge_keys = _parse_key_definitions(root, ns)
@@ -135,63 +96,60 @@ def read(file: FileLike) -> Union[SDG, PDAG, DAG]:
         graph_elem, ns, edge_keys, source_desc
     )
 
-    # Determine graph type and return appropriate class
+    return _graph_for_edges(nodes, edges, has_undirected, has_non_pdag)
+
+
+def _graph_for_edges(
+    nodes: List[str],
+    edges: List[Tuple[str, str, str]],
+    has_undirected: bool,
+    has_non_pdag: bool,
+) -> Union[SDG, PDAG, DAG]:
+    """Return the graph class matching the edge types found.
+
+    Args:
+        nodes: Node names of the graph.
+        edges: Edge triples of the graph.
+        has_undirected: Whether an undirected edge was found.
+        has_non_pdag: Whether an edge outside PDAG semantics was found.
+
+    Returns:
+        SDG, PDAG or DAG depending on the edge types in the graph.
+    """
     if has_non_pdag:
         return SDG(nodes, edges)
-    elif has_undirected:
+    if has_undirected:
         return PDAG(nodes, edges)
-    else:
-        return DAG(nodes, edges)
+    return DAG(nodes, edges)
 
 
-def _parse_key_definitions(
-    root: ET.Element, ns: dict
-) -> Dict[str, Dict[str, Optional[str]]]:
-    """Parse GraphML key definitions for edge attributes.
+class _EdgeTypes:
+    """Edge semantics found while parsing a GraphML graph.
 
-    Args:
-        root: Root element of the GraphML document.
-        ns: Namespace dictionary.
-
-    Returns:
-        Dictionary mapping key id to attribute info.
+    Attributes:
+        has_undirected: Whether an undirected edge has been found.
+        has_non_pdag: Whether an edge outside PDAG semantics was found.
     """
-    keys: Dict[str, Dict[str, Optional[str]]] = {}
-    key_tag = "g:key" if ns else "key"
-    for key_elem in root.findall(key_tag, ns):
-        key_id = key_elem.get("id")
-        attr_name = key_elem.get("attr.name")
-        attr_for = key_elem.get("for")
-        if key_id and attr_for == "edge":
-            keys[key_id] = {"name": attr_name}
-    return keys
 
+    def __init__(self) -> None:
+        self.has_undirected = False
+        self.has_non_pdag = False
 
-def _parse_nodes(
-    graph_elem: ET.Element, ns: dict, source_desc: str
-) -> list[str]:
-    """Parse node elements from the graph.
+    def record(self, edge_symbol: str) -> None:
+        """Record the semantics implied by an edge type symbol.
 
-    Args:
-        graph_elem: The graph element.
-        ns: Namespace dictionary.
-        source_desc: Source description for error messages.
-
-    Returns:
-        List of node names.
-    """
-    nodes = []
-    node_tag = "g:node" if ns else "node"
-    for node_elem in graph_elem.findall(node_tag, ns):
-        node_id = node_elem.get("id")
-        if node_id is None:
-            raise FileFormatError(f"file {source_desc} has node without id")
-        if node_id in nodes:
-            raise FileFormatError(
-                f"file {source_desc} has duplicate node id: {node_id}"
-            )
-        nodes.append(node_id)
-    return nodes
+        Args:
+            edge_symbol: Edge type symbol (e.g. "->", "-", "<->").
+        """
+        if edge_symbol == EdgeType.UNDIRECTED.value[3]:
+            self.has_undirected = True
+            return
+        if edge_symbol in (
+            EdgeType.DIRECTED.value[3],
+            EdgeType.UNDIRECTED.value[3],
+        ):
+            return
+        self.has_non_pdag = True
 
 
 def _parse_edges(
@@ -199,7 +157,7 @@ def _parse_edges(
     ns: dict,
     edge_keys: Dict[str, Dict[str, Optional[str]]],
     source_desc: str,
-) -> tuple[list[tuple[str, str, str]], bool, bool]:
+) -> Tuple[List[Tuple[str, str, str]], bool, bool]:
     """Parse edge elements from the graph.
 
     Args:
@@ -211,140 +169,180 @@ def _parse_edges(
     Returns:
         Tuple of (edges list, has_undirected, has_non_pdag edges).
     """
-    edges = []
-    has_undirected = False
-    has_non_pdag = False
+    edges: List[Tuple[str, str, str]] = []
+    types = _EdgeTypes()
 
     edge_tag = "g:edge" if ns else "edge"
-    data_tag = "g:data" if ns else "data"
 
     for edge_elem in graph_elem.findall(edge_tag, ns):
-        source = edge_elem.get("source")
-        target = edge_elem.get("target")
+        source, target = _edge_endpoints(edge_elem, source_desc)
+        for edge in _edge_triples(
+            edge_elem, ns, edge_keys, source_desc, source, target, types
+        ):
+            edges.append(edge)
 
-        if source is None or target is None:
-            raise FileFormatError(
-                f"file {source_desc} has edge without source or target"
-            )
-
-        # Check for directed attribute (GraphML standard)
-        directed = edge_elem.get("directed")
-
-        # Parse edge data elements for endpoint marks
-        source_mark = EdgeMark.LINE  # default: tail/line
-        target_mark = EdgeMark.ARROW  # default: arrow/head (directed)
-        edge_type_explicit = False  # True if edgeType data element found
-
-        for data_elem in edge_elem.findall(data_tag, ns):
-            key = data_elem.get("key")
-            if key in edge_keys:
-                attr_name = edge_keys[key].get("name", "")
-                value = data_elem.text or ""
-
-                if attr_name == "sourceEndpoint":
-                    source_mark = _endpoint_to_mark(value)
-                elif attr_name == "targetEndpoint":
-                    target_mark = _endpoint_to_mark(value)
-                elif attr_name == "edgeType":
-                    # Direct edge type symbol (e.g., "->", "-", "<->")
-                    edge_symbol = _validate_edge_symbol(value, source_desc)
-                    edges.append((source, edge_symbol, target))
-                    if edge_symbol == EdgeType.UNDIRECTED.value[3]:
-                        has_undirected = True
-                    elif edge_symbol not in (
-                        EdgeType.DIRECTED.value[3],
-                        EdgeType.UNDIRECTED.value[3],
-                    ):
-                        has_non_pdag = True
-                    edge_type_explicit = True
-
-        # If no explicit edgeType, determine from endpoint marks or directed
-        if not edge_type_explicit:
-            # Handle directed="false" attribute
-            if directed == "false":
-                edge_symbol = EdgeType.UNDIRECTED.value[3]
-                has_undirected = True
-            else:
-                edge_symbol = _marks_to_symbol(source_mark, target_mark)
-                if edge_symbol == EdgeType.UNDIRECTED.value[3]:
-                    has_undirected = True
-                elif edge_symbol not in (
-                    EdgeType.DIRECTED.value[3],
-                    EdgeType.UNDIRECTED.value[3],
-                ):
-                    has_non_pdag = True
-
-            edges.append((source, edge_symbol, target))
-
-    return edges, has_undirected, has_non_pdag
+    return edges, types.has_undirected, types.has_non_pdag
 
 
-def _endpoint_to_mark(endpoint: str) -> EdgeMark:
-    """Convert GraphML endpoint value to EdgeMark enum.
+def _edge_triples(
+    edge_elem: ET.Element,
+    ns: dict,
+    edge_keys: Dict[str, Dict[str, Optional[str]]],
+    source_desc: str,
+    source: str,
+    target: str,
+    types: "_EdgeTypes",
+) -> List[Tuple[str, str, str]]:
+    """Return the edge triples described by one GraphML edge element.
 
     Args:
-        endpoint: Endpoint value (none, source, target, arrow, circle, etc.).
+        edge_elem: The edge element.
+        ns: Namespace dictionary.
+        edge_keys: Key definitions for edge attributes.
+        source_desc: Source description for error messages.
+        source: Source node name of the edge.
+        target: Target node name of the edge.
+        types: Edge semantics accumulated so far.
 
     Returns:
-        EdgeMark enum value.
+        List of edge triples, empty when the edge has no explicit type.
     """
-    endpoint = endpoint.lower().strip()
-    return ENDPOINT_TO_MARK.get(endpoint, EdgeMark.LINE)
+    explicit = _explicit_edge_triples(
+        edge_elem, ns, edge_keys, source_desc, source, target, types
+    )
+    if explicit:
+        return explicit
+
+    # Determine the edge type from endpoint marks or the directed attribute
+    symbol = _marked_or_default_symbol(edge_elem, ns, edge_keys)
+    types.record(symbol)
+    return [(source, symbol, target)]
 
 
-def _marks_to_symbol(source_mark: EdgeMark, target_mark: EdgeMark) -> str:
-    """Convert endpoint marks to edge type symbol using EdgeType enum.
+def _explicit_edge_triples(
+    edge_elem: ET.Element,
+    ns: dict,
+    edge_keys: Dict[str, Dict[str, Optional[str]]],
+    source_desc: str,
+    source: str,
+    target: str,
+    types: "_EdgeTypes",
+) -> List[Tuple[str, str, str]]:
+    """Return edge triples given by explicit edgeType data elements.
 
     Args:
-        source_mark: EdgeMark at source end.
-        target_mark: EdgeMark at target end.
+        edge_elem: The edge element.
+        ns: Namespace dictionary.
+        edge_keys: Key definitions for edge attributes.
+        source_desc: Source description for error messages.
+        source: Source node name of the edge.
+        target: Target node name of the edge.
+        types: Edge semantics accumulated so far.
 
     Returns:
-        Edge type symbol (e.g., ->, -, <->, o->).
+        List of edge triples, empty when no edgeType data is present.
     """
-    # Try direct lookup
-    edge_type = _MARKS_TO_EDGE_TYPE.get((source_mark, target_mark))
-    if edge_type:
-        return edge_type.value[3]
+    triples: List[Tuple[str, str, str]] = []
+    data_tag = "g:data" if ns else "data"
 
-    # Handle reverse cases by swapping marks
-    # e.g., (ARROW, LINE) is reverse of DIRECTED, (LINE, CIRCLE) needs reversal
-    edge_type = _MARKS_TO_EDGE_TYPE.get((target_mark, source_mark))
-    if edge_type:
-        # Return the symbol but caller should reverse edge direction
-        return edge_type.value[3]
+    for data_elem in edge_elem.findall(data_tag, ns):
+        symbol = _explicit_edge_symbol(data_elem, edge_keys, source_desc)
+        if symbol is not None:
+            types.record(symbol)
+            triples.append((source, symbol, target))
 
-    # Default to directed if unknown combination
-    return EdgeType.DIRECTED.value[3]
+    return triples
 
 
-def _validate_edge_symbol(symbol: str, source_desc: str) -> str:
-    """Validate an edge type symbol against EdgeType enum.
+def _explicit_edge_symbol(
+    data_elem: ET.Element,
+    edge_keys: Dict[str, Dict[str, Optional[str]]],
+    source_desc: str,
+) -> Optional[str]:
+    """Return the edge symbol given by an edgeType data element.
 
     Args:
-        symbol: Edge type symbol to validate.
+        data_elem: A data element of the edge.
+        edge_keys: Key definitions for edge attributes.
         source_desc: Source description for error messages.
 
     Returns:
-        Validated symbol.
-
-    Raises:
-        FileFormatError: If symbol is invalid.
+        The validated edge symbol, or None when the element holds none.
     """
-    symbol = symbol.strip()
-    if symbol not in VALID_EDGE_SYMBOLS:
-        raise FileFormatError(
-            f"file {source_desc} has invalid edge type: {symbol}"
-        )
-    return symbol
+    key = data_elem.get("key") or ""
+    attr_name = edge_keys.get(key, {}).get("name") or ""
+    if attr_name == "edgeType":
+        return _validate_edge_symbol(data_elem.text or "", source_desc)
+    return None
 
 
-# Map EdgeMark to GraphML endpoint value
-_MARK_TO_ENDPOINT = {
-    EdgeMark.LINE: "none",
-    EdgeMark.ARROW: "arrow",
-    EdgeMark.CIRCLE: "circle",
-}
+def _marked_or_default_symbol(
+    edge_elem: ET.Element,
+    ns: dict,
+    edge_keys: Dict[str, Dict[str, Optional[str]]],
+) -> str:
+    """Return the edge symbol from endpoint marks or the directed attribute.
+
+    Args:
+        edge_elem: The edge element.
+        ns: Namespace dictionary.
+        edge_keys: Key definitions for edge attributes.
+
+    Returns:
+        The edge type symbol for the edge.
+    """
+    if edge_elem.get("directed") == "false":
+        return EdgeType.UNDIRECTED.value[3]
+    source_mark, target_mark = _endpoint_marks(edge_elem, ns, edge_keys)
+    return _marks_to_symbol(source_mark, target_mark)
+
+
+def _endpoint_marks(
+    edge_elem: ET.Element,
+    ns: dict,
+    edge_keys: Dict[str, Dict[str, Optional[str]]],
+) -> Tuple[EdgeMark, EdgeMark]:
+    """Return the endpoint marks described by an edge's data elements.
+
+    Args:
+        edge_elem: The edge element.
+        ns: Namespace dictionary.
+        edge_keys: Key definitions for edge attributes.
+
+    Returns:
+        Tuple of (source mark, target mark).
+    """
+    source_mark = EdgeMark.LINE  # default: tail/line
+    target_mark = EdgeMark.ARROW  # default: arrow/head (directed)
+    marks: Dict[str, EdgeMark] = {}
+    data_tag = "g:data" if ns else "data"
+
+    for data_elem in edge_elem.findall(data_tag, ns):
+        attr_name, mark = _endpoint_mark_for(data_elem, edge_keys)
+        marks[attr_name] = mark
+
+    return (
+        marks.get("sourceEndpoint", source_mark),
+        marks.get("targetEndpoint", target_mark),
+    )
+
+
+def _endpoint_mark_for(
+    data_elem: ET.Element,
+    edge_keys: Dict[str, Dict[str, Optional[str]]],
+) -> Tuple[str, EdgeMark]:
+    """Return the endpoint attribute name and mark of a data element.
+
+    Args:
+        data_elem: A data element of the edge.
+        edge_keys: Key definitions for edge attributes.
+
+    Returns:
+        Tuple of (attribute name, endpoint mark).
+    """
+    key = data_elem.get("key") or ""
+    attr_name = edge_keys.get(key, {}).get("name") or ""
+    return attr_name, _endpoint_to_mark(data_elem.text or "")
 
 
 def write(
@@ -376,21 +374,8 @@ def write(
     if not isinstance(graph, SDG):
         raise TypeError("graphml.write() graph arg must be SDG, PDAG or DAG")
 
-    # Validate file argument type
-    is_path = isinstance(file, (str, Path))
-    is_file_like = hasattr(file, "write")
+    is_path = _check_graphml_write_target(file, "write")
 
-    if not is_path and not is_file_like:
-        raise TypeError(
-            "graphml.write() file arg must be str, Path, or file-like object"
-        )
-
-    if is_path:
-        path_str = str(file)
-        if path_str.lower().split(".")[-1] != "graphml":
-            raise ValueError("graphml.write() bad file suffix")
-
-    # Determine graph type for edgedefault attribute
     # DAG: all edges directed, use edgedefault="directed"
     # PDAG/SDG: mixed edges, use edgedefault="undirected"
     is_dag = isinstance(graph, DAG)
@@ -400,349 +385,101 @@ def write(
     root = ET.Element("graphml", xmlns=GRAPHML_NS)
 
     # Add key definitions for edge endpoint attributes
-    source_key = ET.SubElement(root, "key", id="sourceEndpoint")
-    source_key.set("for", "edge")
-    source_key.set("attr.name", "sourceEndpoint")
-    source_key.set("attr.type", "string")
-
-    target_key = ET.SubElement(root, "key", id="targetEndpoint")
-    target_key.set("for", "edge")
-    target_key.set("attr.name", "targetEndpoint")
-    target_key.set("attr.type", "string")
+    add_edge_key_definitions(
+        root, ("sourceEndpoint", "targetEndpoint"), "string"
+    )
 
     # Create graph element
-    graph_elem = ET.SubElement(
-        root, "graph", id=graph_id, edgedefault=edge_default
-    )
+    graph_elem = _add_graph_element(root, graph_id, edge_default)
 
     # Add nodes in order
     for node in graph.nodes:
         ET.SubElement(graph_elem, "node", id=node)
 
     # Add edges with endpoint attributes
-    edge_id = 0
-    for (source, target), edge_type in graph.edges.items():
-        edge_id += 1
+    _add_graph_edges(graph_elem, graph.edges, is_dag)
 
-        # For non-DAG graphs, mark simple directed edges (->)
-        # with directed="true" for third-party tool compatibility
-        is_directed_edge = edge_type == EdgeType.DIRECTED
-
-        if is_dag:
-            # DAG: edgedefault is directed, no per-edge override needed
-            edge_elem = ET.SubElement(
-                graph_elem,
-                "edge",
-                id=f"e{edge_id}",
-                source=source,
-                target=target,
-            )
-        elif is_directed_edge:
-            # PDAG/SDG: mark directed edges explicitly
-            edge_elem = ET.SubElement(
-                graph_elem,
-                "edge",
-                id=f"e{edge_id}",
-                source=source,
-                target=target,
-                directed="true",
-            )
-        else:
-            # PDAG/SDG: undirected (inherits from graph default)
-            edge_elem = ET.SubElement(
-                graph_elem,
-                "edge",
-                id=f"e{edge_id}",
-                source=source,
-                target=target,
-            )
-
-        # Get endpoint marks from EdgeType
-        source_mark = edge_type.value[1]
-        target_mark = edge_type.value[2]
-
-        # Add endpoint data elements
-        source_data = ET.SubElement(edge_elem, "data", key="sourceEndpoint")
-        source_data.text = _MARK_TO_ENDPOINT[source_mark]
-
-        target_data = ET.SubElement(edge_elem, "data", key="targetEndpoint")
-        target_data.text = _MARK_TO_ENDPOINT[target_mark]
-
-    # Write to file with XML declaration and proper formatting
-    tree = ET.ElementTree(root)
-    ET.indent(tree, space="  ")
-
-    if is_path:
-        with open(str(file), "wb") as f:
-            tree.write(f, encoding="utf-8", xml_declaration=True)
-    else:
-        # File-like object - write as string
-        # ET.write() doesn't support StringIO directly, so we convert
-        xml_str = ET.tostring(root, encoding="unicode")
-        xml_declaration = '<?xml version="1.0" encoding="utf-8"?>\n'
-        file.write(xml_declaration + xml_str)  # type: ignore[union-attr]
+    _write_graphml_document(root, file, is_path)
 
 
-# ---------------------------------------------------------------------------
-# PDG (Probabilistic Dependency Graph) I/O
-# ---------------------------------------------------------------------------
-
-
-def read_pdg(file: FileLike) -> "PDG":
-    """Read a PDG from a GraphML file or file-like object.
-
-    Reads a Probabilistic Dependency Graph with edge probability attributes.
-    The file should have undirected edges with p_forward, p_backward,
-    p_undirected, and p_none data attributes.
+def _add_graph_element(
+    root: ET.Element, graph_id: str, edge_default: str
+) -> ET.Element:
+    """Add the graph element to a GraphML document.
 
     Args:
-        file: File path (str or Path) or file-like object (e.g., StringIO).
-            For file paths, suffix must be '.graphml'.
+        root: Root element of the document being built.
+        graph_id: ID attribute for the graph element.
+        edge_default: Default edge direction for the graph element.
 
     Returns:
-        PDG instance with edge probabilities.
-
-    Raises:
-        TypeError: If argument types incorrect.
-        ValueError: If file path suffix not '.graphml'.
-        FileNotFoundError: If specified file does not exist.
-        FileFormatError: If file contents are not valid GraphML or
-            missing required probability attributes.
-
-    Example:
-        >>> from io import StringIO
-        >>> xml = '''<?xml version="1.0"?>
-        ... <graphml xmlns="http://graphml.graphdrawing.org/xmlns">
-        ...   <key id="p_forward" for="edge" attr.type="double"/>
-        ...   <graph edgedefault="undirected">
-        ...     <node id="A"/><node id="B"/>
-        ...     <edge source="A" target="B">
-        ...       <data key="p_forward">0.8</data>
-        ...       <data key="p_backward">0.1</data>
-        ...       <data key="p_undirected">0.05</data>
-        ...       <data key="p_none">0.05</data>
-        ...     </edge>
-        ...   </graph>
-        ... </graphml>'''
-        >>> pdg = read_pdg(StringIO(xml))
+        The graph element.
     """
-    from causaliq_core.graph.pdg import (  # noqa: F811
-        PDG,
-        EdgeProbabilities,
-    )
-
-    # Validate file argument type
-    is_path = isinstance(file, (str, Path))
-    is_file_like = hasattr(file, "read")
-
-    if not is_path and not is_file_like:
-        raise TypeError(
-            "graphml.read_pdg() file arg must be str, Path, "
-            "or file-like object"
-        )
-
-    source_desc = str(file) if is_path else "<file-like object>"
-
-    if is_path:
-        path_str = str(file)
-        if path_str.lower().split(".")[-1] != "graphml":
-            raise ValueError("graphml.read_pdg() bad file suffix")
-        is_valid_path(path_str)
-
-    try:
-        if is_path:
-            tree = ET.parse(str(file))
-        else:
-            tree = ET.parse(file)  # type: ignore[arg-type]
-        root = tree.getroot()
-    except ET.ParseError as e:
-        raise FileFormatError(f"file {source_desc} invalid XML: {e}")
-
-    # Handle namespaced and non-namespaced GraphML
-    if root.tag == f"{{{GRAPHML_NS}}}graphml":
-        ns = NS
-    elif root.tag == "graphml":
-        ns = {}
-    else:
-        raise FileFormatError(
-            f"file {source_desc} not a GraphML file "
-            f"(root element: {root.tag})"
-        )
-
-    # Find the graph element
-    graph_elem = root.find("g:graph", ns) if ns else root.find("graph")
-    if graph_elem is None:
-        raise FileFormatError(f"file {source_desc} has no graph element")
-
-    # Parse nodes
-    nodes = _parse_nodes(graph_elem, ns, source_desc)
-    if not nodes:
-        raise FileFormatError(f"file {source_desc} has no nodes")
-
-    # Parse edges with probability attributes
-    edges: Dict[Tuple[str, str], "EdgeProbabilities"] = {}
-    edge_tag = "g:edge" if ns else "edge"
-    data_tag = "g:data" if ns else "data"
-
-    for edge_elem in graph_elem.findall(edge_tag, ns):
-        source = edge_elem.get("source")
-        target = edge_elem.get("target")
-
-        if source is None or target is None:
-            raise FileFormatError(
-                f"file {source_desc} has edge without source or target"
-            )
-
-        # Parse probability data elements
-        p_forward = 0.0
-        p_backward = 0.0
-        p_undirected = 0.0
-        p_none = 0.0
-        found_probs = False
-
-        for data_elem in edge_elem.findall(data_tag, ns):
-            key = data_elem.get("key")
-            value = data_elem.text or "0.0"
-            try:
-                if key == "p_forward":
-                    p_forward = float(value)
-                    found_probs = True
-                elif key == "p_backward":
-                    p_backward = float(value)
-                    found_probs = True
-                elif key == "p_undirected":
-                    p_undirected = float(value)
-                    found_probs = True
-                elif key == "p_none":
-                    p_none = float(value)
-                    found_probs = True
-            except ValueError:
-                raise FileFormatError(
-                    f"file {source_desc} has invalid probability value: "
-                    f"{value}"
-                )
-
-        if not found_probs:
-            raise FileFormatError(
-                f"file {source_desc} edge ({source}, {target}) "
-                "missing probability attributes"
-            )
-
-        # Canonicalise edge order (source < target alphabetically)
-        if source > target:
-            source, target = target, source
-            p_forward, p_backward = p_backward, p_forward
-
-        try:
-            probs = EdgeProbabilities(
-                forward=p_forward,
-                backward=p_backward,
-                undirected=p_undirected,
-                none=p_none,
-            )
-        except ValueError as e:
-            raise FileFormatError(
-                f"file {source_desc} edge ({source}, {target}): {e}"
-            )
-
-        edges[(source, target)] = probs
-
-    return PDG(nodes, edges)
+    return ET.SubElement(root, "graph", id=graph_id, edgedefault=edge_default)
 
 
-def write_pdg(pdg: "PDG", file: FileLike) -> None:
-    """Write a PDG to a GraphML file or file-like object.
-
-    Exports the PDG with undirected edges and probability data attributes
-    (p_forward, p_backward, p_undirected, p_none).
-
-    Only edges with p_exist > 0 (i.e., p_none < 1.0) are written.
+def _add_graph_edges(
+    graph_elem: ET.Element,
+    edges: Dict[Tuple[str, str], EdgeType],
+    is_dag: bool,
+) -> None:
+    """Add edge elements with endpoint data to the graph element.
 
     Args:
-        pdg: PDG to write.
-        file: File path (str or Path) or file-like object (e.g., StringIO).
-            For file paths, suffix must be '.graphml'.
-
-    Raises:
-        TypeError: If argument types incorrect.
-        ValueError: If file path suffix not '.graphml'.
-
-    Example:
-        >>> from io import StringIO
-        >>> from causaliq_core.graph.pdg import PDG, EdgeProbabilities
-        >>> pdg = PDG(["A", "B"], {
-        ...     ("A", "B"): EdgeProbabilities(forward=0.8, none=0.2)
-        ... })
-        >>> buffer = StringIO()
-        >>> write_pdg(pdg, buffer)
-        >>> print(buffer.getvalue())
+        graph_elem: The graph element.
+        edges: Edge types keyed by node pair.
+        is_dag: Whether the graph is a DAG.
     """
-    from causaliq_core.graph.pdg import PDG  # noqa: F811
-
-    if not isinstance(pdg, PDG):
-        raise TypeError("graphml.write_pdg() pdg arg must be PDG")
-
-    # Validate file argument type
-    is_path = isinstance(file, (str, Path))
-    is_file_like = hasattr(file, "write")
-
-    if not is_path and not is_file_like:
-        raise TypeError(
-            "graphml.write_pdg() file arg must be str, Path, "
-            "or file-like object"
-        )
-
-    if is_path:
-        path_str = str(file)
-        if path_str.lower().split(".")[-1] != "graphml":
-            raise ValueError("graphml.write_pdg() bad file suffix")
-
-    # Build XML document
-    root = ET.Element("graphml", xmlns=GRAPHML_NS)
-
-    # Add key definitions for probability attributes
-    for key_id in ["p_forward", "p_backward", "p_undirected", "p_none"]:
-        key_elem = ET.SubElement(root, "key", id=key_id)
-        key_elem.set("for", "edge")
-        key_elem.set("attr.name", key_id)
-        key_elem.set("attr.type", "double")
-
-    # Create graph element with undirected default
-    graph_elem = ET.SubElement(root, "graph", id="G", edgedefault="undirected")
-
-    # Add nodes in order
-    for node in pdg.nodes:
-        ET.SubElement(graph_elem, "node", id=node)
-
-    # Add edges with probability attributes (only if p_exist > 0)
     edge_id = 0
-    for (source, target), probs in pdg.edges.items():
-        if probs.p_exist == 0:
-            continue  # Skip edges with no probability of existing
 
+    for (source, target), edge_type in edges.items():
         edge_id += 1
-        edge_elem = ET.SubElement(
-            graph_elem, "edge", id=f"e{edge_id}", source=source, target=target
+        edge_elem = _add_edge_element(
+            graph_elem, edge_id, source, target, edge_type, is_dag
         )
+        _add_endpoint_data(edge_elem, edge_type)
 
-        # Add probability data elements (8 significant figures)
-        for key_id, value in [
-            ("p_forward", probs.forward),
-            ("p_backward", probs.backward),
-            ("p_undirected", probs.undirected),
-            ("p_none", probs.none),
-        ]:
-            data_elem = ET.SubElement(edge_elem, "data", key=key_id)
-            data_elem.text = f"{value:.8g}"
 
-    # Write to file with XML declaration and proper formatting
-    tree = ET.ElementTree(root)
-    ET.indent(tree, space="  ")
+def _add_edge_element(
+    graph_elem: ET.Element,
+    edge_id: int,
+    source: str,
+    target: str,
+    edge_type: EdgeType,
+    is_dag: bool,
+) -> ET.Element:
+    """Add an edge element, marking directed edges where needed.
 
-    if is_path:
-        with open(str(file), "wb") as f:
-            tree.write(f, encoding="utf-8", xml_declaration=True)
-    else:
-        xml_str = ET.tostring(root, encoding="unicode")
-        xml_declaration = '<?xml version="1.0" encoding="utf-8"?>\n'
-        file.write(xml_declaration + xml_str)  # type: ignore[union-attr]
+    For non-DAG graphs, simple directed edges (->) are marked with
+    directed="true" for third-party tool compatibility.
+
+    Args:
+        graph_elem: The graph element.
+        edge_id: One-based identifier of the edge.
+        source: Source node name.
+        target: Target node name.
+        edge_type: Type of the edge.
+        is_dag: Whether the graph is a DAG.
+
+    Returns:
+        The edge element.
+    """
+    attributes = {"id": f"e{edge_id}", "source": source, "target": target}
+    if not is_dag and edge_type == EdgeType.DIRECTED:
+        attributes["directed"] = "true"
+    return ET.SubElement(graph_elem, "edge", attributes)
+
+
+def _add_endpoint_data(edge_elem: ET.Element, edge_type: EdgeType) -> None:
+    """Add sourceEndpoint and targetEndpoint data to an edge element.
+
+    Args:
+        edge_elem: The edge element.
+        edge_type: Type of the edge.
+    """
+    for key_id, mark in (
+        ("sourceEndpoint", edge_type.value[1]),
+        ("targetEndpoint", edge_type.value[2]),
+    ):
+        data_elem = ET.SubElement(edge_elem, "data", key=key_id)
+        data_elem.text = _MARK_TO_ENDPOINT[mark]
