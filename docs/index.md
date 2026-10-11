@@ -42,7 +42,7 @@ For a quickstart guide and installation instructions, see the [README on GitHub]
 - [Development Roadmap](roadmap.md): roadmap of upcoming features
 - [Architecture](architecture/overview.md): overall architecture and design notes
 - [API Reference](api/overview.md): complete reference for Python code
-- [Development Guidelines](https://github.com/causaliq/causaliq-core/blob/main/CONTRIBUTING.md): CausalIQ guidelines for developers
+- [Development Guidelines](https://github.com/causaliq/causaliq/blob/main/docs/development_policy/index.md): CausalIQ guidelines for developers
 - [Changelog](https://github.com/causaliq/causaliq-core/blob/main/CHANGELOG.md)
 - [License](https://github.com/causaliq/causaliq-core/blob/main/LICENSE)
 

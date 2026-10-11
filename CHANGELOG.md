@@ -11,7 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Nothing yet
 
 ### Changed
-- Nothing yet
+- Internal restructuring so that every module and method meets the CausalIQ
+  code policy: long methods were split into private helpers, and larger
+  modules were decomposed into sub-modules that re-export the original names.
+  The public API and behaviour are unchanged.
 
 ### Deprecated
 - Nothing yet

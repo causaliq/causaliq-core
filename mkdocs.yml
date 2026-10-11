@@ -43,7 +43,9 @@ extra_css:
 
 nav:
   - Home: index.md
-  - Roadmap: roadmap.md
+  - Roadmap: 
+    - Roadmap: roadmap.md
+    - Current Development Task: current_task.md
   - Architecture: 
     - Architectural Overview: architecture/overview.md
     - Caching System: architecture/caching.md

@@ -273,3 +273,44 @@ The package structure balances functionality distribution:
 This structure supports both convenience imports
 (`from causaliq_core.utils import rndsf`) and modular usage patterns while
 maintaining backward compatibility.
+
+## Module Organisation
+
+Modules are kept within the module and method limits described in the
+[development policy](https://github.com/causaliq/causaliq/blob/main/docs/development_policy/01-code.md).
+Where an existing module exceeded them, the implementation was reorganised
+using one of two techniques:
+
+- **Flattening**: long methods are split into private helper functions in the
+  same module. This is used where the helpers serve the class or module being
+  refactored, and wherever tests substitute a function by name, so that those
+  patches continue to intercept calls.
+- **Sub-module decomposition**: a module is split into sibling sub-modules
+  (for example a codec, a reader and a writer) which the original module
+  re-exports. Every moved name remains importable from its original module
+  path, so import sites and patch targets are unchanged.
+
+### Sub-Modules
+
+The areas that were decomposed are:
+
+```text
+graph/
+├── pdg_codec.py          # compact binary codec for PDG edges and probabilities
+├── sdg_codec.py          # compact binary codec for SDG nodes and edges
+├── sdg_traversal.py      # tree growth, component traversal and order helpers
+└── io/
+    ├── graphml_common.py # namespace, key, node and endpoint parsing helpers
+    └── graphml_pdg.py    # PDG specific GraphML reading and writing
+
+bn/
+├── marginals.py          # marginal cache and marginal computation helpers
+└── io/
+    ├── dsc_parse.py      # DSC line patterns, parser and consistency checks
+    ├── xdsl_common.py    # XDSL constants and equation parsing helpers
+    ├── xdsl_read.py      # XDSL reader
+    └── xdsl_write.py     # XDSL writer
+```
+
+The `utils`, `cache`, `java`, `action` and `r` modules were brought within the
+limits by flattening alone, so they gained no new sub-modules.
