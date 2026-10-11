@@ -12,7 +12,7 @@ import json
 import re
 import struct
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from causaliq_core.cache.compressors.base import Compressor
 
@@ -129,27 +129,42 @@ class JsonCompressor(Compressor):
             result: Bytearray to append compressed data to.
         """
         if value is None:
-            self._compress_token("null", token_cache, result)
-        elif isinstance(value, bool):
+            return self._compress_token("null", token_cache, result)
+        if isinstance(value, bool):
             # Must check bool before int (bool is subclass of int)
-            self._compress_token(
+            return self._compress_token(
                 "true" if value else "false", token_cache, result
             )
-        elif isinstance(value, int):
-            result.append(LITERAL_INT)
-            result.extend(struct.pack("<q", value))
-        elif isinstance(value, float):
-            result.append(LITERAL_FLOAT)
-            result.extend(struct.pack("<d", value))
-        elif isinstance(value, str):
-            self._compress_string(value, token_cache, result)
-        elif isinstance(value, list):
-            self._compress_list(value, token_cache, result)
-        elif isinstance(value, dict):
-            self._compress_dict(value, token_cache, result)
-        else:
-            # Fallback: convert to string
-            self._compress_string(str(value), token_cache, result)
+        if isinstance(value, int):
+            return self._compress_literal(LITERAL_INT, "<q", value, result)
+        if isinstance(value, float):
+            return self._compress_literal(LITERAL_FLOAT, "<d", value, result)
+        if isinstance(value, str):
+            return self._compress_string(value, token_cache, result)
+        if isinstance(value, list):
+            return self._compress_list(value, token_cache, result)
+        if isinstance(value, dict):
+            return self._compress_dict(value, token_cache, result)
+        # Fallback: convert to string
+        self._compress_string(str(value), token_cache, result)
+
+    def _compress_literal(
+        self,
+        marker: int,
+        fmt: str,
+        value: Any,
+        result: bytearray,
+    ) -> None:
+        """Compress a numeric literal as a marker plus packed bytes.
+
+        Args:
+            marker: Type marker byte identifying the literal.
+            fmt: Struct format string used to pack the value.
+            value: Numeric value to compress.
+            result: Bytearray to append compressed data to.
+        """
+        result.append(marker)
+        result.extend(struct.pack(fmt, value))
 
     def _compress_token(
         self, token: str, token_cache: TokenCache, result: bytearray
@@ -268,32 +283,50 @@ class JsonCompressor(Compressor):
         if type_marker == LITERAL_INT:
             value = struct.unpack("<q", blob[offset : offset + 8])[0]
             return value, offset + 8
-        elif type_marker == LITERAL_FLOAT:
+        if type_marker == LITERAL_FLOAT:
             value = struct.unpack("<d", blob[offset : offset + 8])[0]
             return value, offset + 8
-        elif type_marker == TOKEN_REF:
-            token_id = struct.unpack("<H", blob[offset : offset + 2])[0]
-            offset += 2
-            token = self._get_token(token_id, token_cache)
+        if type_marker == TOKEN_REF:
+            return self._decompress_token(blob, offset, token_cache)
+        raise ValueError(  # pragma: no cover
+            f"Unknown type marker: {type_marker}"
+        )
 
-            if token == "null":
-                return None, offset
-            elif token == "true":
-                return True, offset
-            elif token == "false":
-                return False, offset
-            elif token == '"':
-                return self._decompress_string(blob, offset, token_cache)
-            elif token == "[":
-                return self._decompress_list(blob, offset, token_cache)
-            elif token == "{":
-                return self._decompress_dict(blob, offset, token_cache)
-            else:  # pragma: no cover
-                raise ValueError(
-                    f"Unexpected token at value position: {token}"
-                )
-        else:  # pragma: no cover
-            raise ValueError(f"Unknown type marker: {type_marker}")
+    def _decompress_token(
+        self, blob: bytes, offset: int, token_cache: TokenCache
+    ) -> tuple[Any, int]:
+        """Decompress a token reference into its value.
+
+        Args:
+            blob: Binary data to decompress.
+            offset: Current position (after the type marker).
+            token_cache: Cache for token dictionary.
+
+        Returns:
+            Tuple of (decompressed value, new offset).
+
+        Raises:
+            ValueError: If the token cannot start a value.
+        """
+        token_id = struct.unpack("<H", blob[offset : offset + 2])[0]
+        offset += 2
+        token = self._get_token(token_id, token_cache)
+
+        if token == "null":
+            return None, offset
+        if token == "true":
+            return True, offset
+        if token == "false":
+            return False, offset
+        if token == '"':
+            return self._decompress_string(blob, offset, token_cache)
+        if token == "[":
+            return self._decompress_list(blob, offset, token_cache)
+        if token == "{":
+            return self._decompress_dict(blob, offset, token_cache)
+        raise ValueError(  # pragma: no cover
+            f"Unexpected token at value position: {token}"
+        )
 
     def _decompress_string(
         self, blob: bytes, offset: int, token_cache: TokenCache
@@ -386,46 +419,103 @@ class JsonCompressor(Compressor):
         """
         result = {}
         # Check for empty dict
+        empty_end = self._closing_brace_offset(blob, offset, token_cache)
+        if empty_end is not None:
+            return {}, empty_end
+
+        while offset < len(blob):
+            key, value, offset = self._read_dict_entry(
+                blob, offset, token_cache
+            )
+            result[key] = value
+
+            # Check for closing brace or comma
+            end = self._closing_brace_offset(blob, offset, token_cache)
+            if end is not None:
+                return result, end
+
+            offset = self._consume_dict_comma(blob, offset, token_cache)
+
+        raise ValueError("Unterminated dict")  # pragma: no cover
+
+    def _closing_brace_offset(
+        self, blob: bytes, offset: int, token_cache: TokenCache
+    ) -> Optional[int]:
+        """Return the offset after a closing brace at offset, if present.
+
+        Args:
+            blob: Binary data to decompress.
+            offset: Current position in blob.
+            token_cache: Cache for token dictionary.
+
+        Returns:
+            Offset after the closing brace, or None if not a closing brace.
+        """
         if offset < len(blob) and blob[offset] == TOKEN_REF:
             token_id = struct.unpack("<H", blob[offset + 1 : offset + 3])[0]
             token = self._get_token(token_id, token_cache)
             if token == "}":
-                return {}, offset + 3
+                return offset + 3
+        return None
 
-        while offset < len(blob):
-            # Decompress key (must be string)
-            key, offset = self._decompress_value(blob, offset, token_cache)
-            if not isinstance(key, str):  # pragma: no cover
-                raise ValueError(f"Dict key must be string, got {type(key)}")
+    def _read_dict_entry(
+        self, blob: bytes, offset: int, token_cache: TokenCache
+    ) -> tuple[str, Any, int]:
+        """Decompress one key/value pair from a dict body.
 
-            # Expect colon
-            if (
-                offset >= len(blob) or blob[offset] != TOKEN_REF
-            ):  # pragma: no cover
-                raise ValueError("Expected ':' after dict key")
-            token_id = struct.unpack("<H", blob[offset + 1 : offset + 3])[0]
-            offset += 3
-            token = self._get_token(token_id, token_cache)
-            if token != ":":  # pragma: no cover
-                raise ValueError(f"Expected ':', got '{token}'")
+        Args:
+            blob: Binary data to decompress.
+            offset: Current position in the dict body.
+            token_cache: Cache for token dictionary.
 
-            # Decompress value
-            value, offset = self._decompress_value(blob, offset, token_cache)
-            result[key] = value
+        Returns:
+            Tuple of (key, value, offset after the value).
 
-            # Check for comma or closing brace
-            if offset >= len(blob):  # pragma: no cover
-                raise ValueError("Unterminated dict")
-            if blob[offset] != TOKEN_REF:  # pragma: no cover
-                raise ValueError("Expected token after dict value")
-            token_id = struct.unpack("<H", blob[offset + 1 : offset + 3])[0]
-            offset += 3
-            token = self._get_token(token_id, token_cache)
-            if token == "}":
-                return result, offset
-            elif token != ",":  # pragma: no cover
-                raise ValueError(
-                    f"Expected ',' or '}}' in dict, got '{token}'"
-                )
+        Raises:
+            ValueError: If the key is not a string or the colon is missing.
+        """
+        # Decompress key (must be string)
+        key, offset = self._decompress_value(blob, offset, token_cache)
+        if not isinstance(key, str):  # pragma: no cover
+            raise ValueError(f"Dict key must be string, got {type(key)}")
 
-        raise ValueError("Unterminated dict")  # pragma: no cover
+        # Expect colon
+        if (
+            offset >= len(blob) or blob[offset] != TOKEN_REF
+        ):  # pragma: no cover
+            raise ValueError("Expected ':' after dict key")
+        token_id = struct.unpack("<H", blob[offset + 1 : offset + 3])[0]
+        token = self._get_token(token_id, token_cache)
+        if token != ":":  # pragma: no cover
+            raise ValueError(f"Expected ':', got '{token}'")
+
+        # Decompress value
+        value, offset = self._decompress_value(blob, offset + 3, token_cache)
+        return key, value, offset
+
+    def _consume_dict_comma(
+        self, blob: bytes, offset: int, token_cache: TokenCache
+    ) -> int:
+        """Consume the separator token that follows a dict value.
+
+        Args:
+            blob: Binary data to decompress.
+            offset: Current position in blob.
+            token_cache: Cache for token dictionary.
+
+        Returns:
+            Offset after the separator token.
+
+        Raises:
+            ValueError: If the separator is missing or is not a comma.
+        """
+        if offset >= len(blob):  # pragma: no cover
+            raise ValueError("Unterminated dict")
+        if blob[offset] != TOKEN_REF:  # pragma: no cover
+            raise ValueError("Expected token after dict value")
+        token_id = struct.unpack("<H", blob[offset + 1 : offset + 3])[0]
+        offset += 3
+        token = self._get_token(token_id, token_cache)
+        if token != ",":  # pragma: no cover
+            raise ValueError(f"Expected ',' or '}}' in dict, got '{token}'")
+        return offset

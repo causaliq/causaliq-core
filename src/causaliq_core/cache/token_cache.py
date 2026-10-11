@@ -336,65 +336,105 @@ class TokenCache:
             key_json: Original unhashed key as JSON string for collision
                 detection. Empty string if not provided.
         """
-        # Check for existing entries with this hash
+        rows = self._entries_for_hash(hash)
+
+        if not rows:
+            # No existing entry - insert with seq=0
+            self._insert_entry(hash, 0, key_json, data, metadata)
+        elif self._update_matching(hash, rows, key_json, data, metadata):
+            # Same key - existing entry updated in place
+            return
+        else:
+            # Collision: key_json doesn't match any existing - insert new seq
+            seq = max(row[0] for row in rows) + 1
+            self._insert_entry(hash, seq, key_json, data, metadata)
+
+        self.conn.commit()
+
+    def _entries_for_hash(self, hash: str) -> list[Any]:
+        """Return (seq, key_json) rows stored for a hash, ordered by seq.
+
+        Args:
+            hash: Unique identifier for the entry.
+
+        Returns:
+            Rows of (seq, key_json) pairs stored for the hash.
+        """
         cursor = self.conn.execute(
             "SELECT seq, key_json FROM cache_entries "
             "WHERE hash = ? ORDER BY seq",
             (hash,),
         )
-        rows = cursor.fetchall()
+        return cursor.fetchall()
 
-        if not rows:
-            # No existing entry - insert with seq=0
-            self.conn.execute(
-                "INSERT INTO cache_entries "
-                "(hash, seq, key_json, data, created_at, metadata)"
-                " VALUES (?, 0, ?, ?, ?, ?)",
-                (
-                    hash,
-                    key_json,
-                    data,
-                    self._utcnow_iso(),
-                    metadata,
-                ),
-            )
-        else:
-            # Check if key_json matches any existing entry
-            for seq, existing_key_json in rows:
-                if existing_key_json == key_json:
-                    # Same key - update existing entry
-                    self.conn.execute(
-                        "UPDATE cache_entries SET data = ?, metadata = ?, "
-                        "created_at = ? "
-                        "WHERE hash = ? AND seq = ?",
-                        (
-                            data,
-                            metadata,
-                            self._utcnow_iso(),
-                            hash,
-                            seq,
-                        ),
-                    )
-                    self.conn.commit()
-                    return
+    def _insert_entry(
+        self,
+        hash: str,
+        seq: int,
+        key_json: str,
+        data: bytes,
+        metadata: bytes | None,
+    ) -> None:
+        """Insert a new cache entry row with the given sequence number.
 
-            # Collision: key_json doesn't match any existing - insert new seq
-            max_seq = max(row[0] for row in rows)
-            self.conn.execute(
-                "INSERT INTO cache_entries "
-                "(hash, seq, key_json, data, created_at, metadata)"
-                " VALUES (?, ?, ?, ?, ?, ?)",
-                (
-                    hash,
-                    max_seq + 1,
-                    key_json,
-                    data,
-                    self._utcnow_iso(),
-                    metadata,
-                ),
-            )
+        Args:
+            hash: Unique identifier for the entry.
+            seq: Sequence number to store for the entry.
+            key_json: Original unhashed key as JSON string.
+            data: Binary data to store.
+            metadata: Optional binary metadata.
+        """
+        self.conn.execute(
+            "INSERT INTO cache_entries "
+            "(hash, seq, key_json, data, created_at, metadata)"
+            " VALUES (?, ?, ?, ?, ?, ?)",
+            (
+                hash,
+                seq,
+                key_json,
+                data,
+                self._utcnow_iso(),
+                metadata,
+            ),
+        )
 
-        self.conn.commit()
+    def _update_matching(
+        self,
+        hash: str,
+        rows: list[Any],
+        key_json: str,
+        data: bytes,
+        metadata: bytes | None,
+    ) -> bool:
+        """Update the entry whose key_json matches, if one exists.
+
+        Args:
+            hash: Unique identifier for the entry.
+            rows: Existing (seq, key_json) rows for the hash.
+            key_json: Original unhashed key as JSON string.
+            data: Binary data to store.
+            metadata: Optional binary metadata.
+
+        Returns:
+            bool: Whether an existing entry was updated.
+        """
+        for seq, existing_key_json in rows:
+            if existing_key_json == key_json:
+                self.conn.execute(
+                    "UPDATE cache_entries SET data = ?, metadata = ?, "
+                    "created_at = ? "
+                    "WHERE hash = ? AND seq = ?",
+                    (
+                        data,
+                        metadata,
+                        self._utcnow_iso(),
+                        hash,
+                        seq,
+                    ),
+                )
+                self.conn.commit()
+                return True
+        return False
 
     def get(
         self,

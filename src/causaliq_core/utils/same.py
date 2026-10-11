@@ -106,6 +106,55 @@ def dicts_same(
     return same
 
 
+def _dists_axes_same(df1: DataFrame, df2: DataFrame) -> bool:
+    """Return whether two distributions share their index and column axes.
+
+    Args:
+        df1: First distribution.
+        df2: Second distribution.
+
+    Returns:
+        bool: Whether the primary and secondary axes agree.
+    """
+    if (
+        sorted(list(df1.index)) != sorted(list(df2.index))
+        or df1.index.name != df2.index.name
+    ):
+        print("\ndists_same: different primary variable/values")
+        return False
+
+    if list(df1.columns.names) != list(df2.columns.names):
+        print("\ndists_same: different secondary variables")
+        return False
+
+    return True
+
+
+def _dists_pmfs_same(
+    dict1: Dict[Any, Any], dict2: Dict[Any, Any], sf: int
+) -> bool:
+    """Return whether the PMFs of two column dictionaries agree.
+
+    Args:
+        dict1: First distribution as a dictionary of PMFs.
+        dict2: Second distribution as a dictionary of PMFs.
+        sf: Number of sig. figures used in probability comparisons.
+
+    Returns:
+        bool: Whether the two sets of PMFs agree.
+    """
+    if dict1.keys() != dict2.keys():
+        print("\ndists_same: different secondary values")
+        return False
+
+    for values, pmf in dict1.items():
+        if not dicts_same(pmf, dict2[values], sf):
+            print("\ndists_same: different probabilities")
+            return False
+
+    return True
+
+
 def dists_same(df1: DataFrame, df2: DataFrame, sf: int = 10) -> bool:
     """Test whether two distributions are the same with specified precision.
 
@@ -127,27 +176,7 @@ def dists_same(df1: DataFrame, df2: DataFrame, sf: int = 10) -> bool:
     if not isinstance(df1, DataFrame) or not isinstance(df2, DataFrame):
         raise TypeError("dists_same() bad arg types")
 
-    if (
-        sorted(list(df1.index)) != sorted(list(df2.index))
-        or df1.index.name != df2.index.name
-    ):
-        print("\ndists_same: different primary variable/values")
+    if not _dists_axes_same(df1, df2):
         return False
 
-    if list(df1.columns.names) != list(df2.columns.names):
-        print("\ndists_same: different secondary variables")
-        return False
-
-    dict1 = df1.to_dict()
-    dict2 = df2.to_dict()
-
-    if dict1.keys() != dict2.keys():
-        print("\ndists_same: different secondary values")
-        return False
-
-    for values, pmf in dict1.items():
-        if not dicts_same(pmf, dict2[values], sf):
-            print("\ndists_same: different probabilities")
-            return False
-
-    return True
+    return _dists_pmfs_same(df1.to_dict(), df2.to_dict(), sf)

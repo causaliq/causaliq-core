@@ -167,6 +167,41 @@ def validate_filter(expression: str) -> None:
         raise FilterSyntaxError(f"Invalid filter expression: {e}") from e
 
 
+def _evaluate_expression(
+    evaluator: EvalWithCompoundTypes, expression: str
+) -> Any:
+    """Evaluate an expression, mapping failures to filter exceptions.
+
+    Args:
+        evaluator: Configured evaluator instance.
+        expression: Filter expression string.
+
+    Returns:
+        Raw result of evaluating the expression.
+
+    Raises:
+        FilterSyntaxError: If the expression has invalid syntax.
+        FilterExpressionError: If evaluation fails (e.g. undefined variable).
+    """
+    try:
+        return evaluator.eval(expression)
+    except SyntaxError as e:
+        raise FilterSyntaxError(f"Invalid filter syntax: {e}") from e
+    except NameNotDefined as e:
+        # Must be caught before InvalidExpression (NameNotDefined is subclass)
+        raise FilterExpressionError(
+            f"Undefined variable in filter: {e}"
+        ) from e
+    except InvalidExpression as e:
+        raise FilterSyntaxError(f"Invalid filter expression: {e}") from e
+    except NameError as e:
+        raise FilterExpressionError(
+            f"Undefined variable in filter: {e}"
+        ) from e
+    except Exception as e:
+        raise FilterExpressionError(f"Filter evaluation failed: {e}") from e
+
+
 def evaluate_filter(expression: str, metadata: Dict[str, Any]) -> bool:
     """Evaluate filter expression against metadata dictionary.
 
@@ -212,26 +247,50 @@ def evaluate_filter(expression: str, metadata: Dict[str, Any]) -> bool:
 
     evaluator = _create_evaluator(metadata)
 
+    # Coerce result to boolean
+    return bool(_evaluate_expression(evaluator, expression))
+
+
+def _is_user_variable(name: str) -> bool:
+    """Return whether a name is a user variable rather than a builtin.
+
+    Args:
+        name: Name referenced in the expression.
+
+    Returns:
+        bool: Whether the name is a user variable.
+    """
+    if name in ("True", "False", "None"):
+        return False
+    return name not in _ALLOWED_FUNCTIONS
+
+
+def _filter_variables(expression: str) -> Set[str]:
+    """Return the user variable names referenced in an expression.
+
+    Args:
+        expression: Filter expression string.
+
+    Returns:
+        Set of variable names used in the expression.
+
+    Raises:
+        FilterSyntaxError: If expression has invalid syntax.
+    """
+    import ast
+
     try:
-        result = evaluator.eval(expression)
+        tree = ast.parse(expression, mode="eval")
     except SyntaxError as e:
         raise FilterSyntaxError(f"Invalid filter syntax: {e}") from e
-    except NameNotDefined as e:
-        # Must be caught before InvalidExpression (NameNotDefined is subclass)
-        raise FilterExpressionError(
-            f"Undefined variable in filter: {e}"
-        ) from e
-    except InvalidExpression as e:
-        raise FilterSyntaxError(f"Invalid filter expression: {e}") from e
-    except NameError as e:
-        raise FilterExpressionError(
-            f"Undefined variable in filter: {e}"
-        ) from e
-    except Exception as e:
-        raise FilterExpressionError(f"Filter evaluation failed: {e}") from e
 
-    # Coerce result to boolean
-    return bool(result)
+    variables: Set[str] = set()
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Name) and _is_user_variable(node.id):
+            variables.add(node.id)
+
+    return variables
 
 
 def get_filter_variables(expression: str) -> Set[str]:
@@ -263,25 +322,55 @@ def get_filter_variables(expression: str) -> Set[str]:
     if not expression.strip():
         raise FilterSyntaxError("Filter expression cannot be empty")
 
-    import ast
+    return _filter_variables(expression)
+
+
+def _select_random_values(
+    all_metadata: List[Dict[str, Any]], var_name: str, count: int, seed: int
+) -> FrozenSet[Any]:
+    """Select *count* distinct values of a variable using stable RNG.
+
+    Args:
+        all_metadata: Flat metadata dictionaries from all entries.
+        var_name: Variable whose distinct values are sampled.
+        count: Number of values to select.
+        seed: Seed for reproducible selection.
+
+    Returns:
+        Frozen set of selected values.
+
+    Raises:
+        FilterExpressionError: If fewer distinct values exist than requested.
+    """
+    # Collect distinct non-None values of var_name.
+    values = {
+        meta[var_name]
+        for meta in all_metadata
+        if var_name in meta and meta[var_name] is not None
+    }
 
     try:
-        tree = ast.parse(expression, mode="eval")
-    except SyntaxError as e:
-        raise FilterSyntaxError(f"Invalid filter syntax: {e}") from e
+        return random_set(list(values), count, seed)
+    except ValueError as e:
+        raise FilterExpressionError(
+            f"random() for variable '{var_name}': {e}"
+        ) from e
 
-    variables: Set[str] = set()
 
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Name):
-            # Exclude built-in constants and allowed functions
-            if (
-                node.id not in ("True", "False", "None")
-                and node.id not in _ALLOWED_FUNCTIONS
-            ):
-                variables.add(node.id)
+def _substitute_random_call(expression: str, match: Any, name: str) -> str:
+    """Return expression with one ``random(...)`` call replaced by a name.
 
-    return variables
+    Args:
+        expression: Expression to rewrite.
+        match: Match object for the ``VAR in random(...)`` pattern.
+        name: Replacement variable name.
+
+    Returns:
+        Rewritten expression.
+    """
+    call_start = match.start(2)
+    call_end = match.end(2)
+    return expression[:call_start] + name + expression[call_end:]
 
 
 def resolve_random_calls(
@@ -332,30 +421,42 @@ def resolve_random_calls(
         var_name = m.group(1)
         count = int(m.group(3))
         seed = int(m.group(4))
-
-        # Collect distinct non-None values of var_name.
-        values = {
-            meta[var_name]
-            for meta in all_metadata
-            if var_name in meta and meta[var_name] is not None
-        }
-
-        try:
-            selected = random_set(list(values), count, seed)
-        except ValueError as e:
-            raise FilterExpressionError(
-                f"random() for variable '{var_name}': {e}"
-            ) from e
+        selected = _select_random_values(all_metadata, var_name, count, seed)
 
         # Inject as extra name, replace random(...) in expression.
         name = f"_random_{i}"
         extra_names[name] = selected
-
-        call_start = m.start(2)
-        call_end = m.end(2)
-        new_expr = new_expr[:call_start] + name + new_expr[call_end:]
+        new_expr = _substitute_random_call(new_expr, m, name)
 
     return new_expr, extra_names
+
+
+def _entry_matches(
+    entry: Dict[str, Any],
+    metadata_key: str,
+    expression: str,
+    extra_names: Dict[str, Any],
+) -> bool:
+    """Return whether a single entry satisfies the filter expression.
+
+    Args:
+        entry: Cache entry dictionary.
+        metadata_key: Key in entry dict containing metadata.
+        expression: Pre-resolved filter expression.
+        extra_names: Pre-computed names merged into the metadata.
+
+    Returns:
+        bool: Whether the entry matches the filter.
+    """
+    metadata = entry.get(metadata_key, {})
+    if not isinstance(metadata, dict):
+        return False
+    try:
+        merged = {**metadata, **extra_names}
+        return evaluate_filter(expression, merged)
+    except FilterExpressionError:
+        # Entry missing required fields - skip it
+        return False
 
 
 def filter_entries(
@@ -407,14 +508,7 @@ def filter_entries(
 
     result = []
     for entry in entries:
-        metadata = entry.get(metadata_key, {})
-        if isinstance(metadata, dict):
-            try:
-                merged = {**metadata, **extra_names}
-                if evaluate_filter(resolved_expr, merged):
-                    result.append(entry)
-            except FilterExpressionError:
-                # Entry missing required fields - skip it
-                pass
+        if _entry_matches(entry, metadata_key, resolved_expr, extra_names):
+            result.append(entry)
 
     return result

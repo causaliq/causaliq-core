@@ -84,6 +84,22 @@ def validate_weight_spec(weight_spec: Dict[str, Dict[str, float]]) -> None:
                 )
 
 
+def _value_weight(field_value: Any, value_weights: Dict[str, float]) -> float:
+    """Return the weight for a metadata value, defaulting to 1.0.
+
+    Args:
+        field_value: Value of the metadata field.
+        value_weights: Mapping of metadata values to weights.
+
+    Returns:
+        The matching weight, or 1.0 when the value has no entry.
+    """
+    lookup_key = (
+        str(field_value) if not isinstance(field_value, str) else field_value
+    )
+    return value_weights.get(lookup_key, 1.0)
+
+
 def compute_weight(
     metadata: Dict[str, Any],
     weight_spec: Dict[str, Dict[str, float]],
@@ -120,15 +136,7 @@ def compute_weight(
 
     for field_name, value_weights in weight_spec.items():
         if field_name in metadata:
-            field_value = metadata[field_name]
-            # Convert to string for lookup if needed (handles enums, etc.)
-            lookup_key = (
-                str(field_value)
-                if not isinstance(field_value, str)
-                else field_value
-            )
-            if lookup_key in value_weights:
-                weight *= value_weights[lookup_key]
+            weight *= _value_weight(metadata[field_name], value_weights)
 
     return weight
 

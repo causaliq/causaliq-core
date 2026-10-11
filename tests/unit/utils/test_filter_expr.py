@@ -6,6 +6,7 @@ from pytest_mock import MockerFixture
 from causaliq_core.utils.filter_expr import (
     FilterExpressionError,
     FilterSyntaxError,
+    _is_user_variable,
     evaluate_filter,
     filter_entries,
     get_filter_variables,
@@ -468,3 +469,22 @@ def test_evaluate_filter_generic_exception(mocker: MockerFixture) -> None:
         FilterExpressionError, match="Filter evaluation failed"
     ):
         evaluate_filter("x == 1", {"x": 1})
+
+
+# Test filter_entries skips entries whose metadata is not a dictionary.
+def test_filter_entries_skips_non_dict_metadata() -> None:
+    """Cover the non-dict metadata guard when matching an entry."""
+    entries = [
+        {"metadata": {"network": "asia"}},
+        {"metadata": "not a dictionary"},
+    ]
+    result = filter_entries(entries, "network == 'asia'")
+    assert result == [{"metadata": {"network": "asia"}}]
+
+
+# Test _is_user_variable excludes builtin constants and functions.
+def test_is_user_variable_excludes_non_variables() -> None:
+    """Cover the builtin-constant guard in _is_user_variable."""
+    assert _is_user_variable("True") is False
+    assert _is_user_variable("len") is False
+    assert _is_user_variable("network") is True
