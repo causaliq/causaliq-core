@@ -276,3 +276,17 @@ def test_bnlearn_import_skips_empty_lines_in_output(monkeypatch, tmp_path):
     )
     result = bnlearn_import(str(rda_file))
     assert isinstance(result, BN)
+
+
+# Test bnlearn_import ignores lines before the first NODE line.
+def test_bnlearn_import_ignores_lines_before_first_node(monkeypatch, tmp_path):
+    rda_file = tmp_path / "test.rda"
+    rda_file.touch()
+    output = "PARENTS\t\nNODE\tA\nCOEF\t(Intercept)\t2.5\nSD\t0.4\n"
+    monkeypatch.setattr(
+        "causaliq_core.r.bnlearn.run_r_script",
+        lambda s, **kw: output,
+    )
+    result = bnlearn_import(str(rda_file))
+    assert isinstance(result, BN)
+    assert result.dag.nodes == ["A"]

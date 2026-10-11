@@ -37,6 +37,25 @@ def _build_r_network_script(varname: str, pdag: PDAG) -> List[str]:
     return lines
 
 
+def _parse_r_arc_output(output: str) -> List[Tuple[str, str]]:
+    """Return the arcs listed in tab-delimited R output.
+
+    Args:
+        output: Standard output from an R script that wrote arcs as a table.
+
+    Returns:
+        List of (tail, head) node pairs.
+    """
+    arcs: List[Tuple[str, str]] = []
+    if not output.strip():
+        return arcs
+    for row in output.strip().split("\n"):
+        parts = row.strip().split("\t")
+        if len(parts) == 2:
+            arcs.append((parts[0], parts[1]))
+    return arcs
+
+
 def bnlearn_cpdag(pdag: PDAG) -> PDAG:
     """Return CPDAG corresponding to supplied PDAG via bnlearn.
 
@@ -73,13 +92,7 @@ def bnlearn_cpdag(pdag: PDAG) -> PDAG:
     )
     try:
         output = run_r_script("\n".join(script_lines) + "\n")
-        arcs_pairs: List[Tuple[str, str]] = []
-        if output.strip():
-            for row in output.strip().split("\n"):
-                parts = row.strip().split("\t")
-                if len(parts) == 2:
-                    arcs_pairs.append((parts[0], parts[1]))
-        edges = r_arcs_to_edges(arcs_pairs)
+        edges = r_arcs_to_edges(_parse_r_arc_output(output))
     except (RNotAvailableError, RRuntimeError):
         raise
     except Exception as exc:
@@ -179,28 +192,47 @@ def bnlearn_import(rda_path: str) -> BN:
     try:
         output = run_r_script("\n".join(script_lines) + "\n")
         nodes_list, node_data = _parse_bn_output(output)
-        arcs: List[Tuple[str, str, str]] = []
-        cnd_specs: Dict = {}
-        for node in nodes_list:
-            info = node_data[node]
-            coefs = dict(info["coefs"])
-            parents = info["parents"]
-            sd = info["sd"]
-            if set(coefs) != {"(Intercept)"} | set(parents):
-                raise ValueError("bnlearn_import: invalid RDA file")
-            mean = float(coefs.pop("(Intercept)"))
-            cnd_specs[node] = (
-                LinGauss,
-                {"coeffs": coefs, "mean": mean, "sd": sd},
-            )
-            arcs += [(p, "->", node) for p in coefs]
-        return BN(DAG(nodes_list, arcs), cnd_specs)
-    except (TypeError, FileNotFoundError, ValueError, RNotAvailableError):
-        raise
-    except RRuntimeError:
+        return _build_imported_bn(nodes_list, node_data)
+    except (
+        TypeError,
+        FileNotFoundError,
+        ValueError,
+        RNotAvailableError,
+        RRuntimeError,
+    ):
         raise
     except Exception as exc:
         raise RRuntimeError(f"bnlearn_import failed: {exc}") from exc
+
+
+def _build_imported_bn(nodes_list: List[str], node_data: Dict) -> BN:
+    """Return a LinGauss BN from parsed bnlearn serialisation data.
+
+    Args:
+        nodes_list: Ordered node names.
+        node_data: Per-node serialisation data.
+
+    Returns:
+        The reconstructed Bayesian Network.
+
+    Raises:
+        ValueError: If the data does not describe a LinGauss network.
+    """
+    arcs: List[Tuple[str, str, str]] = []
+    cnd_specs: Dict = {}
+    for node in nodes_list:
+        info = node_data[node]
+        coefs = dict(info["coefs"])
+        parents = info["parents"]
+        if set(coefs) != {"(Intercept)"} | set(parents):
+            raise ValueError("bnlearn_import: invalid RDA file")
+        mean = float(coefs.pop("(Intercept)"))
+        cnd_specs[node] = (
+            LinGauss,
+            {"coeffs": coefs, "mean": mean, "sd": info["sd"]},
+        )
+        arcs += [(p, "->", node) for p in coefs]
+    return BN(DAG(nodes_list, arcs), cnd_specs)
 
 
 def _parse_bn_output(
@@ -223,21 +255,65 @@ def _parse_bn_output(
         if not line:
             continue
         parts = line.split("\t")
-        tag = parts[0]
-        if tag == "NODE":
-            current_node = parts[1]
-            nodes_list.append(current_node)
-            node_data[current_node] = {
-                "coefs": {},
-                "parents": [],
-                "sd": 0.0,
-            }
-        elif tag == "PARENTS" and current_node is not None:
-            p_str = parts[1] if len(parts) > 1 else ""
-            if p_str:
-                node_data[current_node]["parents"] = p_str.split(",")
-        elif tag == "COEF" and current_node is not None:
-            node_data[current_node]["coefs"][parts[1]] = float(parts[2])
-        elif tag == "SD" and current_node is not None:
-            node_data[current_node]["sd"] = float(parts[1])
+        current_node = _apply_bn_line(
+            parts, nodes_list, node_data, current_node
+        )
     return nodes_list, node_data
+
+
+def _apply_bn_line(
+    parts: List[str],
+    nodes_list: List[str],
+    node_data: Dict,
+    current: Optional[str],
+) -> Optional[str]:
+    """Apply one tab-delimited BN line to the accumulated parse state.
+
+    Args:
+        parts: Tab-delimited fields of the line.
+        nodes_list: Ordered node list, extended in place.
+        node_data: Per-node serialisation data, updated in place.
+        current: Node currently being described.
+
+    Returns:
+        The node being described once this line has been applied.
+    """
+    tag = parts[0]
+    if tag == "NODE":
+        nodes_list.append(parts[1])
+        node_data[parts[1]] = {"coefs": {}, "parents": [], "sd": 0.0}
+        return parts[1]
+    if current is None:
+        return current
+    _apply_bn_node_line(node_data[current], parts)
+    return current
+
+
+def _apply_bn_node_line(node: Dict, parts: List[str]) -> None:
+    """Apply one PARENTS, COEF or SD line to a node's serialisation data.
+
+    Args:
+        node: Serialisation data of the node being described.
+        parts: Tab-delimited fields of the line.
+    """
+    tag = parts[0]
+    if tag == "PARENTS":
+        _set_bn_parents(node, parts)
+        return
+    if tag == "COEF":
+        node["coefs"][parts[1]] = float(parts[2])
+        return
+    if tag == "SD":
+        node["sd"] = float(parts[1])
+
+
+def _set_bn_parents(node: Dict, parts: List[str]) -> None:
+    """Record the parent list of a node from a PARENTS line.
+
+    Args:
+        node: Serialisation data of the node being described.
+        parts: Tab-delimited fields of the line.
+    """
+    parent_str = parts[1] if len(parts) > 1 else ""
+    if parent_str:
+        node["parents"] = parent_str.split(",")
