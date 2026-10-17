@@ -20,7 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Nothing yet
 
 ### Removed
-- Nothing yet
+- `ActionPattern.UPDATE` and `ActionPattern.NOCACHES`. Actions now declare
+  only `CREATE` (writes a workflow cache without reading one) or
+  `AGGREGATE` (reads a workflow cache and writes one); steps that write
+  plain files run once under the output-driven run-once rule.
 
 ### Fixed
 - Nothing yet

@@ -559,19 +559,12 @@ def test_action_result_type_alias() -> None:
 # ---------------------------------------------------------------------------
 
 
-# Test ActionPattern has all documented pattern values.
+# Test ActionPattern has exactly the two documented pattern values.
 def test_action_pattern_values() -> None:
     """ActionPattern values match the documented patterns."""
     assert ActionPattern.CREATE.value == "create"
-    assert ActionPattern.UPDATE.value == "update"
     assert ActionPattern.AGGREGATE.value == "aggregate"
-    assert ActionPattern.NOCACHES.value == "nocaches"
-
-
-# Test NOCACHES pattern is a distinct member of ActionPattern.
-def test_action_pattern_nocaches_distinct() -> None:
-    """NOCACHES is distinct from the cache-based patterns."""
-    assert ActionPattern.NOCACHES in ActionPattern
-    assert ActionPattern.NOCACHES != ActionPattern.CREATE
-    assert ActionPattern.NOCACHES != ActionPattern.UPDATE
-    assert ActionPattern.NOCACHES != ActionPattern.AGGREGATE
+    assert {member.value for member in ActionPattern} == {
+        "create",
+        "aggregate",
+    }

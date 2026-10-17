@@ -33,21 +33,14 @@ class ActionPattern(Enum):
     The workflow executor validates and enforces these patterns.
 
     Attributes:
-        CREATE: Creates new cache entries. Requires output and matrix,
-            input (for caches) is prohibited.
-        UPDATE: Modifies existing cache entries in place. Requires input,
-            output and matrix are prohibited.
-        AGGREGATE: Combines multiple entries into new summary entries.
-            Requires input, output, and matrix.
-        NOCACHES: Operates on files without using workflow caches or the
-            matrix. Neither input nor output are workflow caches, so no
-            matrix definition is required and the step runs once.
+        CREATE: Writes new cache entries. Requires an output cache and a
+            matrix; a cache input is prohibited.
+        AGGREGATE: Combines existing cache entries into new entries.
+            Requires a cache input, an output cache and a matrix.
     """
 
     CREATE = "create"
-    UPDATE = "update"
     AGGREGATE = "aggregate"
-    NOCACHES = "nocaches"
 
 
 @dataclass
@@ -108,11 +101,9 @@ class CausalIQActionProvider(ABC):
     handles compression for each data type.
 
     Action patterns define how actions interact with workflow caches:
-    - CREATE: Creates new entries (output + matrix required, input prohibited)
-    - UPDATE: Modifies existing entries (input required, output/matrix
+    - CREATE: Writes new entries (output + matrix required, input
               prohibited)
     - AGGREGATE: Combines entries (input + output + matrix required)
-    - NOCACHES: Operates on files without caches or matrix (no constraints)
 
     Attributes:
         name: Provider identifier for workflow 'uses' field.
