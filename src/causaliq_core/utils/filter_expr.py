@@ -107,9 +107,10 @@ _ALLOWED_FUNCTIONS: Dict[str, Any] = {
     "random": _random_placeholder,
 }
 
-# Regex to find VAR in random(count, seed) patterns
+# Regex to find VAR in random(count, seed) patterns. The variable may be
+# qualified (for example ``learn_graph.seed``).
 _RANDOM_PATTERN = re.compile(
-    r"(\w+)\s+in\s+(random\s*\(\s*(\d+)\s*,\s*(\d+)\s*\))"
+    r"([\w.]+)\s+in\s+(random\s*\(\s*(\d+)\s*,\s*(\d+)\s*\))"
 )
 
 

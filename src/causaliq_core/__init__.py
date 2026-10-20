@@ -13,8 +13,21 @@ from causaliq_core.action import (
     CoreActionProvider,
 )
 from causaliq_core.cache import TokenCache
+from causaliq_core.metadata import (
+    PROVENANCE_KEYS,
+    RESERVED_KEYS,
+    SCHEMA_VERSION,
+    ActionMetadata,
+    MetadataError,
+    MetadataParts,
+    build_metadata,
+    is_v2_metadata,
+    normalise_metadata,
+    split_metadata,
+)
 
-__version__ = "0.8.0.dev6"
+__version__ = "0.8.0.dev7"
+
 __author__ = "CausalIQ"
 __email__ = "info@causaliq.org"
 
@@ -51,4 +64,15 @@ __all__ = [
     "ActionValidationError",
     "CausalIQActionProvider",
     "CoreActionProvider",
+    # Metadata envelope
+    "ActionMetadata",
+    "MetadataError",
+    "MetadataParts",
+    "PROVENANCE_KEYS",
+    "RESERVED_KEYS",
+    "SCHEMA_VERSION",
+    "build_metadata",
+    "is_v2_metadata",
+    "normalise_metadata",
+    "split_metadata",
 ]

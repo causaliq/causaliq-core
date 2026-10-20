@@ -315,6 +315,16 @@ def test_resolve_rewrites_expression() -> None:
     assert len(names["_random_0"]) == 10
 
 
+# Test resolve_random_calls supports qualified variable names.
+def test_resolve_qualified_name() -> None:
+    metas = [{"learn_graph.seed": i} for i in range(25)]
+    expr, names = resolve_random_calls(
+        "learn_graph.seed in random(10, 0)", metas
+    )
+    assert "random(10, 0)" not in expr
+    assert len(names["_random_0"]) == 10
+
+
 # Test resolve_random_calls selection is deterministic.
 def test_resolve_deterministic() -> None:
     metas = [{"seed": i} for i in range(25)]

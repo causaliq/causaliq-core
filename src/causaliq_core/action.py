@@ -16,14 +16,21 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from io import StringIO
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from causaliq_core.cache import TokenCache
 from causaliq_core.graph import SDG
 from causaliq_core.graph.io import graphml
+from causaliq_core.metadata import ActionMetadata
 
-# Type alias for action result tuple: (status, metadata, objects)
-ActionResult = Tuple[str, Dict[str, Any], List[Dict[str, Any]]]
+# Type alias for action result tuple: (status, metadata, objects).
+# CausalIQ actions return structured metadata holding ``inputs`` and
+# ``result``; a legacy flat mapping is accepted from third-party actions.
+ActionResult = Tuple[
+    str,
+    Union[ActionMetadata, Dict[str, Any]],
+    List[Dict[str, Any]],
+]
 
 
 class ActionPattern(Enum):
