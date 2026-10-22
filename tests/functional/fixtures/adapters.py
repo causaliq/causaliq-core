@@ -14,10 +14,14 @@ class DataFrameAdapter(BNFit):
     def __init__(self, df):
         self.df = df
         self._N = len(df)
-        # Convert string/object columns to categorical
+        # Normalise categorical columns to string values. pandas versions
+        # differ in whether numeric or boolean CSV columns become numeric
+        # or boolean categories; the BN layer expects string values.
         for col in df.columns:
             dtype_name = str(df[col].dtype)
-            if dtype_name in ("object", "string", "str"):
+            if dtype_name == "category":
+                df[col] = df[col].astype(str).astype("category")
+            elif dtype_name in ("object", "string", "str"):
                 df[col] = df[col].astype("category")
         # Compute node_values for categorical columns
         self._node_values = {

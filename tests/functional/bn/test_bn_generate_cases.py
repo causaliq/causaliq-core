@@ -157,9 +157,9 @@ def test_bn_generate_cases_cancer_demo():  # OK Cancer BN
 def test_bn_generate_cases_cancer_write_ok(tmpfile):  # OK writing Cancer BN
     bn = read_bn(str(TESTDATA_DIR / "cancer" / "cancer.dsc"))
     cases = bn.generate_cases(10000, tmpfile)
-    df_check = pd.read_csv(tmpfile, dtype="category")
+    df_check = pd.read_csv(tmpfile, dtype=str)
     check = DataFrameAdapter(df_check)
-    assert check.df.equals(cases)
+    pd.testing.assert_frame_equal(check.df, cases, check_categorical=False)
 
 
 # Check generating continuous data

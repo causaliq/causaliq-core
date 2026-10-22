@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Nothing yet
 
 ### Changed
+- **Breaking metadata envelope change** - the action metadata block `inputs`
+  is now `parameters`, and provenance records `started` (local ISO 8601 time
+  with an offset and second precision) and `elapsed` (seconds) instead of
+  `started_at`, `finished_at` and `duration_seconds`. Obsolete provenance
+  keys are not carried forward when metadata is normalised.
 - Internal restructuring so that every module and method meets the CausalIQ
   code policy: long methods were split into private helpers, and larger
   modules were decomposed into sub-modules that re-export the original names.
@@ -26,7 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   plain files run once under the output-driven run-once rule.
 
 ### Fixed
-- Nothing yet
+- **Numeric categorical values in CPT fitting** - pandas and NumPy scalar
+  categories such as `np.int64` are normalised to strings when fitting
+  CPTs, so numeric CSV categories produce consistent CPT values and
+  generated cases across pandas versions.
 
 ### Security
 - Nothing yet

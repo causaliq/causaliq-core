@@ -21,7 +21,25 @@ def test_schema_version_is_two():
 
 # Reserved keys name the four envelope blocks
 def test_reserved_keys_cover_envelope_blocks():
-    assert RESERVED_KEYS == {"provenance", "inputs", "result", "history"}
+    assert RESERVED_KEYS == {
+        "provenance",
+        "parameters",
+        "result",
+        "history",
+    }
+
+
+# Provenance uses the standard field names in the documented order
+def test_provenance_keys_are_standard():
+    assert PROVENANCE_KEYS == (
+        "provider",
+        "provider_version",
+        "workflow_version",
+        "action",
+        "started",
+        "elapsed",
+        "environment",
+    )
 
 
 # Build returns all four envelope blocks
@@ -29,7 +47,7 @@ def test_build_metadata_returns_envelope_blocks():
     metadata = build_metadata(
         provider="causaliq-discovery",
         action="learn_graph",
-        inputs={"algorithm": "hc"},
+        parameters={"algorithm": "hc"},
         result={"status": "ok"},
     )
     assert set(metadata) == RESERVED_KEYS
@@ -40,7 +58,7 @@ def test_build_metadata_records_provider_and_action():
     metadata = build_metadata(
         provider="causaliq-discovery",
         action="learn_graph",
-        inputs={},
+        parameters={},
         result={},
     )
     provenance = metadata["provenance"]
@@ -53,23 +71,25 @@ def test_build_metadata_defaults_optional_provenance():
     metadata = build_metadata(
         provider="provider",
         action="action",
-        inputs={},
+        parameters={},
         result={},
     )
     provenance = metadata["provenance"]
     assert set(provenance) == set(PROVENANCE_KEYS)
     assert provenance["provider_version"] is None
+    assert provenance["started"] is None
+    assert provenance["elapsed"] is None
     assert provenance["environment"] is None
 
 
-# Build copies the input and result mappings
+# Build copies the parameter and result mappings
 def test_build_metadata_copies_blocks():
-    inputs = {"algorithm": "hc"}
+    parameters = {"algorithm": "hc"}
     result = {"status": "ok"}
-    metadata = build_metadata("provider", "action", inputs, result)
-    inputs["algorithm"] = "pc"
+    metadata = build_metadata("provider", "action", parameters, result)
+    parameters["algorithm"] = "pc"
     result["status"] = "error"
-    assert metadata["inputs"] == {"algorithm": "hc"}
+    assert metadata["parameters"] == {"algorithm": "hc"}
     assert metadata["result"] == {"status": "ok"}
 
 
@@ -101,11 +121,11 @@ def test_build_metadata_rejects_empty_action(action):
         build_metadata("provider", action, {}, {})
 
 
-# Build rejects non-mapping inputs and result blocks
-@pytest.mark.parametrize("inputs,result", [([], {}), ({}, []), (None, {})])
-def test_build_metadata_rejects_non_mapping_blocks(inputs, result):
+# Build rejects non-mapping parameter and result blocks
+@pytest.mark.parametrize("parameters,result", [([], {}), ({}, []), (None, {})])
+def test_build_metadata_rejects_non_mapping_blocks(parameters, result):
     with pytest.raises(MetadataError):
-        build_metadata("provider", "action", inputs, result)
+        build_metadata("provider", "action", parameters, result)
 
 
 # Build rejects a non-mapping history block
@@ -134,10 +154,34 @@ def test_is_v2_metadata_rejects_non_mapping(value):
 # Normalising version 2 fills missing blocks and provenance keys
 def test_normalise_metadata_completes_v2():
     metadata = normalise_metadata({"provenance": {"provider": "p"}})
-    assert metadata["inputs"] == {}
+    assert metadata["parameters"] == {}
     assert metadata["result"] == {}
     assert metadata["history"] == {}
     assert metadata["provenance"]["action"] is None
+
+
+# Normalising version 2 accepts an empty provenance block
+def test_normalise_metadata_accepts_empty_provenance():
+    metadata = normalise_metadata({"provenance": {}})
+    assert set(metadata["provenance"]) == set(PROVENANCE_KEYS)
+    assert metadata["provenance"]["provider"] is None
+
+
+# Normalising version 2 drops obsolete provenance keys
+def test_normalise_metadata_drops_obsolete_provenance():
+    metadata = normalise_metadata(
+        {
+            "provenance": {
+                "provider": "p",
+                "started_at": "2026-01-01T00:00:00+00:00",
+                "finished_at": "2026-01-01T00:00:01+00:00",
+                "duration_seconds": 1.0,
+            }
+        }
+    )
+    assert set(metadata["provenance"]) == set(PROVENANCE_KEYS)
+    assert metadata["provenance"]["started"] is None
+    assert metadata["provenance"]["elapsed"] is None
 
 
 # Normalising a single legacy block moves its fields to result
@@ -147,7 +191,7 @@ def test_normalise_metadata_converts_single_legacy_block():
     )
     assert metadata["provenance"]["provider"] == "causaliq-discovery"
     assert metadata["provenance"]["action"] == "learn_graph"
-    assert metadata["inputs"] == {}
+    assert metadata["parameters"] == {}
     assert metadata["result"] == {"status": "ok"}
     assert metadata["history"] == {}
 
@@ -164,7 +208,7 @@ def test_normalise_metadata_converts_multiple_legacy_blocks():
     assert metadata["result"] == {"f1": 0.9}
     assert metadata["history"] == {
         "causaliq-discovery.learn_graph": {
-            "inputs": {},
+            "parameters": {},
             "result": {"status": "ok"},
         }
     }
@@ -183,7 +227,7 @@ def test_normalise_metadata_skips_reserved_keys():
 def test_normalise_metadata_handles_empty_mapping():
     metadata = normalise_metadata({})
     assert metadata["provenance"]["provider"] is None
-    assert metadata["inputs"] == {}
+    assert metadata["parameters"] == {}
     assert metadata["result"] == {}
     assert metadata["history"] == {}
 
@@ -224,7 +268,7 @@ def test_split_metadata_returns_parts():
         {"status": "ok"},
     )
     parts = split_metadata(metadata)
-    assert parts.inputs == {"algorithm": "hc"}
+    assert parts.parameters == {"algorithm": "hc"}
     assert parts.result == {"status": "ok"}
     assert parts.history == {}
     assert parts.provenance["provider"] == "provider"

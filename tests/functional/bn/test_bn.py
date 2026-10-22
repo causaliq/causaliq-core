@@ -107,6 +107,21 @@ def test_bn_xy_zy_1_ok():
 # Check fitting BN to categorical data
 
 
+# Test fitting BN to numeric categorical values from older pandas versions.
+def test_bn_fit_numeric_categories_ok():
+    df = pd.DataFrame(
+        {
+            "A": pd.Categorical([1, 1, 0]),
+            "B": pd.Categorical([1, 0, 0]),
+        }
+    )
+    data = DataFrameAdapter(df)
+    bn = BN.fit(dag.ab(), data)
+    assert bn.cnds["A"].values == {"0", "1"}
+    assert bn.cnds["B"].values == {"0", "1"}
+    assert set(bn.generate_cases(5)["A"].astype(str)) <= {"0", "1"}
+
+
 # Test fitting BN to categorical data with ab_3 dataset
 def test_bn_fit_ab_3_ok():
     df = pd.read_csv(TESTDATA_DIR / "ab_3.csv", dtype="category")

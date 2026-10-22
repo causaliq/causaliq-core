@@ -4,11 +4,11 @@ Defines schema version 2 of the metadata stored with cached workflow
 entries and exported as ``_meta.json``. The envelope separates:
 
 - ``provenance``: who produced the entry, when, and in what environment;
-- ``inputs``: the effective parameters used by the action;
+- ``parameters``: the effective parameters used by the action;
 - ``result``: what the action produced;
 - ``history``: metadata inherited from earlier actions.
 
-Actions return an :class:`ActionMetadata` mapping holding ``inputs`` and
+Actions return an :class:`ActionMetadata` mapping holding ``parameters`` and
 ``result``. The framework adds the provenance and history blocks, so the
 envelope is constructed in one place.
 
@@ -36,7 +36,7 @@ __all__ = [
 SCHEMA_VERSION = 2
 """Version of the metadata envelope written by this package."""
 
-RESERVED_KEYS = frozenset({"provenance", "inputs", "result", "history"})
+RESERVED_KEYS = frozenset({"provenance", "parameters", "result", "history"})
 """Keys reserved at the top level of the metadata envelope."""
 
 PROVENANCE_KEYS = (
@@ -44,9 +44,8 @@ PROVENANCE_KEYS = (
     "provider_version",
     "workflow_version",
     "action",
-    "started_at",
-    "finished_at",
-    "duration_seconds",
+    "started",
+    "elapsed",
     "environment",
 )
 """Provenance fields, always present in a version 2 envelope."""
@@ -59,9 +58,9 @@ class MetadataError(ValueError):
 
 
 class ActionMetadata(TypedDict):
-    """Metadata returned by an action: effective inputs and results."""
+    """Metadata returned by an action: effective parameters and results."""
 
-    inputs: Dict[str, Any]
+    parameters: Dict[str, Any]
     result: Dict[str, Any]
 
 
@@ -71,13 +70,13 @@ class MetadataParts:
 
     Attributes:
         provenance: Who produced the entry, when and in what environment.
-        inputs: Effective parameters used by the action.
+        parameters: Effective parameters used by the action.
         result: Values produced by the action.
         history: Metadata inherited from earlier actions.
     """
 
     provenance: Dict[str, Any]
-    inputs: Dict[str, Any]
+    parameters: Dict[str, Any]
     result: Dict[str, Any]
     history: Dict[str, Any]
 
@@ -85,14 +84,13 @@ class MetadataParts:
 def build_metadata(
     provider: str,
     action: str,
-    inputs: Dict[str, Any],
+    parameters: Dict[str, Any],
     result: Dict[str, Any],
     *,
     provider_version: Optional[str] = None,
     workflow_version: Optional[str] = None,
-    started_at: Optional[str] = None,
-    finished_at: Optional[str] = None,
-    duration_seconds: Optional[float] = None,
+    started: Optional[str] = None,
+    elapsed: Optional[float] = None,
     environment: Optional[Dict[str, Any]] = None,
     history: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
@@ -101,19 +99,18 @@ def build_metadata(
     Args:
         provider: Provider name that owns the action.
         action: Action name that produced the entry.
-        inputs: Effective parameters used by the action.
+        parameters: Effective parameters used by the action.
         result: Values produced by the action.
         provider_version: Version of the provider package, if known.
         workflow_version: Version of the workflow package, if known.
-        started_at: ISO 8601 UTC time at which the action started.
-        finished_at: ISO 8601 UTC time at which the action finished.
-        duration_seconds: Monotonic wall-clock duration of the action.
+        started: Local ISO 8601 time at which the action started.
+        elapsed: Monotonic wall-clock duration of the action in seconds.
         environment: Environment information from
             :func:`causaliq_core.utils.environment`.
         history: Metadata inherited from earlier actions.
 
     Returns:
-        Metadata envelope with ``provenance``, ``inputs``, ``result`` and
+        Metadata envelope with ``provenance``, ``parameters``, ``result`` and
         ``history`` blocks.
 
     Raises:
@@ -122,7 +119,7 @@ def build_metadata(
     """
     _require_name(provider, "provider")
     _require_name(action, "action")
-    _require_block(inputs, "inputs")
+    _require_block(parameters, "parameters")
     _require_block(result, "result")
     _require_block(history, "history", optional=True)
     return {
@@ -131,12 +128,11 @@ def build_metadata(
             action=action,
             provider_version=provider_version,
             workflow_version=workflow_version,
-            started_at=started_at,
-            finished_at=finished_at,
-            duration_seconds=duration_seconds,
+            started=started,
+            elapsed=elapsed,
             environment=environment,
         ),
-        "inputs": dict(inputs),
+        "parameters": dict(parameters),
         "result": dict(result),
         "history": dict(history or {}),
     }
@@ -183,9 +179,8 @@ def _build_provenance(
     action: str,
     provider_version: Optional[str],
     workflow_version: Optional[str],
-    started_at: Optional[str],
-    finished_at: Optional[str],
-    duration_seconds: Optional[float],
+    started: Optional[str],
+    elapsed: Optional[float],
     environment: Optional[Dict[str, Any]],
 ) -> Dict[str, Any]:
     """Build the provenance block, defaulting unknown values to None.
@@ -195,9 +190,8 @@ def _build_provenance(
         action: Action name that produced the entry.
         provider_version: Version of the provider package, if known.
         workflow_version: Version of the workflow package, if known.
-        started_at: ISO 8601 UTC time at which the action started.
-        finished_at: ISO 8601 UTC time at which the action finished.
-        duration_seconds: Monotonic wall-clock duration of the action.
+        started: Local ISO 8601 time at which the action started.
+        elapsed: Monotonic wall-clock duration of the action in seconds.
         environment: Environment information, if available.
 
     Returns:
@@ -208,9 +202,8 @@ def _build_provenance(
         "provider_version": provider_version,
         "workflow_version": workflow_version,
         "action": action,
-        "started_at": started_at,
-        "finished_at": finished_at,
-        "duration_seconds": duration_seconds,
+        "started": started,
+        "elapsed": elapsed,
         "environment": dict(environment) if environment is not None else None,
     }
 
@@ -298,18 +291,20 @@ def _normalise_flat(metadata: Dict[str, Any]) -> Dict[str, Any]:
 def _normalise_v2(metadata: Dict[str, Any]) -> Dict[str, Any]:
     """Return a complete version 2 envelope with every block present.
 
+    Provenance is rebuilt from :data:`PROVENANCE_KEYS`, so obsolete keys
+    left by earlier schema revisions are not carried forward.
+
     Args:
         metadata: Version 2 metadata, potentially missing optional blocks.
 
     Returns:
         Metadata with all four blocks and every provenance key present.
     """
-    provenance = dict(metadata.get("provenance") or {})
-    for key in PROVENANCE_KEYS:
-        provenance.setdefault(key, None)
+    raw_provenance = metadata.get("provenance") or {}
+    provenance = {key: raw_provenance.get(key) for key in PROVENANCE_KEYS}
     return {
         "provenance": provenance,
-        "inputs": dict(metadata.get("inputs") or {}),
+        "parameters": dict(metadata.get("parameters") or {}),
         "result": dict(metadata.get("result") or {}),
         "history": dict(metadata.get("history") or {}),
     }
@@ -328,7 +323,7 @@ def _normalise_legacy(metadata: Dict[str, Any]) -> Dict[str, Any]:
     provider, action, fields = blocks[-1]
     history = {
         f"{block_provider}.{block_action}": {
-            "inputs": {},
+            "parameters": {},
             "result": dict(block_fields),
         }
         for block_provider, block_action, block_fields in blocks[:-1]
@@ -336,7 +331,7 @@ def _normalise_legacy(metadata: Dict[str, Any]) -> Dict[str, Any]:
     return build_metadata(
         provider=provider,
         action=action,
-        inputs={},
+        parameters={},
         result=dict(fields),
         history=history,
     )
@@ -371,7 +366,7 @@ def _empty_envelope() -> Dict[str, Any]:
     provenance = {key: None for key in PROVENANCE_KEYS}
     return {
         "provenance": provenance,
-        "inputs": {},
+        "parameters": {},
         "result": {},
         "history": {},
     }
@@ -392,7 +387,7 @@ def split_metadata(metadata: Dict[str, Any]) -> MetadataParts:
     envelope = normalise_metadata(metadata)
     return MetadataParts(
         provenance=envelope["provenance"],
-        inputs=envelope["inputs"],
+        parameters=envelope["parameters"],
         result=envelope["result"],
         history=envelope["history"],
     )

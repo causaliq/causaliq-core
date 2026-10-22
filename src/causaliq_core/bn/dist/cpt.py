@@ -565,6 +565,23 @@ def _add_cpt_entry(
     return parents, values
 
 
+def _categorical_value(value: Any) -> str:
+    """Return a categorical value as a Python string.
+
+    Data adapters may expose pandas or NumPy scalar values (for example
+    ``np.int64``) when a categorical column was inferred from numeric CSV
+    data. CPTs use string values throughout, so normalise at the fitting
+    boundary instead of relying on each adapter.
+
+    Args:
+        value: Value read from a categorical column.
+
+    Returns:
+        The value as a string.
+    """
+    return value if isinstance(value, str) else str(value)
+
+
 def _parentless_cpt_spec(node: str, data: Any) -> Tuple[type, Dict[str, Any]]:
     """Return the CPT specification of a parentless node.
 
@@ -575,7 +592,13 @@ def _parentless_cpt_spec(node: str, data: Any) -> Tuple[type, Dict[str, Any]]:
     Returns:
         Tuple of (CPT class, PMF of the node's values).
     """
-    return (CPT, {k: v / data.N for k, v in data.node_values[node].items()})
+    return (
+        CPT,
+        {
+            _categorical_value(k): v / data.N
+            for k, v in data.node_values[node].items()
+        },
+    )
 
 
 def _fit_parented_cpt(
@@ -596,6 +619,11 @@ def _fit_parented_cpt(
     cptdata: List[Tuple[Any, Dict[str, Any]]] = []
     parent_map = {node: list(parents)} if len(parents) > 0 else {}
     counts, _, rowval, colval = data.marginals(node, parent_map, True)
+    rowval = tuple(_categorical_value(v) for v in rowval)
+    colval = tuple(
+        {parent: _categorical_value(v) for parent, v in combo.items()}
+        for combo in colval
+    )
 
     for j in range(counts.shape[1]):
         N_ij = counts[:, j].sum()  # total count for jth parent combo
@@ -626,8 +654,14 @@ def _autocomplete_cpt_entries(
     Returns:
         Number of PMFs that had to be estimated.
     """
-    pmf = {k: v / data.N for k, v in data.node_values[node].items()}
-    parent_values = {p: list(data.node_values[p].keys()) for p in parents}
+    pmf = {
+        _categorical_value(k): v / data.N
+        for k, v in data.node_values[node].items()
+    }
+    parent_values = {
+        p: [_categorical_value(v) for v in data.node_values[p].keys()]
+        for p in parents
+    }
     pvs_in_data = [c[0] for c in cptdata]
     estimated = 0
 
