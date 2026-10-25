@@ -3,6 +3,7 @@ causaliq-core: Core utilities and classes for the CausalIQ ecosystem
 """
 
 from causaliq_core.action import (
+    NO_DEFAULT,
     ActionExecutionError,
     ActionInput,
     ActionOutput,
@@ -11,6 +12,7 @@ from causaliq_core.action import (
     ActionValidationError,
     CausalIQActionProvider,
     CoreActionProvider,
+    resolve_action_parameters,
 )
 from causaliq_core.cache import TokenCache
 from causaliq_core.metadata import (
@@ -26,7 +28,7 @@ from causaliq_core.metadata import (
     split_metadata,
 )
 
-__version__ = "0.8.0.dev8"
+__version__ = "0.8.0.dev9"
 
 __author__ = "CausalIQ"
 __email__ = "info@causaliq.org"
@@ -64,6 +66,8 @@ __all__ = [
     "ActionValidationError",
     "CausalIQActionProvider",
     "CoreActionProvider",
+    "NO_DEFAULT",
+    "resolve_action_parameters",
     # Metadata envelope
     "ActionMetadata",
     "MetadataError",

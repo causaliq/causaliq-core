@@ -50,23 +50,54 @@ class ActionPattern(Enum):
     AGGREGATE = "aggregate"
 
 
+class _NoDefault:
+    """Sentinel type marking an input that declares no default value."""
+
+    def __repr__(self) -> str:
+        """Return a readable name for documentation and logs."""
+        return "NO_DEFAULT"
+
+
+NO_DEFAULT = _NoDefault()
+"""Sentinel used when an action input declares no default value.
+
+``None`` cannot be used for this purpose because it is also a value a
+user might supply. An omitted parameter that declares a default is filled
+in by the framework; a parameter with no default stays absent, which
+means it does not apply to the action in this configuration.
+"""
+
+
 @dataclass
 class ActionInput:
     """Define action input specification.
 
+    The specification is the single source of truth for a parameter's
+    default. Providers must not repeat the default in their own code; the
+    framework supplies it before the action runs.
+
     Attributes:
         name: Parameter name.
         description: Human-readable description.
-        required: Whether the parameter is required.
-        default: Default value if not provided.
+        required: Whether the parameter is required. A required input
+            must not declare a default.
+        default: Default value if not provided, or ``NO_DEFAULT`` when
+            the parameter has no default. A default must be a value the
+            user could supply and must appear in ``choices`` when choices
+            are declared. ``None`` is never a valid default.
         type_hint: Type hint string for documentation.
+        choices: Closed set of values the parameter may take, or ``None``
+            when any value of the declared type is accepted. For a
+            list-valued parameter the choices enumerate the values each
+            element may take, in addition to any scalar "off" token.
     """
 
     name: str
     description: str
     required: bool = False
-    default: Any = None
+    default: Any = NO_DEFAULT
     type_hint: str = "Any"
+    choices: Optional[Tuple[Any, ...]] = None
 
 
 @dataclass
@@ -96,6 +127,139 @@ class ActionValidationError(Exception):
     pass
 
 
+def _check_input_choices(where: str, spec: ActionInput) -> None:
+    """Raise when an input's choices are empty, null or miss the default.
+
+    Args:
+        where: Location prefix used in the error message.
+        spec: Input specification to check.
+
+    Raises:
+        ActionValidationError: If the choices set is unusable or does not
+            contain the declared default.
+    """
+    if spec.choices is None:
+        return
+    if not spec.choices:
+        raise ActionValidationError(f"{where}: choices must not be empty")
+    if any(choice is None for choice in spec.choices):
+        raise ActionValidationError(
+            f"{where}: choices must not contain null; the user omits the "
+            f"parameter instead"
+        )
+    if spec.default is not NO_DEFAULT and spec.default not in spec.choices:
+        raise ActionValidationError(
+            f"{where}: default {spec.default!r} is not one of its choices "
+            f"{list(spec.choices)!r}"
+        )
+
+
+def _check_input_spec(provider_name: str, key: str, spec: Any) -> None:
+    """Raise when one action input specification breaks the contract.
+
+    Specifications that are not :class:`ActionInput` instances are
+    ignored so that legacy and mock providers keep working.
+
+    Args:
+        provider_name: Provider name used in error messages.
+        key: Dictionary key the specification is declared under.
+        spec: Value found in the provider's ``inputs`` mapping.
+
+    Raises:
+        ActionValidationError: If the specification is inconsistent.
+    """
+    if not isinstance(spec, ActionInput):
+        return
+    where = f"Provider '{provider_name}' input '{key}'"
+    if spec.name != key:
+        raise ActionValidationError(
+            f"{where}: declared name '{spec.name}' does not match its key"
+        )
+    if spec.required and spec.default is not NO_DEFAULT:
+        raise ActionValidationError(
+            f"{where}: a required input must not declare a default"
+        )
+    if spec.default is None:
+        raise ActionValidationError(
+            f"{where}: a null default is not supported; omit the "
+            f"parameter instead or declare an explicit value"
+        )
+    _check_input_choices(where, spec)
+
+
+def _check_input_specs(
+    provider_name: str, inputs: Dict[str, ActionInput]
+) -> None:
+    """Raise when a provider's input specifications break the contract.
+
+    Args:
+        provider_name: Provider name used in error messages.
+        inputs: The provider's declared input specifications.
+
+    Raises:
+        ActionValidationError: If any specification is inconsistent.
+    """
+    for key, spec in inputs.items():
+        _check_input_spec(provider_name, key, spec)
+
+
+def _applicable_inputs(provider: Any, action: str) -> Dict[str, ActionInput]:
+    """Return the input specifications that apply to one action.
+
+    A provider that declares ``action_parameters`` (action name to
+    accepted parameter names) restricts defaults to those parameters.
+    An action the provider does not list receives no defaults, so an
+    unknown action is reported by action-specific validation rather than
+    by an unexpected parameter.
+
+    Args:
+        provider: Action provider instance or class.
+        action: Action name the parameters apply to.
+
+    Returns:
+        Mapping of applicable input specifications.
+    """
+    inputs: Dict[str, ActionInput] = dict(getattr(provider, "inputs", {}))
+    action_parameters = getattr(provider, "action_parameters", None)
+    if not isinstance(action_parameters, dict):
+        return inputs
+    if action not in action_parameters:
+        return {}
+    names = action_parameters[action]
+    return {name: spec for name, spec in inputs.items() if name in names}
+
+
+def resolve_action_parameters(
+    provider: Any,
+    action: str,
+    supplied: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Return the effective parameters for one action.
+
+    Supplied values win. A parameter that was omitted takes its declared
+    default when it applies to the action. A parameter supplied as
+    ``None`` marks a matrix dimension that is not applicable: it is left
+    out and does not receive a default.
+
+    Args:
+        provider: Action provider instance or class.
+        action: Action name the parameters apply to.
+        supplied: Parameters supplied by the workflow step.
+
+    Returns:
+        Effective parameters, with declared defaults filled in and
+        parameters that do not apply left out.
+    """
+    effective = {
+        name: value for name, value in supplied.items() if value is not None
+    }
+    for name, spec in _applicable_inputs(provider, action).items():
+        if name in supplied or spec.default is NO_DEFAULT:
+            continue
+        effective[name] = spec.default
+    return effective
+
+
 class CausalIQActionProvider(ABC):
     """Base class for action providers that expose multiple workflow actions.
 
@@ -123,6 +287,25 @@ class CausalIQActionProvider(ABC):
         inputs: Input parameter specifications.
         outputs: Output name to description mapping.
     """
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Check the input specification contract for a new provider.
+
+        Every declared default must be a value the user could supply, a
+        required input must not declare one, and a null default is
+        rejected. This runs when the provider class is defined, so an
+        inconsistent provider fails at load time and is reported by the
+        workflow registry as a discovery error.
+
+        Args:
+            **kwargs: Class keyword arguments passed to the base class.
+
+        Raises:
+            ActionValidationError: If an input specification is
+                inconsistent.
+        """
+        super().__init_subclass__(**kwargs)
+        _check_input_specs(cls.name or cls.__name__, cls.inputs)
 
     # Provider metadata
     name: str = ""

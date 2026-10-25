@@ -6,6 +6,7 @@ from io import StringIO
 import pytest
 
 from causaliq_core import (
+    NO_DEFAULT,
     ActionExecutionError,
     ActionInput,
     ActionOutput,
@@ -30,8 +31,9 @@ def test_action_input_defaults() -> None:
     assert inp.name == "test"
     assert inp.description == "A test input"
     assert inp.required is False
-    assert inp.default is None
+    assert inp.default is NO_DEFAULT
     assert inp.type_hint == "Any"
+    assert inp.choices is None
 
 
 # Test ActionInput with all fields specified.
@@ -39,14 +41,16 @@ def test_action_input_full() -> None:
     inp = ActionInput(
         name="param",
         description="A parameter",
-        required=True,
+        required=False,
         default="value",
         type_hint="str",
+        choices=("value", "other"),
     )
     assert inp.name == "param"
-    assert inp.required is True
+    assert inp.required is False
     assert inp.default == "value"
     assert inp.type_hint == "str"
+    assert inp.choices == ("value", "other")
 
 
 # Test ActionOutput dataclass has expected fields.
