@@ -29,6 +29,19 @@ evaluation without security risks of `eval()`.
     options:
       show_source: false
 
+## Relaxing Bare Values
+
+::: causaliq_core.utils.relax_filter_literals
+    options:
+      show_source: false
+
+A workflow may write a filter value without quotes:
+`network == asia and network in [asia, cancer]`. The relaxed form is
+`network == 'asia' and network in ['asia', 'cancer']`. Bare names on the
+right of a comparison, and inside a membership collection, become string
+literals. Names in `reserved_names` stay references. The left-hand side
+of a comparison is always a reference.
+
 ## Exceptions
 
 ::: causaliq_core.utils.FilterExpressionError

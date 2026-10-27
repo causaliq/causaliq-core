@@ -43,6 +43,7 @@ Safe filter expression evaluation for metadata filtering:
 - `evaluate_filter()` - Evaluate filter against metadata
 - `validate_filter()` - Check filter syntax validity
 - `filter_entries()` - Filter collections by expression
+- `relax_filter_literals()` - Quote bare right-hand values as strings
 - Python syntax with `simpleeval` for security
 
 ### [Weight Computation](utils_weights.md)

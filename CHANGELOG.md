@@ -8,7 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Nothing yet
+- `relax_filter_literals()` in `causaliq_core.utils` - rewrites bare
+  right-hand values in filter expressions as string literals, so
+  `status == ok` and `network in [asia, cancer]` work without quoting
+  while names reserved for workflow parameters stay references.
 
 ### Changed
 - **Breaking metadata envelope change** - the action metadata block `inputs`
