@@ -17,6 +17,7 @@ from .filter_expr import (
     resolve_random_calls,
     validate_filter,
 )
+from .filter_literals import relax_filter_literals
 from .io import FileFormatError, is_valid_path, write_dataframe
 from .math import ln, rndsf
 from .random import RandomIntegers
@@ -112,6 +113,7 @@ __all__ = [
     "FileFormatError",
     "is_valid_path",
     "RandomIntegers",
+    "relax_filter_literals",
     "resolve_random_calls",
     "Timing",
     "validate_filter",

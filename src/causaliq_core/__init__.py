@@ -28,7 +28,7 @@ from causaliq_core.metadata import (
     split_metadata,
 )
 
-__version__ = "0.8.0.dev9"
+__version__ = "0.8.0.dev10"
 
 __author__ = "CausalIQ"
 __email__ = "info@causaliq.org"
