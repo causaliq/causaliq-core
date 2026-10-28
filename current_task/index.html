@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#refactor-causaliq-core-modules-according-to-module-and-method-rules" class="md-skip">
+        <a href="#refactor-actionpy-according-to-module-and-method-rules" class="md-skip">
           Skip to content
         </a>
       
@@ -537,63 +537,13 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#commits" class="md-nav__link">
+  <a href="#quality-gates-as-in-scriptscheck_cips1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Commits
+        Quality Gates (as in scripts/check_ci.ps1)
       
     </span>
   </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#gates-after-each-slice-as-in-scriptscheck_cips1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Gates after each slice (as in scripts/check_ci.ps1)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#outcome" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Outcome
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Outcome">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#what-changed" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What changed
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#verification" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Verification
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -2502,63 +2452,13 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#commits" class="md-nav__link">
+  <a href="#quality-gates-as-in-scriptscheck_cips1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Commits
+        Quality Gates (as in scripts/check_ci.ps1)
       
     </span>
   </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#gates-after-each-slice-as-in-scriptscheck_cips1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Gates after each slice (as in scripts/check_ci.ps1)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#outcome" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Outcome
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Outcome">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#what-changed" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What changed
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#verification" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Verification
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -2579,8 +2479,8 @@
 
 
 
-<h1 id="refactor-causaliq-core-modules-according-to-module-and-method-rules">refactor causaliq-core modules according to module and method rules<a class="headerlink" href="#refactor-causaliq-core-modules-according-to-module-and-method-rules" title="Permanent link">&para;</a></h1>
-<p>Please develop a plan to refactor all <code>causaliq-core</code> modules to obey the
+<h1 id="refactor-actionpy-according-to-module-and-method-rules">refactor action.py according to module and method rules<a class="headerlink" href="#refactor-actionpy-according-to-module-and-method-rules" title="Permanent link">&para;</a></h1>
+<p>Please develop a plan to refactor <a class="magiclink magiclink-github magiclink-mention" href="https://github.com/src" title="GitHub User: src">@src</a>\causaliq_core\action.py to obey the
 development policies</p>
 <h2 id="constraints-learned-from-causaliq-analysis-refactors">Constraints learned from <code>causaliq-analysis</code> refactors<a class="headerlink" href="#constraints-learned-from-causaliq-analysis-refactors" title="Permanent link">&para;</a></h2>
 <ul>
@@ -2589,14 +2489,7 @@ development policies</p>
 <li><strong>No behaviour-free bulk test rewrites</strong>: add focused tests
   only where coverage gaps appear</li>
 </ul>
-<h2 id="commits">Commits<a class="headerlink" href="#commits" title="Permanent link">&para;</a></h2>
-<p>Stage the work as <strong>between two and four commits</strong> which the user will do:</p>
-<ol>
-<li><strong>Code and tests</strong> — one to three commits</li>
-<li><strong>Documentation</strong> — one documentation commit</li>
-</ol>
-<p>Do not mix documentation-only changes into the code commit.</p>
-<h2 id="gates-after-each-slice-as-in-scriptscheck_cips1">Gates after each slice (as in <code>scripts/check_ci.ps1</code>)<a class="headerlink" href="#gates-after-each-slice-as-in-scriptscheck_cips1" title="Permanent link">&para;</a></h2>
+<h2 id="quality-gates-as-in-scriptscheck_cips1">Quality Gates (as in <code>scripts/check_ci.ps1</code>)<a class="headerlink" href="#quality-gates-as-in-scriptscheck_cips1" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>black --check src tests</code></li>
 <li><code>isort --check-only src tests</code></li>
@@ -2604,62 +2497,6 @@ development policies</p>
 <li><code>mypy src/</code></li>
 <li><code>python scripts/check_code_rules.py --strict src/causaliq_core</code></li>
 </ul>
-<p>Maintain <strong>100 % coverage</strong> on the new modules and keep the <code>ord_hc_f1</code> SVG
-replication test green.</p>
-<h2 id="outcome">Outcome<a class="headerlink" href="#outcome" title="Permanent link">&para;</a></h2>
-<p>The refactor is complete. <code>python scripts/check_code_rules.py</code> reports zero
-breaches across all 60 modules in <code>src/causaliq_core</code>, the full test suite
-passes with 100 % coverage, and behaviour is unchanged.</p>
-<table>
-<thead>
-<tr>
-<th>Stage</th>
-<th>Modules refactored</th>
-<th>Breaches reported</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Starting point</td>
-<td>–</td>
-<td>67</td>
-</tr>
-<tr>
-<td>Slice 1</td>
-<td><code>utils</code>, <code>cache</code>, <code>java</code></td>
-<td>52</td>
-</tr>
-<tr>
-<td>Slice 2</td>
-<td><code>graph</code></td>
-<td>26</td>
-</tr>
-<tr>
-<td>Slice 3</td>
-<td><code>bn</code>, <code>action</code>, <code>r</code></td>
-<td>0</td>
-</tr>
-</tbody>
-</table>
-<h3 id="what-changed">What changed<a class="headerlink" href="#what-changed" title="Permanent link">&para;</a></h3>
-<ul>
-<li>Long methods and functions were split into private helpers, keeping every
-  method within the statement and nesting depth limits.</li>
-<li>Modules that exceeded the module statement limit were decomposed into
-  sibling sub-modules which the original module re-exports, so public API,
-  module paths and import sites are unchanged. Details of the decomposition
-  are recorded in the <a href="../architecture/overview/">architecture overview</a>.</li>
-<li>Modules whose functions are substituted in tests with
-  <code>monkeypatch.setattr</code> were flattened in place (<code>utils.environment</code>,
-  <code>utils.timing</code>, <code>java.session</code>, <code>r.bnlearn</code> and <code>graph.io</code>) so that patches
-  still intercept the calls.</li>
-<li>One test was added for filter expression rendering, where the refactor
-  exposed a coverage gap.</li>
-</ul>
-<h3 id="verification">Verification<a class="headerlink" href="#verification" title="Permanent link">&para;</a></h3>
-<p>Every slice was checked with <code>black --check</code>, <code>isort --check-only</code>, <code>flake8</code>,
-<code>mypy src/</code> and the strict rules report, followed by the full test suite at
-100 % coverage on Python 3.9 to 3.13 in CI.</p>
 
 
 
