@@ -116,13 +116,21 @@ multiple related actions.
 - `CoreActionProvider` with GraphML and JSON compression/decompression
 - Structured input/output specifications via `ActionInput` and `ActionOutput`
 - Action validation and execution error handling
+- Split by responsibility into the modules below, with every public name
+  re-exported from `causaliq_core.action` so imports stay unchanged
 
 ## Module Organisation
 
 ```
 causaliq_core/
 ├── __init__.py          # Package metadata and constants
-├── action.py            # Action provider framework
+├── action/              # Action provider framework
+│   ├── spec.py          # Inputs, outputs, patterns and NO_DEFAULT
+│   ├── errors.py        # Execution and validation errors
+│   ├── parameters.py    # Input contract and parameter defaults
+│   ├── provider.py      # CausalIQActionProvider and ActionResult
+│   ├── core_provider.py # CoreActionProvider (graphml, json, pdg)
+│   └── graphml_codec.py # Tokenised GraphML binary codec
 ├── cli.py               # Command-line interface
 ├── bn/                  # Bayesian Networks
 │   ├── bn.py            # BN class (network structure)
