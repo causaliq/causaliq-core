@@ -1,11 +1,10 @@
-"""Unit tests for the action input contract in causaliq_core.action."""
+"""Unit tests for causaliq_core.action.parameters."""
 
 from typing import Any, Dict
 
 import pytest
 
 from causaliq_core import (
-    NO_DEFAULT,
     ActionInput,
     ActionResult,
     ActionValidationError,
@@ -24,16 +23,6 @@ class _Provider(CausalIQActionProvider):
         self, action, parameters, mode, context, logger
     ) -> ActionResult:
         return ("success", {}, [])
-
-
-# Test the sentinel is readable in documentation and logs.
-def test_no_default_repr() -> None:
-    assert repr(NO_DEFAULT) == "NO_DEFAULT"
-
-
-# Test the default sentinel is distinct from a supplied null value.
-def test_no_default_is_not_none() -> None:
-    assert NO_DEFAULT is not None
 
 
 # Test an enumerated default is accepted when it is a member of choices.
