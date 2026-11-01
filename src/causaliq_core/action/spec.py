@@ -15,19 +15,32 @@ from typing import Any, Optional, Tuple
 
 
 class ActionPattern(Enum):
-    """Workflow action execution patterns.
+    """Workflow action cache-mapping patterns.
 
-    Defines how actions interact with caches and matrix definitions.
-    The workflow executor validates and enforces these patterns.
+    A pattern declares how an action reads from and writes to the workflow
+    cache, so the executor knows what each step is given and how to
+    validate it. The three patterns differ in the dimensionality of the
+    mapping, not in what the action is called.
 
     Attributes:
-        CREATE: Writes new cache entries. Requires an output cache and a
-            matrix; a cache input is prohibited.
-        AGGREGATE: Combines existing cache entries into new entries.
-            Requires a cache input, an output cache and a matrix.
+        PRODUCE: Creates new cache entries without reading a workflow
+            cache. Requires an output cache and a matrix; a cache input
+            is prohibited. Produces one entry per matrix combination.
+        MAP: Maps each input cache entry to one output cache entry, so
+            the input and output caches share their dimensions. Requires
+            an input and an output; the matrix may be omitted because it
+            is taken from the input cache. Exactly one input entry is
+            given per job.
+        AGGREGATE: Groups input cache entries into output entries, so the
+            output dimensions are a reduction of the input dimensions.
+            Requires an input, an output and a matrix naming the grouping
+            dimensions; the matrix is never inherited because inheriting
+            it would regroup nothing. One or more input entries are given
+            per job.
     """
 
-    CREATE = "create"
+    PRODUCE = "produce"
+    MAP = "map"
     AGGREGATE = "aggregate"
 
 

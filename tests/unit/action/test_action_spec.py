@@ -63,12 +63,14 @@ def test_no_default_is_not_none() -> None:
 # ---------------------------------------------------------------------------
 
 
-# Test ActionPattern has exactly the two documented pattern values.
+# Test ActionPattern has exactly the three documented pattern values.
 def test_action_pattern_values() -> None:
     """ActionPattern values match the documented patterns."""
-    assert ActionPattern.CREATE.value == "create"
+    assert ActionPattern.PRODUCE.value == "produce"
+    assert ActionPattern.MAP.value == "map"
     assert ActionPattern.AGGREGATE.value == "aggregate"
     assert {member.value for member in ActionPattern} == {
-        "create",
+        "produce",
+        "map",
         "aggregate",
     }

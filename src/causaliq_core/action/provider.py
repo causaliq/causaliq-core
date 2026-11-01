@@ -38,10 +38,13 @@ class CausalIQActionProvider(ABC):
     operations. Workflow uses these to build a registry of which provider
     handles compression for each data type.
 
-    Action patterns define how actions interact with workflow caches:
-    - CREATE: Writes new entries (output + matrix required, input
-              prohibited)
-    - AGGREGATE: Combines entries (input + output + matrix required)
+    Action patterns declare how an action maps workflow cache entries:
+    - PRODUCE: Writes new entries (output + matrix required, input
+               prohibited)
+    - MAP: Maps one input entry to one output entry (input + output
+           required, matrix taken from the input cache)
+    - AGGREGATE: Groups input entries (input + output + grouping matrix
+                 required)
 
     Attributes:
         name: Provider identifier for workflow 'uses' field.
