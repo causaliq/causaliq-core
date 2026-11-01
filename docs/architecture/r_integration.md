@@ -32,7 +32,8 @@ causaliq_core/r/
 ├── __init__.py        # Exports run_r_script
 ├── session.py         # _find_rscript(), run_r_script()
 ├── availability.py    # is_r_available(), is_r_package_available()
-├── convert.py         # data_to_r_dataframe(), r_arcs_to_edges()
+├── convert.py         # write_r_datafile(), datafile_to_r_code(),
+│                      #   data_to_r_dataframe(), r_arcs_to_edges()
 ├── bnlearn.py         # bnlearn_cpdag(), bnlearn_compare(), bnlearn_import()
 └── exceptions.py      # RNotAvailableError, RPackageNotAvailableError,
                        #   RRuntimeError
@@ -45,7 +46,8 @@ Python caller
     │
     ├─ is_r_available()            # guard check — returns bool, never raises
     │
-    ├─ data_to_r_dataframe(...)    # serialise Python data → R code string
+    ├─ write_r_datafile(...)       # serialise Python data → temporary CSV
+    ├─ datafile_to_r_code(...)     # → R code string that reads the datafile
     │
     └─ run_r_script(script)
            │
@@ -93,19 +95,31 @@ raise do so explicitly.
 
 ## Data Exchange
 
-All data flows between Python and R as **plain text**. There are no binary
-formats, no shared memory, and no temp files.
+Results flow from R to Python as **plain text** on stdout. There are no binary
+formats, no shared memory, and no long-lived state in R.
 
-### Python → R: code generation
+### Python → R: sample data
 
-`data_to_r_dataframe(sample, columns, node_types, varname)` returns a string
-of R code that assigns a `data.frame`. Each column is serialised inline:
+Sample data is handed to R as a **temporary CSV datafile**, never as
+generated R source literals:
 
-- **Continuous nodes** → `c(1.2, 3.4, ...)` numeric vectors
-- **Categorical nodes** → `factor(c("a","b","a", ...))` factor vectors
+| Function | Purpose |
+|---|---|
+| `write_r_datafile(sample, columns, path)` | write the sample to a CSV datafile |
+| `datafile_to_r_code(path, columns, node_types, varname)` | return the `read.csv` line that loads it |
 
-The generated code is concatenated with the calling script and piped to R in
-a single `run_r_script` call.
+`datafile_to_r_code` maps node types to R column classes, so **continuous
+nodes** are read as `numeric` vectors and **categorical nodes** as `factor`
+vectors. Column names are kept verbatim (`check.names = FALSE`) so the node
+names R reports back match those held in Python.
+
+Writing a datafile matters for performance. Serialising a sample as inline R
+literals (`c(1.2, 3.4, ...)`) makes the R parser build one length-1 vector per
+value, and parsing cost grows *faster* than the sample size: an 8-variable
+discrete sample takes 0.04 s to read at 1,000 rows but 54 s at 100,000 rows.
+`read.csv` parses the same data in 0.2 s at 100,000 rows and 1.3 s at
+1,000,000 rows. `data_to_r_dataframe` remains available for small samples and
+documentation examples, but is not used for learning runs.
 
 ### R → Python: text parsing
 
@@ -116,6 +130,7 @@ R scripts write results to stdout as delimited text:
 | Graph arcs | `from\tto` per line | `r_arcs_to_edges()` |
 | Structural metrics | `tp\tfp\tfn\tshd` single line | `bnlearn_compare()` |
 | BN parameters | `NODE\t…`, `PARENTS\t…`, `COEF\t…`, `SD\t…` blocks | `_parse_bn_output()` |
+
 
 ## bnlearn Utilities
 
