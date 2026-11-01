@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `write_r_datafile()` and `datafile_to_r_code()` in `causaliq_core.r` - hand
+  a sample to R as a temporary CSV datafile instead of generated R source
+  literals. `datafile_to_r_code()` maps node types to R `colClasses`
+  (`factor` for categorical, `numeric` for continuous) and keeps column names
+  verbatim.
 - `relax_filter_literals()` in `causaliq_core.utils` - rewrites bare
   right-hand values in filter expressions as string literals, so
   `status == ok` and `network in [asia, cancer]` work without quoting
@@ -38,6 +43,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   categories such as `np.int64` are normalised to strings when fitting
   CPTs, so numeric CSV categories produce consistent CPT values and
   generated cases across pandas versions.
+- **R data transfer cost** - `data_to_r_dataframe()` writes one R literal per
+  sample value, and the R parser turns each literal into its own vector, so
+  cost grew faster than the sample size (54 s to parse an 8-variable sample
+  of 100,000 rows). Callers now use `write_r_datafile()` with
+  `datafile_to_r_code()`, which R parses linearly: 0.2 s for the same sample
+  and 1.3 s at 1,000,000 rows.
 
 ### Security
 - Nothing yet

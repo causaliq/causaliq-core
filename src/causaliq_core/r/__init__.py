@@ -14,7 +14,12 @@ from causaliq_core.r.bnlearn import (
     bnlearn_cpdag,
     bnlearn_import,
 )
-from causaliq_core.r.convert import data_to_r_dataframe, r_arcs_to_edges
+from causaliq_core.r.convert import (
+    data_to_r_dataframe,
+    datafile_to_r_code,
+    r_arcs_to_edges,
+    write_r_datafile,
+)
 from causaliq_core.r.exceptions import (
     RNotAvailableError,
     RPackageNotAvailableError,
@@ -28,6 +33,8 @@ __all__ = [
     "run_r_script",
     "r_arcs_to_edges",
     "data_to_r_dataframe",
+    "write_r_datafile",
+    "datafile_to_r_code",
     "bnlearn_cpdag",
     "bnlearn_compare",
     "bnlearn_import",

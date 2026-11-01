@@ -2,7 +2,11 @@
 
 import numpy as np
 
-from causaliq_core.r.convert import data_to_r_dataframe, r_arcs_to_edges
+from causaliq_core.r.convert import (
+    data_to_r_dataframe,
+    datafile_to_r_code,
+    r_arcs_to_edges,
+)
 
 
 # Test r_arcs_to_edges returns empty list for empty input.
@@ -93,3 +97,60 @@ def test_data_to_r_dataframe_assigns_to_varname():
     sample = np.array([[1.0], [2.0]])
     result = data_to_r_dataframe(sample, ["X"], {}, varname="my_data")
     assert result.startswith("my_data <- data.frame(")
+
+
+# Test datafile_to_r_code returns str type.
+def test_datafile_to_r_code_returns_string():
+    result = datafile_to_r_code("C:/tmp/d.csv", ["A"], {})
+    assert isinstance(result, str)
+
+
+# Test datafile_to_r_code reads the datafile with read.csv.
+def test_datafile_to_r_code_uses_read_csv():
+    result = datafile_to_r_code("C:/tmp/d.csv", ["A"], {})
+    assert result.startswith("df <- read.csv(")
+    assert '"C:/tmp/d.csv"' in result
+
+
+# Test datafile_to_r_code maps discrete columns to factors.
+def test_datafile_to_r_code_discrete_uses_factor():
+    result = datafile_to_r_code("d.csv", ["A", "B"], {"A": "DISCRETE"})
+    assert 'colClasses = c("factor", "numeric")' in result
+
+
+# Test datafile_to_r_code maps binary and ordinal columns to factors.
+def test_datafile_to_r_code_binary_and_ordinal_use_factor():
+    types = {"A": "BINARY", "B": "ORDINAL"}
+    result = datafile_to_r_code("d.csv", ["A", "B"], types)
+    assert 'colClasses = c("factor", "factor")' in result
+
+
+# Test datafile_to_r_code maps count columns to numeric.
+def test_datafile_to_r_code_count_uses_numeric():
+    result = datafile_to_r_code("d.csv", ["A"], {"A": "COUNT"})
+    assert 'colClasses = c("numeric")' in result
+
+
+# Test datafile_to_r_code treats unknown types as continuous.
+def test_datafile_to_r_code_unknown_type_treated_as_continuous():
+    result = datafile_to_r_code("d.csv", ["A"], {"A": "SOMETHING"})
+    assert 'colClasses = c("numeric")' in result
+
+
+# Test datafile_to_r_code converts Windows paths to forward slashes.
+def test_datafile_to_r_code_converts_backslashes():
+    result = datafile_to_r_code("C:\\tmp\\d.csv", ["A"], {})
+    assert "C:/tmp/d.csv" in result
+    assert "\\" not in result
+
+
+# Test datafile_to_r_code preserves column names verbatim.
+def test_datafile_to_r_code_disables_name_mangling():
+    result = datafile_to_r_code("d.csv", ["A"], {})
+    assert "check.names = FALSE" in result
+
+
+# Test datafile_to_r_code assigns to the given varname.
+def test_datafile_to_r_code_assigns_to_varname():
+    result = datafile_to_r_code("d.csv", ["A"], {}, varname="my_data")
+    assert result.startswith("my_data <- read.csv(")
