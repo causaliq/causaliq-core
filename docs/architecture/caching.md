@@ -79,6 +79,9 @@ String: "content"  → Token ID: 2
 String: "user"     → Token ID: 3
 ```
 
+Once the dictionary passes 65,535 tokens, later IDs use a wide reference
+(0x03 + uint32) instead, so a large cache keeps working.
+
 Benefits accumulate as more entries share common tokens:
 
 | Entries | Unique Tokens | Compression |
@@ -122,13 +125,14 @@ class Compressor(ABC):
 
 ## JsonCompressor Format
 
-The built-in `JsonCompressor` uses three type markers:
+The built-in `JsonCompressor` uses four type markers:
 
 | Marker | Hex | Description |
 |--------|-----|-------------|
 | TOKEN_REF | 0x00 | Token ID reference (uint16) |
 | LITERAL_INT | 0x01 | 64-bit signed integer |
 | LITERAL_FLOAT | 0x02 | 64-bit double float |
+| TOKEN_REF_WIDE | 0x03 | Token ID reference (uint32), used above 65535 |
 
 Example encoding:
 

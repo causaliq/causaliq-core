@@ -144,13 +144,14 @@ imported = compressor.import_(Path("data.json"))
 
 ### Compression Format
 
-The compressor uses three type markers for compact binary representation:
+The compressor uses four type markers for compact binary representation:
 
 | Marker | Value | Description |
 |--------|-------|-------------|
 | TOKEN_REF | 0x00 | Token ID reference (uint16) |
 | LITERAL_INT | 0x01 | 64-bit signed integer |
 | LITERAL_FLOAT | 0x02 | 64-bit double float |
+| TOKEN_REF_WIDE | 0x03 | Token ID reference (uint32), used above 65535 |
 
 #### What Gets Tokenised
 
@@ -171,7 +172,8 @@ Tokens:   { " role " : " user " , " content " : " Hello   world " }
           ↓   ↓     ↓ ↓   ↓    ↓ ↓     ↓      ↓ ↓   ↓       ↓    ↓
           T1  T2   T3 T2 T4   T5 T2 T6  T7    T8 T2 T4     T9   T10 T2 T11
 
-Each token ID: 3 bytes (0x00 marker + uint16)
+Each token ID: 3 bytes (0x00 marker + uint16), or 5 bytes
+(0x03 marker + uint32) once the dictionary passes 65,535 tokens
 ```
 
 ### Token Reuse
