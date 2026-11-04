@@ -269,10 +269,7 @@ class TokenCache:
             token: The string token to look up or create.
 
         Returns:
-            Integer ID for the token (1-65535 range).
-
-        Raises:
-            ValueError: If token dictionary exceeds uint16 capacity.
+            Integer ID for the token.
         """
         # Fast path: check in-memory cache
         if token in self._token_to_id:
@@ -285,12 +282,6 @@ class TokenCache:
         )
         token_id: int = cursor.fetchone()[0]
         self.conn.commit()
-
-        # Check uint16 capacity (max 65,535 tokens)
-        if token_id > 65535:  # pragma: no cover
-            raise ValueError(
-                f"Token dictionary exceeded uint16 capacity: {token_id}"
-            )
 
         # Update in-memory cache
         self._token_to_id[token] = token_id

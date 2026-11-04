@@ -24,6 +24,10 @@ if TYPE_CHECKING:  # pragma: no cover
 TOKEN_REF = 0x00
 LITERAL_INT = 0x01
 LITERAL_FLOAT = 0x02
+TOKEN_REF_WIDE = 0x03
+
+# Largest token ID that fits the narrow (uint16) reference form
+_MAX_NARROW_TOKEN_ID = 0xFFFF
 
 
 class JsonCompressor(Compressor):
@@ -33,7 +37,8 @@ class JsonCompressor(Compressor):
     Numbers are stored as binary literals. Typical compression is 50-70%.
 
     Compression format:
-        - Token reference: 0x00 + uint16 (token ID)
+        - Token reference: 0x00 + uint16 (token ID), or 0x03 + uint32 when
+          the ID exceeds 65535
         - Integer literal: 0x01 + int64 (8 bytes, signed)
         - Float literal: 0x02 + float64 (8 bytes, double)
 
@@ -177,8 +182,12 @@ class JsonCompressor(Compressor):
             result: Bytearray to append compressed data to.
         """
         token_id = token_cache.get_or_create_token(token)
-        result.append(TOKEN_REF)
-        result.extend(struct.pack("<H", token_id))
+        if token_id <= _MAX_NARROW_TOKEN_ID:
+            result.append(TOKEN_REF)
+            result.extend(struct.pack("<H", token_id))
+        else:
+            result.append(TOKEN_REF_WIDE)
+            result.extend(struct.pack("<I", token_id))
 
     def _compress_string(
         self, value: str, token_cache: TokenCache, result: bytearray
@@ -261,6 +270,45 @@ class JsonCompressor(Compressor):
         tokens = re.findall(r"\w+|\s+|[^\w\s]", value)
         return tokens
 
+    @staticmethod
+    def _is_token_ref(marker: int) -> bool:
+        """Return True when a marker byte starts a token reference.
+
+        Args:
+            marker: Byte read at the current offset.
+
+        Returns:
+            True for the narrow or the wide token reference marker.
+        """
+        return marker in (TOKEN_REF, TOKEN_REF_WIDE)
+
+    def _read_token_ref(
+        self, blob: bytes, offset: int, token_cache: TokenCache
+    ) -> tuple[str, int]:
+        """Read the token reference that starts at offset.
+
+        Args:
+            blob: Binary data to decompress.
+            offset: Current position (at the token reference marker).
+            token_cache: Cache for token dictionary.
+
+        Returns:
+            Tuple of (token text, offset after the reference).
+
+        Raises:
+            ValueError: If no token reference starts at offset.
+        """
+        marker = blob[offset]
+        if marker == TOKEN_REF:
+            token_id = struct.unpack("<H", blob[offset + 1 : offset + 3])[0]
+            return self._get_token(token_id, token_cache), offset + 3
+        if marker == TOKEN_REF_WIDE:
+            token_id = struct.unpack("<I", blob[offset + 1 : offset + 5])[0]
+            return self._get_token(token_id, token_cache), offset + 5
+        raise ValueError(  # pragma: no cover
+            f"Expected token reference at offset {offset}"
+        )
+
     def _decompress_value(
         self, blob: bytes, offset: int, token_cache: TokenCache
     ) -> tuple[Any, int]:
@@ -278,6 +326,8 @@ class JsonCompressor(Compressor):
             raise ValueError("Unexpected end of data")
 
         type_marker = blob[offset]
+        if self._is_token_ref(type_marker):
+            return self._decompress_token(blob, offset, token_cache)
         offset += 1
 
         if type_marker == LITERAL_INT:
@@ -286,8 +336,6 @@ class JsonCompressor(Compressor):
         if type_marker == LITERAL_FLOAT:
             value = struct.unpack("<d", blob[offset : offset + 8])[0]
             return value, offset + 8
-        if type_marker == TOKEN_REF:
-            return self._decompress_token(blob, offset, token_cache)
         raise ValueError(  # pragma: no cover
             f"Unknown type marker: {type_marker}"
         )
@@ -299,7 +347,7 @@ class JsonCompressor(Compressor):
 
         Args:
             blob: Binary data to decompress.
-            offset: Current position (after the type marker).
+            offset: Current position (at the type marker).
             token_cache: Cache for token dictionary.
 
         Returns:
@@ -308,9 +356,7 @@ class JsonCompressor(Compressor):
         Raises:
             ValueError: If the token cannot start a value.
         """
-        token_id = struct.unpack("<H", blob[offset : offset + 2])[0]
-        offset += 2
-        token = self._get_token(token_id, token_cache)
+        token, offset = self._read_token_ref(blob, offset, token_cache)
 
         if token == "null":
             return None, offset
@@ -346,14 +392,7 @@ class JsonCompressor(Compressor):
         """
         parts: list[str] = []
         while offset < len(blob):
-            type_marker = blob[offset]
-            if type_marker != TOKEN_REF:  # pragma: no cover
-                raise ValueError(
-                    f"Expected token in string, got {type_marker}"
-                )
-            token_id = struct.unpack("<H", blob[offset + 1 : offset + 3])[0]
-            offset += 3
-            token = self._get_token(token_id, token_cache)
+            token, offset = self._read_token_ref(blob, offset, token_cache)
             if token == '"':
                 # End of string
                 return "".join(parts), offset
@@ -379,11 +418,10 @@ class JsonCompressor(Compressor):
         """
         items = []
         # Check for empty list
-        if offset < len(blob) and blob[offset] == TOKEN_REF:
-            token_id = struct.unpack("<H", blob[offset + 1 : offset + 3])[0]
-            token = self._get_token(token_id, token_cache)
+        if offset < len(blob) and self._is_token_ref(blob[offset]):
+            token, after = self._read_token_ref(blob, offset, token_cache)
             if token == "]":
-                return [], offset + 3
+                return [], after
 
         while offset < len(blob):
             value, offset = self._decompress_value(blob, offset, token_cache)
@@ -392,11 +430,9 @@ class JsonCompressor(Compressor):
             # Check for comma or closing bracket
             if offset >= len(blob):  # pragma: no cover
                 raise ValueError("Unterminated list")
-            if blob[offset] != TOKEN_REF:  # pragma: no cover
+            if not self._is_token_ref(blob[offset]):  # pragma: no cover
                 raise ValueError("Expected token after list item")
-            token_id = struct.unpack("<H", blob[offset + 1 : offset + 3])[0]
-            offset += 3
-            token = self._get_token(token_id, token_cache)
+            token, offset = self._read_token_ref(blob, offset, token_cache)
             if token == "]":
                 return items, offset
             elif token != ",":  # pragma: no cover
@@ -451,11 +487,10 @@ class JsonCompressor(Compressor):
         Returns:
             Offset after the closing brace, or None if not a closing brace.
         """
-        if offset < len(blob) and blob[offset] == TOKEN_REF:
-            token_id = struct.unpack("<H", blob[offset + 1 : offset + 3])[0]
-            token = self._get_token(token_id, token_cache)
+        if offset < len(blob) and self._is_token_ref(blob[offset]):
+            token, after = self._read_token_ref(blob, offset, token_cache)
             if token == "}":
-                return offset + 3
+                return after
         return None
 
     def _read_dict_entry(
@@ -480,17 +515,16 @@ class JsonCompressor(Compressor):
             raise ValueError(f"Dict key must be string, got {type(key)}")
 
         # Expect colon
-        if (
-            offset >= len(blob) or blob[offset] != TOKEN_REF
+        if offset >= len(blob) or not self._is_token_ref(
+            blob[offset]
         ):  # pragma: no cover
             raise ValueError("Expected ':' after dict key")
-        token_id = struct.unpack("<H", blob[offset + 1 : offset + 3])[0]
-        token = self._get_token(token_id, token_cache)
+        token, offset = self._read_token_ref(blob, offset, token_cache)
         if token != ":":  # pragma: no cover
             raise ValueError(f"Expected ':', got '{token}'")
 
         # Decompress value
-        value, offset = self._decompress_value(blob, offset + 3, token_cache)
+        value, offset = self._decompress_value(blob, offset, token_cache)
         return key, value, offset
 
     def _consume_dict_comma(
@@ -511,11 +545,9 @@ class JsonCompressor(Compressor):
         """
         if offset >= len(blob):  # pragma: no cover
             raise ValueError("Unterminated dict")
-        if blob[offset] != TOKEN_REF:  # pragma: no cover
+        if not self._is_token_ref(blob[offset]):  # pragma: no cover
             raise ValueError("Expected token after dict value")
-        token_id = struct.unpack("<H", blob[offset + 1 : offset + 3])[0]
-        offset += 3
-        token = self._get_token(token_id, token_cache)
+        token, offset = self._read_token_ref(blob, offset, token_cache)
         if token != ",":  # pragma: no cover
             raise ValueError(f"Expected ',' or '}}' in dict, got '{token}'")
         return offset

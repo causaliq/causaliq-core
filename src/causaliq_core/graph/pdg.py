@@ -89,8 +89,8 @@ class EdgeProbabilities:
     def __post_init__(self) -> None:
         """Validate probabilities sum to 1.0."""
         total = self.forward + self.backward + self.undirected + self.none
-        # Use 1e-6 tolerance to account for GraphML text serialisation
-        # round-trips (8 sig figs per float, 4 floats = ~1e-7 worst case)
+        # Tolerance absorbs the last bits of a float sum, which depend on
+        # the order the components are added in.
         if abs(total - 1.0) > 1e-6:
             raise ValueError(
                 f"Edge probabilities must sum to 1.0, got {total:.10f}"

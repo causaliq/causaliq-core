@@ -51,20 +51,32 @@ def test_write_pdg_omits_no_edge() -> None:
     assert 'source="A" target="C"' not in xml
 
 
-# Test write_pdg uses 4 significant figures.
+# Test write_pdg keeps full probability precision.
 def test_write_pdg_precision() -> None:
-    """write_pdg outputs 8 significant figures."""
+    """write_pdg writes probabilities that parse back exactly."""
+    third = 1.0 / 3.0
     pdg = PDG(
-        ["A", "B"],
-        {("A", "B"): EdgeProbabilities(forward=0.123456789, none=0.876543211)},
+        ["A", "B", "C"],
+        {
+            ("A", "B"): EdgeProbabilities(
+                forward=0.123456789, none=0.876543211
+            ),
+            ("B", "C"): EdgeProbabilities(
+                forward=third, backward=third, undirected=third, none=0.0
+            ),
+        },
     )
     buffer = StringIO()
     write_pdg(pdg, buffer)
 
-    xml = buffer.getvalue()
-    # Should be rounded to 8 s.f.: 0.12345679
-    assert "0.12345679" in xml
-    assert "0.87654321" in xml
+    restored = read_pdg(StringIO(buffer.getvalue()))
+    forward = restored.edges[("A", "B")]
+    assert forward.forward == 0.123456789
+    assert forward.none == 0.876543211
+    thirds = restored.edges[("B", "C")]
+    assert thirds.forward == third
+    assert thirds.backward == third
+    assert thirds.undirected == third
 
 
 # Test write_pdg validates pdg type.

@@ -259,6 +259,9 @@ def write_pdg(pdg: "PDG", file: FileLike) -> None:
     (p_forward, p_backward, p_undirected, p_none).
 
     Only edges with p_exist > 0 (i.e., p_none < 1.0) are written.
+    Probabilities are written with the shortest text that parses back to
+    the same float, so a written PDG reloads with identical values and a
+    later extraction step sees the same numbers.
 
     Args:
         pdg: PDG to write.
@@ -345,4 +348,7 @@ def _add_probability_data(
         ("p_none", probs.none),
     ):
         data_elem = ET.SubElement(edge_elem, "data", key=key_id)
-        data_elem.text = f"{value:.8g}"
+        # Shortest text that parses back to the same float: a written PDG
+        # reloads with identical probabilities, so extraction gives the
+        # same result as working on the in-memory graph.
+        data_elem.text = repr(float(value))

@@ -9,6 +9,10 @@ import pytest
 
 from causaliq_core.cache import TokenCache
 from causaliq_core.cache.compressors import JsonCompressor
+from causaliq_core.cache.compressors.json_compressor import (
+    TOKEN_REF,
+    TOKEN_REF_WIDE,
+)
 
 
 @pytest.fixture
@@ -356,3 +360,57 @@ def test_unknown_type_fallback(
     result = compressor.decompress(compressed, cache)
     # The custom object gets converted to its string representation
     assert result == {"custom": "custom_value"}
+
+
+# ============================================================================
+# Token reference width tests
+# ============================================================================
+
+
+class _HighIdTokenCache:
+    """Token cache stand-in that assigns IDs from a chosen base."""
+
+    def __init__(self, base: int) -> None:
+        self._next = base
+        self._ids: dict[int, str] = {}
+        self._tokens: dict[str, int] = {}
+
+    def get_or_create_token(self, token: str) -> int:
+        """Return a fixed ID for a token, creating IDs in sequence."""
+        if token not in self._tokens:
+            self._tokens[token] = self._next
+            self._ids[self._next] = token
+            self._next += 1
+        return self._tokens[token]
+
+    def get_token(self, token_id: int) -> "str | None":
+        """Return the token text for an ID."""
+        return self._ids.get(token_id)
+
+
+# Token IDs above the uint16 limit use the wide reference form.
+def test_wide_token_reference_round_trip() -> None:
+    """Token IDs above 65535 round-trip through the wide reference form."""
+    cache = _HighIdTokenCache(base=65600)
+    compressor = JsonCompressor()
+    original = {"a": "text", "b": [1, 2.5, "more"], "c": {"d": "deep"}}
+
+    compressed = compressor.compress(original, cache)
+
+    # The document's opening brace is the first token in the blob.
+    assert compressed[0] == TOKEN_REF_WIDE
+    assert compressor.decompress(compressed, cache) == original
+
+
+# Token IDs up to 65535 keep the compact narrow reference form.
+def test_narrow_token_reference_round_trip() -> None:
+    """Token IDs up to 65535 use the narrow reference form."""
+    cache = _HighIdTokenCache(base=1)
+    compressor = JsonCompressor()
+    original = {"a": "text", "b": [1, "more"]}
+
+    compressed = compressor.compress(original, cache)
+
+    # The document's opening brace is the first token in the blob.
+    assert compressed[0] == TOKEN_REF
+    assert compressor.decompress(compressed, cache) == original
