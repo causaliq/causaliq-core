@@ -22,7 +22,16 @@ Example:
 """
 
 import re
-from typing import Any, Dict, FrozenSet, List, Sequence, Set, Tuple
+from typing import (
+    Any,
+    Dict,
+    FrozenSet,
+    List,
+    Mapping,
+    Sequence,
+    Set,
+    Tuple,
+)
 
 from simpleeval import (  # type: ignore[import-untyped]
     EvalWithCompoundTypes,
@@ -327,7 +336,10 @@ def get_filter_variables(expression: str) -> Set[str]:
 
 
 def _select_random_values(
-    all_metadata: List[Dict[str, Any]], var_name: str, count: int, seed: int
+    all_metadata: Sequence[Mapping[str, Any]],
+    var_name: str,
+    count: int,
+    seed: int,
 ) -> FrozenSet[Any]:
     """Select *count* distinct values of a variable using stable RNG.
 
@@ -376,7 +388,7 @@ def _substitute_random_call(expression: str, match: Any, name: str) -> str:
 
 def resolve_random_calls(
     expression: str,
-    all_metadata: List[Dict[str, Any]],
+    all_metadata: Sequence[Mapping[str, Any]],
 ) -> Tuple[str, Dict[str, Any]]:
     """Pre-resolve ``random()`` calls in a filter expression.
 

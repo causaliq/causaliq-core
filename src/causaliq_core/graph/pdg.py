@@ -304,8 +304,11 @@ class PDG:
         equally between forward and backward). Edges that would create
         cycles are skipped.
 
-        For ties where effective forward equals effective backward,
-        alphabetical ordering is used (source < target).
+        For ties where effective forward equals effective backward, up to
+        the 1e-9 tolerance used for merged graphs, alphabetical ordering is
+        used (source < target). Candidate edges with near-equal
+        probabilities are ranked by their node pair, so the extracted DAG is
+        independent of the order of the edges in the source graph.
 
         Args:
             threshold: Minimum p_exist to consider an edge (default 0.0).
@@ -553,6 +556,17 @@ def _reversed_probabilities(
 # Candidate edge: (probability, source, target, direction, is tie break)
 Candidate = Tuple[float, str, str, str, bool]
 
+# Probabilities closer than this are treated as equal. Merged graphs carry
+# floating-point noise of order 1e-16, so an exact comparison lets that noise
+# decide an orientation or a ranking; treating such values as equal keeps the
+# extracted DAG reproducible.
+_TIE_TOLERANCE = 1e-9
+
+# Narrower tolerance for the probability threshold: just wide enough to
+# absorb summation noise (1.1e-16), so a value genuinely below the threshold
+# stays excluded.
+_THRESHOLD_TOLERANCE = 1e-15
+
 
 def _candidate_for(
     source: str, target: str, probs: EdgeProbabilities
@@ -561,7 +575,8 @@ def _candidate_for(
 
     The undirected probability is split equally between the two possible
     directions and ties are broken in favour of the canonical forward
-    direction.
+    direction. An orientation difference within ``_TIE_TOLERANCE`` counts as
+    a tie, so floating-point noise cannot choose the direction.
 
     Args:
         source: Canonical source node.
@@ -573,10 +588,28 @@ def _candidate_for(
     """
     eff_forward = probs.forward + probs.undirected / 2
     eff_backward = probs.backward + probs.undirected / 2
-    if eff_backward > eff_forward:
+    if eff_backward - eff_forward > _TIE_TOLERANCE:
         return (eff_backward, source, target, "backward", False)
-    is_tie = eff_forward == eff_backward
+    is_tie = abs(eff_forward - eff_backward) <= _TIE_TOLERANCE
     return (eff_forward, source, target, "forward", is_tie)
+
+
+def _ranking_key(candidate: Candidate) -> Tuple[float, str, str]:
+    """Return the deterministic ranking key for a candidate edge.
+
+    The probability is rounded so that values differing only by
+    floating-point noise rank equally, and the canonical node pair breaks
+    the remaining ties. The extracted DAG therefore does not depend on the
+    incidental order of the edges in the source graph.
+
+    Args:
+        candidate: Candidate edge tuple.
+
+    Returns:
+        Sort key ordering by descending probability, then by node pair.
+    """
+    probability, source, target = candidate[:3]
+    return (-round(probability, 9), source, target)
 
 
 def _candidate_edges(
@@ -589,19 +622,23 @@ def _candidate_edges(
         threshold: Minimum p_exist for an edge to be considered.
 
     Returns:
-        Tuple of (candidates ordered by descending probability, number of
-        edges skipped because they fall below the threshold).
+        Tuple of (candidates ordered by descending probability, then by node
+        pair, number of edges skipped because they fall below the threshold).
+
+    An edge whose p_exist is within ``_THRESHOLD_TOLERANCE`` below the
+    threshold is kept, so that floating-point noise cannot decide whether it
+    is included.
     """
     candidates = []
     skipped = 0
+    cutoff = threshold - _THRESHOLD_TOLERANCE
     for (source, target), probs in edges.items():
-        if probs.p_exist < threshold:
+        if probs.p_exist < cutoff:
             skipped += 1
             continue
         candidates.append(_candidate_for(source, target, probs))
 
-    # Sort by probability descending (stable sort preserves order for ties)
-    candidates.sort(key=lambda x: -x[0])
+    candidates.sort(key=_ranking_key)
     return candidates, skipped
 
 
