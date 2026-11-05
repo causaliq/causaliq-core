@@ -3406,7 +3406,10 @@ pdg = read_pdg(StringIO(xml))</p>
         <p>Write a PDG to a GraphML file or file-like object.</p>
 <p>Exports the PDG with undirected edges and probability data attributes
 (p_forward, p_backward, p_undirected, p_none).</p>
-<p>Only edges with p_exist &gt; 0 (i.e., p_none &lt; 1.0) are written.</p>
+<p>Only edges with p_exist &gt; 0 (i.e., p_none &lt; 1.0) are written.
+Probabilities are written with the shortest text that parses back to
+the same float, so a written PDG reloads with identical values and a
+later extraction step sees the same numbers.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>

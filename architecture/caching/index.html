@@ -2823,6 +2823,8 @@ repeated strings with compact integer IDs:</p>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>String: &quot;content&quot;  → Token ID: 2
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>String: &quot;user&quot;     → Token ID: 3
 </span></code></pre></div>
+<p>Once the dictionary passes 65,535 tokens, later IDs use a wide reference
+(0x03 + uint32) instead, so a large cache keeps working.</p>
 <p>Benefits accumulate as more entries share common tokens:</p>
 <table>
 <thead>
@@ -2884,7 +2886,7 @@ repeated strings with compact integer IDs:</p>
 </span><span id="__span-3-25"><a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>        <span class="o">...</span>
 </span></code></pre></div>
 <h2 id="jsoncompressor-format">JsonCompressor Format<a class="headerlink" href="#jsoncompressor-format" title="Permanent link">&para;</a></h2>
-<p>The built-in <code>JsonCompressor</code> uses three type markers:</p>
+<p>The built-in <code>JsonCompressor</code> uses four type markers:</p>
 <table>
 <thead>
 <tr>
@@ -2908,6 +2910,11 @@ repeated strings with compact integer IDs:</p>
 <td>LITERAL_FLOAT</td>
 <td>0x02</td>
 <td>64-bit double float</td>
+</tr>
+<tr>
+<td>TOKEN_REF_WIDE</td>
+<td>0x03</td>
+<td>Token ID reference (uint32), used above 65535</td>
 </tr>
 </tbody>
 </table>

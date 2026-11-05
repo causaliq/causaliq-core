@@ -4025,7 +4025,7 @@ data, achieving compression through shared token dictionary usage.</p>
 </span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="n">imported</span> <span class="o">=</span> <span class="n">compressor</span><span class="o">.</span><span class="n">import_</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;data.json&quot;</span><span class="p">))</span>
 </span></code></pre></div>
 <h3 id="compression-format">Compression Format<a class="headerlink" href="#compression-format" title="Permanent link">&para;</a></h3>
-<p>The compressor uses three type markers for compact binary representation:</p>
+<p>The compressor uses four type markers for compact binary representation:</p>
 <table>
 <thead>
 <tr>
@@ -4049,6 +4049,11 @@ data, achieving compression through shared token dictionary usage.</p>
 <td>LITERAL_FLOAT</td>
 <td>0x02</td>
 <td>64-bit double float</td>
+</tr>
+<tr>
+<td>TOKEN_REF_WIDE</td>
+<td>0x03</td>
+<td>Token ID reference (uint32), used above 65535</td>
 </tr>
 </tbody>
 </table>
@@ -4100,7 +4105,8 @@ data, achieving compression through shared token dictionary usage.</p>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>          ↓   ↓     ↓ ↓   ↓    ↓ ↓     ↓      ↓ ↓   ↓       ↓    ↓
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>          T1  T2   T3 T2 T4   T5 T2 T6  T7    T8 T2 T4     T9   T10 T2 T11
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>Each token ID: 3 bytes (0x00 marker + uint16)
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>Each token ID: 3 bytes (0x00 marker + uint16), or 5 bytes
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>(0x03 marker + uint32) once the dictionary passes 65,535 tokens
 </span></code></pre></div>
 <h3 id="token-reuse">Token Reuse<a class="headerlink" href="#token-reuse" title="Permanent link">&para;</a></h3>
 <p>Tokens are shared across all entries in a cache, providing cumulative
@@ -4141,7 +4147,8 @@ Numbers are stored as binary literals. Typical compression is 50-70%.</p>
 <details class="compression-format" open>
   <summary>Compression format</summary>
   <ul>
-<li>Token reference: 0x00 + uint16 (token ID)</li>
+<li>Token reference: 0x00 + uint16 (token ID), or 0x03 + uint32 when
+  the ID exceeds 65535</li>
 <li>Integer literal: 0x01 + int64 (8 bytes, signed)</li>
 <li>Float literal: 0x02 + float64 (8 bytes, double)</li>
 </ul>

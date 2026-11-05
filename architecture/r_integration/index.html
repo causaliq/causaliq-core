@@ -789,10 +789,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#python-r-code-generation" class="md-nav__link">
+  <a href="#python-r-sample-data" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Python → R: code generation
+        Python → R: sample data
       
     </span>
   </a>
@@ -2793,10 +2793,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#python-r-code-generation" class="md-nav__link">
+  <a href="#python-r-sample-data" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Python → R: code generation
+        Python → R: sample data
       
     </span>
   </a>
@@ -3000,32 +3000,34 @@ more portable, and easier to test.</p>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── __init__.py        # Exports run_r_script
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├── session.py         # _find_rscript(), run_r_script()
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>├── availability.py    # is_r_available(), is_r_package_available()
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>├── convert.py         # data_to_r_dataframe(), r_arcs_to_edges()
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>├── bnlearn.py         # bnlearn_cpdag(), bnlearn_compare(), bnlearn_import()
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>└── exceptions.py      # RNotAvailableError, RPackageNotAvailableError,
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>                       #   RRuntimeError
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>├── convert.py         # write_r_datafile(), datafile_to_r_code(),
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│                      #   data_to_r_dataframe(), r_arcs_to_edges()
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>├── bnlearn.py         # bnlearn_cpdag(), bnlearn_compare(), bnlearn_import()
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>└── exceptions.py      # RNotAvailableError, RPackageNotAvailableError,
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>                       #   RRuntimeError
 </span></code></pre></div>
 <h3 id="call-flow">Call Flow<a class="headerlink" href="#call-flow" title="Permanent link">&para;</a></h3>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Python caller
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    │
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    ├─ is_r_available()            # guard check — returns bool, never raises
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    │
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    ├─ data_to_r_dataframe(...)    # serialise Python data → R code string
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    │
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    └─ run_r_script(script)
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>           │
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>           ├─ _find_rscript()      # PATH → R_HOME fallback
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>           │
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>           └─ subprocess.run(
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>                  [&quot;Rscript&quot;, &quot;--vanilla&quot;, &quot;-&quot;],
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>                  input=script,    # R code piped via stdin
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>                  capture_output=True,
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>                  text=True,
-</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>                  timeout=timeout
-</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>              )
-</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>                  │
-</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>                  ├─ stdout  →  parsed by caller (arcs, metrics, BN fields)
-</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>                  └─ stderr  →  included in RRuntimeError on non-zero exit
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    ├─ write_r_datafile(...)       # serialise Python data → temporary CSV
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    ├─ datafile_to_r_code(...)     # → R code string that reads the datafile
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    │
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    └─ run_r_script(script)
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>           │
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>           ├─ _find_rscript()      # PATH → R_HOME fallback
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>           │
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>           └─ subprocess.run(
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>                  [&quot;Rscript&quot;, &quot;--vanilla&quot;, &quot;-&quot;],
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>                  input=script,    # R code piped via stdin
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>                  capture_output=True,
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>                  text=True,
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>                  timeout=timeout
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>              )
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>                  │
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>                  ├─ stdout  →  parsed by caller (arcs, metrics, BN fields)
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>                  └─ stderr  →  included in RRuntimeError on non-zero exit
 </span></code></pre></div>
 <h2 id="session-management">Session Management<a class="headerlink" href="#session-management" title="Permanent link">&para;</a></h2>
 <h3 id="rscript-discovery">Rscript Discovery<a class="headerlink" href="#rscript-discovery" title="Permanent link">&para;</a></h3>
@@ -3052,17 +3054,40 @@ raise do so explicitly.</p>
   message.</li>
 </ul>
 <h2 id="data-exchange">Data Exchange<a class="headerlink" href="#data-exchange" title="Permanent link">&para;</a></h2>
-<p>All data flows between Python and R as <strong>plain text</strong>. There are no binary
-formats, no shared memory, and no temp files.</p>
-<h3 id="python-r-code-generation">Python → R: code generation<a class="headerlink" href="#python-r-code-generation" title="Permanent link">&para;</a></h3>
-<p><code>data_to_r_dataframe(sample, columns, node_types, varname)</code> returns a string
-of R code that assigns a <code>data.frame</code>. Each column is serialised inline:</p>
-<ul>
-<li><strong>Continuous nodes</strong> → <code>c(1.2, 3.4, ...)</code> numeric vectors</li>
-<li><strong>Categorical nodes</strong> → <code>factor(c("a","b","a", ...))</code> factor vectors</li>
-</ul>
-<p>The generated code is concatenated with the calling script and piped to R in
-a single <code>run_r_script</code> call.</p>
+<p>Results flow from R to Python as <strong>plain text</strong> on stdout. There are no binary
+formats, no shared memory, and no long-lived state in R.</p>
+<h3 id="python-r-sample-data">Python → R: sample data<a class="headerlink" href="#python-r-sample-data" title="Permanent link">&para;</a></h3>
+<p>Sample data is handed to R as a <strong>temporary CSV datafile</strong>, never as
+generated R source literals:</p>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>write_r_datafile(sample, columns, path)</code></td>
+<td>write the sample to a CSV datafile</td>
+</tr>
+<tr>
+<td><code>datafile_to_r_code(path, columns, node_types, varname)</code></td>
+<td>return the <code>read.csv</code> line that loads it</td>
+</tr>
+</tbody>
+</table>
+<p><code>datafile_to_r_code</code> maps node types to R column classes, so <strong>continuous
+nodes</strong> are read as <code>numeric</code> vectors and <strong>categorical nodes</strong> as <code>factor</code>
+vectors. Column names are kept verbatim (<code>check.names = FALSE</code>) so the node
+names R reports back match those held in Python.</p>
+<p>Writing a datafile matters for performance. Serialising a sample as inline R
+literals (<code>c(1.2, 3.4, ...)</code>) makes the R parser build one length-1 vector per
+value, and parsing cost grows <em>faster</em> than the sample size: an 8-variable
+discrete sample takes 0.04 s to read at 1,000 rows but 54 s at 100,000 rows.
+<code>read.csv</code> parses the same data in 0.2 s at 100,000 rows and 1.3 s at
+1,000,000 rows. <code>data_to_r_dataframe</code> remains available for small samples and
+documentation examples, but is not used for learning runs.</p>
 <h3 id="r-python-text-parsing">R → Python: text parsing<a class="headerlink" href="#r-python-text-parsing" title="Permanent link">&para;</a></h3>
 <p>R scripts write results to stdout as delimited text:</p>
 <table>
