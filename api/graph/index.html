@@ -4806,8 +4806,11 @@ forward/backward relative to alphabetical ordering.</p>
 based on effective probability (splitting undirected probability
 equally between forward and backward). Edges that would create
 cycles are skipped.</p>
-<p>For ties where effective forward equals effective backward,
-alphabetical ordering is used (source &lt; target).</p>
+<p>For ties where effective forward equals effective backward, up to
+the 1e-9 tolerance used for merged graphs, alphabetical ordering is
+used (source &lt; target). Candidate edges with near-equal
+probabilities are ranked by their node pair, so the extracted DAG is
+independent of the order of the edges in the source graph.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>

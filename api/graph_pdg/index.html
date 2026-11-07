@@ -3433,11 +3433,16 @@ graphs rather than a single graph.</p>
 <li>For each edge pair, compute effective forward and backward probabilities
    by splitting the undirected probability equally between directions.</li>
 <li>Choose the direction with the higher effective probability.</li>
-<li>For ties (effective forward equals effective backward), use alphabetical
-   ordering (source &lt; target, i.e. forward direction).</li>
-<li>Sort candidate edges by descending probability.</li>
+<li>For ties, use alphabetical ordering (source &lt; target, i.e. the forward
+   direction). Probabilities within 1e-9 of each other count as a tie, so
+   the floating-point noise carried by merged graphs cannot choose the
+   direction.</li>
+<li>Sort candidate edges by descending probability, then by node pair, so the
+   result does not depend on the order of the edges in the source graph.</li>
 <li>Greedily add edges, skipping any that would create a cycle (checked
-   via ancestor tracking with propagation to descendants).</li>
+   via ancestor tracking with propagation to descendants). An edge counts as
+   reaching the threshold when its <code>p_exist</code> is within 1e-15 below it, so
+   summation noise of order 1e-16 cannot decide inclusion.</li>
 </ol>
 <p><strong>Parameters:</strong></p>
 <ul>
@@ -4522,8 +4527,11 @@ forward/backward relative to alphabetical ordering.</p>
 based on effective probability (splitting undirected probability
 equally between forward and backward). Edges that would create
 cycles are skipped.</p>
-<p>For ties where effective forward equals effective backward,
-alphabetical ordering is used (source &lt; target).</p>
+<p>For ties where effective forward equals effective backward, up to
+the 1e-9 tolerance used for merged graphs, alphabetical ordering is
+used (source &lt; target). Candidate edges with near-equal
+probabilities are ranked by their node pair, so the extracted DAG is
+independent of the order of the edges in the source graph.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
