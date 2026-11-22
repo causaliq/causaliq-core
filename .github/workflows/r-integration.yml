@@ -5,7 +5,7 @@ on:
 
 jobs:
   r-integration:
-    name: R Integration (${{ matrix.os }}, Python 3.11)
+    name: R Integration (${{ matrix.os }}, Python 3.12)
     runs-on: ${{ matrix.os }}
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -32,10 +32,10 @@ jobs:
       - name: Install bnlearn
         run: Rscript -e "install.packages('bnlearn')"
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v7
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Install causaliq-core
         shell: bash

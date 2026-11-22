@@ -59,7 +59,7 @@ to the R session layer):
 3. Select **R Integration** in the left sidebar.
 4. Click **Run workflow** → **Run workflow**.
 
-The workflow runs on Ubuntu and Windows with Python 3.11. R packages are
+The workflow runs on Ubuntu and Windows with Python 3.12. R packages are
 cached between runs to avoid reinstalling bnlearn from scratch each time.
 
 ## Environment Tests

@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   code policy: long methods were split into private helpers, and larger
   modules were decomposed into sub-modules that re-export the original names.
   The public API and behaviour are unchanged.
+- Python 3.14 is now supported and tested in CI, and the default development
+  interpreter is Python 3.12. The R and Java integration workflows run on
+  Python 3.12.
 
 ### Deprecated
 - Nothing yet
@@ -37,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   only `CREATE` (writes a workflow cache without reading one) or
   `AGGREGATE` (reads a workflow cache and writes one); steps that write
   plain files run once under the output-driven run-once rule.
+- Python 3.9 support: `requires-python` is now `>=3.10`, and the development
+  environments, CI matrix and generated scripts cover Python 3.10 to 3.14.
 
 ### Fixed
 - **Numeric categorical values in CPT fitting** - pandas and NumPy scalar
