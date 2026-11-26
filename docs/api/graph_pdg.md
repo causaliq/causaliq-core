@@ -112,11 +112,16 @@ Extract a DAG from the PDG using a greedy algorithm.
 1. For each edge pair, compute effective forward and backward probabilities
    by splitting the undirected probability equally between directions.
 2. Choose the direction with the higher effective probability.
-3. For ties (effective forward equals effective backward), use alphabetical
-   ordering (source < target, i.e. forward direction).
-4. Sort candidate edges by descending probability.
+3. For ties, use alphabetical ordering (source < target, i.e. the forward
+   direction). Probabilities within 1e-9 of each other count as a tie, so
+   the floating-point noise carried by merged graphs cannot choose the
+   direction.
+4. Sort candidate edges by descending probability, then by node pair, so the
+   result does not depend on the order of the edges in the source graph.
 5. Greedily add edges, skipping any that would create a cycle (checked
-   via ancestor tracking with propagation to descendants).
+   via ancestor tracking with propagation to descendants). An edge counts as
+   reaching the threshold when its `p_exist` is within 1e-15 below it, so
+   summation noise of order 1e-16 cannot decide inclusion.
 
 **Parameters:**
 
