@@ -42,7 +42,7 @@ cpdag = bnlearn_cpdag(pdag)
 ### `bnlearn_compare`
 
 ```python
-def bnlearn_compare(pdag: PDAG, ref: PDAG) -> Dict[str, int]:
+def bnlearn_compare(pdag: PDAG, ref: PDAG) -> dict[str, int]:
 ```
 
 Compare a learned graph against a reference using bnlearn's `compare()` and

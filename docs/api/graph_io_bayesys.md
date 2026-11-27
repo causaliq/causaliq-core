@@ -11,13 +11,13 @@ The Bayesys format uses CSV files to represent graphs where:
 
 ## Functions
 
-### `read(path: str, all_nodes: Optional[List[str]] = None, strict: bool = True) -> Union[PDAG, DAG]`
+### `read(path: str, all_nodes: list[str] | None = None, strict: bool = True) -> PDAG | DAG`
 
 Read a graph from a Bayesys CSV format file.
 
 **Parameters:**
 - `path` (str): Full path name of file to read
-- `all_nodes` (List[str], optional): Complete list of nodes that should be included in the graph. If provided, nodes not appearing in edges will be added as isolated nodes
+- `all_nodes` (list[str], optional): Complete list of nodes that should be included in the graph. If provided, nodes not appearing in edges will be added as isolated nodes
 - `strict` (bool): If True, enforces strict format validation
 
 **Returns:**

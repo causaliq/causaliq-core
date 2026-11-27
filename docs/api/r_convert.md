@@ -12,8 +12,8 @@ serialised to R code strings (Python → R) or parsed from tab-separated text
 ```python
 def data_to_r_dataframe(
     sample: Any,
-    columns: List[str],
-    node_types: Dict[str, str],
+    columns: list[str],
+    node_types: dict[str, str],
     varname: str,
 ) -> str:
 ```
@@ -56,8 +56,8 @@ code = data_to_r_dataframe(
 
 ```python
 def r_arcs_to_edges(
-    arcs: List[Tuple[str, str]],
-) -> List[Tuple[str, str, str]]:
+    arcs: list[tuple[str, str]],
+) -> list[tuple[str, str, str]]:
 ```
 
 Convert bnlearn arc pairs to CausalIQ edge tuples.

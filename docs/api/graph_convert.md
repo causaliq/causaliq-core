@@ -58,8 +58,8 @@ Convert a dictionary representation of an adjacency matrix to a pandas DataFrame
 
 **Parameters:**
 
-- `adjmat_dict` (Dict): Dictionary with (row, col) tuple keys and numeric values
-- `labels` (List[str], optional): Variable labels. If None, creates labels A, B, C, etc.
+- `adjmat_dict` (dict): Dictionary with (row, col) tuple keys and numeric values
+- `labels` (list[str], optional): Variable labels. If None, creates labels A, B, C, etc.
 
 **Returns:**
 

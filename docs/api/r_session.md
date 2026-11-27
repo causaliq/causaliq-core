@@ -44,7 +44,7 @@ reproducible behaviour regardless of the user's R configuration.
 ### `_find_rscript`
 
 ```python
-def _find_rscript() -> Optional[str]:
+def _find_rscript() -> str | None:
 ```
 
 Locate the `Rscript` executable.
