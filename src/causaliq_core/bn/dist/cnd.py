@@ -3,7 +3,7 @@
 # implementations as CPT or LinearGuassian etc.
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Union
 
 
 class CND(ABC):
@@ -28,10 +28,10 @@ class CND(ABC):
     def fit(
         cls,
         node: str,
-        parents: Optional[Tuple[str, ...]],
+        parents: tuple[str, ...] | None,
         data: Any,
         autocomplete: bool = True,
-    ) -> Tuple[Tuple[type, Dict[str, Any]], Optional[int]]:
+    ) -> tuple[tuple[type, dict[str, Any]], int | None]:
         """Constructs a CND (Conditional Node Distribution) from data.
 
         Args:
@@ -48,7 +48,7 @@ class CND(ABC):
         pass
 
     @abstractmethod
-    def cdist(self, parental_values: Optional[Dict[str, Any]] = None) -> Any:
+    def cdist(self, parental_values: dict[str, Any] | None = None) -> Any:
         """Return conditional distribution for specified parental values.
 
         Args:
@@ -62,7 +62,7 @@ class CND(ABC):
         pass
 
     @abstractmethod
-    def random_value(self, pvs: Optional[Dict[str, Any]]) -> Union[str, float]:
+    def random_value(self, pvs: dict[str, Any] | None) -> Union[str, float]:
         """Generate a random value for a node given the value of its parents.
 
         Args:
@@ -73,7 +73,7 @@ class CND(ABC):
         """
 
     @abstractmethod
-    def parents(self) -> List[str]:
+    def parents(self) -> list[str]:
         """Return parents of node CND relates to.
 
         Returns:
@@ -82,7 +82,7 @@ class CND(ABC):
         pass
 
     @abstractmethod
-    def to_spec(self, name_map: Dict[str, str]) -> Dict[str, Any]:
+    def to_spec(self, name_map: dict[str, str]) -> dict[str, Any]:
         """Returns external specification format of CND,
         renaming nodes according to a name map.
 
@@ -116,8 +116,8 @@ class CND(ABC):
     def validate_parents(
         self,
         node: str,
-        parents: Dict[str, List[str]],
-        node_values: Dict[str, List[str]],
+        parents: dict[str, list[str]],
+        node_values: dict[str, list[str]],
     ) -> None:
         """Checks every CND's parents and (categorical) parental values
         are consistent.
@@ -135,9 +135,9 @@ class CND(ABC):
     @classmethod
     def validate_cnds(
         cls,
-        nodes: List[str],
-        cnds: Dict[str, "CND"],
-        parents: Dict[str, List[str]],
+        nodes: list[str],
+        cnds: dict[str, "CND"],
+        parents: dict[str, list[str]],
     ) -> None:
         """Checks that all CNDs in graph are consistent with one another
         and with graph structure.
@@ -171,8 +171,8 @@ class CND(ABC):
 
     @classmethod
     def _map_keys(
-        cls, odict: Dict[str, Any], name_map: Dict[str, str]
-    ) -> Dict[str, Any]:
+        cls, odict: dict[str, Any], name_map: dict[str, str]
+    ) -> dict[str, Any]:
         """Renames some keys in a dict, re-ordering it by new key names.
 
         Args:

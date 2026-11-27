@@ -7,7 +7,7 @@
 #
 
 from re import compile, findall
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from causaliq_core.utils import FileFormatError
 
@@ -46,7 +46,7 @@ EQN_NORMAL = r"[\+\-]?Normal\(.+?\,.+?\)"
 EQN_SPLIT_TERMS = compile(r"[\+|\-]")
 
 
-def _to_float(string: str) -> Optional[float]:
+def _to_float(string: str) -> float | None:
     """Convert string to float.
 
     Args:
@@ -62,7 +62,7 @@ def _to_float(string: str) -> Optional[float]:
     return x
 
 
-def _parse_equation_normal(string: str) -> Tuple[float, float]:
+def _parse_equation_normal(string: str) -> tuple[float, float]:
     """Parse the string defining normal function.
 
     Args:
@@ -118,7 +118,7 @@ def _parse_equation_coeffs(string: Any, parents: Any) -> Any:
     return coeffs
 
 
-def _parse_equation_terms(string: Any) -> Dict[Any, Any]:
+def _parse_equation_terms(string: Any) -> dict[Any, Any]:
     """Return the parent coefficients named in an equation.
 
     Args:
@@ -134,7 +134,7 @@ def _parse_equation_terms(string: Any) -> Dict[Any, Any]:
     terms = EQN_SPLIT_TERMS.split(string)
     terms = terms[1:] if terms[0] == "" else terms
 
-    coeffs: Dict[Any, Any] = {}
+    coeffs: dict[Any, Any] = {}
     for term in terms:
         parent, coeff = _parse_equation_term(string, term)
         if coeff is None or parent in coeffs:
@@ -143,7 +143,7 @@ def _parse_equation_terms(string: Any) -> Dict[Any, Any]:
     return coeffs
 
 
-def _parse_equation_term(string: Any, term: Any) -> Tuple[Any, Any]:
+def _parse_equation_term(string: Any, term: Any) -> tuple[Any, Any]:
     """Return the parent and signed coefficient of one equation term.
 
     Args:
@@ -166,7 +166,7 @@ def _parse_equation_term(string: Any, term: Any) -> Tuple[Any, Any]:
     return parent, None if coeff is None else coeff * sign
 
 
-def _parse_equation_factor(parts: Any) -> Tuple[Any, Any]:
+def _parse_equation_factor(parts: Any) -> tuple[Any, Any]:
     """Return the parent and coefficient of a term with a "*" symbol.
 
     Args:
@@ -223,7 +223,7 @@ def _parse_equation_definition(
     return {"mean": mean, "sd": sd, "coeffs": coeffs}
 
 
-def _check_equation_sides(sides: List[Any], node: Any) -> None:
+def _check_equation_sides(sides: list[Any], node: Any) -> None:
     """Check an equation definition has a valid left and right hand side.
 
     Args:

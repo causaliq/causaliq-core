@@ -5,14 +5,14 @@ The helpers operate on plain node, parent and edge data so that they do not
 need to depend on the graph classes themselves.
 """
 
-from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Iterable, Set, Union
 
 
 def _prepare_parents(
-    parents: Dict[str, List[str]],
-    nodes: Optional[Union[List[str], Set[str]]],
-    new_arc: Optional[Tuple[str, str]],
-) -> Dict[str, Set[str]]:
+    parents: dict[str, list[str]],
+    nodes: Union[list[str], Set[str]] | None,
+    new_arc: tuple[str, str] | None,
+) -> dict[str, Set[str]]:
     """Return a mutable parents mapping with any new arc applied.
 
     Args:
@@ -32,7 +32,7 @@ def _prepare_parents(
     return parents_copy
 
 
-def _remove_roots(parents_copy: Dict[str, Set[str]], roots: Set[str]) -> None:
+def _remove_roots(parents_copy: dict[str, Set[str]], roots: Set[str]) -> None:
     """Remove a layer of root nodes from a parents mapping.
 
     Args:
@@ -46,8 +46,8 @@ def _remove_roots(parents_copy: Dict[str, Set[str]], roots: Set[str]) -> None:
 
 
 def _order_layers(
-    parents_copy: Dict[str, Set[str]],
-) -> Optional[List[Set[str]]]:
+    parents_copy: dict[str, Set[str]],
+) -> list[Set[str]] | None:
     """Return the partial topological layers of a parents mapping.
 
     Args:
@@ -56,7 +56,7 @@ def _order_layers(
     Returns:
         List of layers of root nodes, or None when the graph is cyclic.
     """
-    order: List[Set[str]] = []
+    order: list[Set[str]] = []
     while len(parents_copy):
         roots = {n for n in parents_copy if not parents_copy[n]}
         if not len(roots):
@@ -67,10 +67,10 @@ def _order_layers(
 
 
 def layout_partial_order(
-    parents: Dict[str, List[str]],
-    nodes: Optional[Union[List[str], Set[str]]] = None,
-    new_arc: Optional[Tuple[str, str]] = None,
-) -> Optional[List[Set[str]]]:
+    parents: dict[str, list[str]],
+    nodes: Union[list[str], Set[str]] | None = None,
+    new_arc: tuple[str, str] | None = None,
+) -> list[Set[str]] | None:
     """Return partial topological ordering for the directed part of a graph.
 
     The graph is specified by a list of parents for each node.
@@ -102,8 +102,8 @@ def layout_partial_order(
 
 
 def undirected_edge_pairs(
-    edges: Iterable[Tuple[str, str]],
-) -> Set[Tuple[str, str]]:
+    edges: Iterable[tuple[str, str]],
+) -> Set[tuple[str, str]]:
     """Return undirected node pairs with the smaller node name first.
 
     Args:
@@ -115,7 +115,7 @@ def undirected_edge_pairs(
     return {(e[0], e[1]) if e[1] > e[0] else (e[1], e[0]) for e in edges}
 
 
-def _crosses_boundary(edge: Tuple[str, str], c_nodes: Set[str]) -> bool:
+def _crosses_boundary(edge: tuple[str, str], c_nodes: Set[str]) -> bool:
     """Return whether exactly one end of an edge is inside a node set.
 
     Args:
@@ -130,8 +130,8 @@ def _crosses_boundary(edge: Tuple[str, str], c_nodes: Set[str]) -> bool:
 
 
 def _extends_tree(
-    edge: Tuple[str, str],
-    tree: Set[Union[Tuple[str, str], Tuple[str, None]]],
+    edge: tuple[str, str],
+    tree: Set[Union[tuple[str, str], tuple[str, None]]],
     t_nodes: Set[str],
 ) -> bool:
     """Return whether an edge extends a tree across its boundary.
@@ -150,10 +150,10 @@ def _extends_tree(
 
 
 def _extend_tree_pass(
-    tree: Set[Union[Tuple[str, str], Tuple[str, None]]],
+    tree: Set[Union[tuple[str, str], tuple[str, None]]],
     t_nodes: Set[str],
-    edges: Set[Tuple[str, str]],
-) -> Tuple[Set[Union[Tuple[str, str], Tuple[str, None]]], Set[str], bool]:
+    edges: Set[tuple[str, str]],
+) -> tuple[Set[Union[tuple[str, str], tuple[str, None]]], Set[str], bool]:
     """Extend a tree by a single pass over the candidate edges.
 
     Args:
@@ -175,8 +175,8 @@ def _extend_tree_pass(
 
 
 def grow_undirected_tree(
-    first_edge: Tuple[str, str], edges: Set[Tuple[str, str]]
-) -> Tuple[Set[Union[Tuple[str, str], Tuple[str, None]]], Set[str]]:
+    first_edge: tuple[str, str], edges: Set[tuple[str, str]]
+) -> tuple[Set[Union[tuple[str, str], tuple[str, None]]], Set[str]]:
     """Return the tree grown from an edge through connected edges.
 
     Args:
@@ -186,7 +186,7 @@ def grow_undirected_tree(
     Returns:
         Tuple of (edges in the tree, nodes in the tree).
     """
-    tree: Set[Union[Tuple[str, str], Tuple[str, None]]] = {first_edge}
+    tree: Set[Union[tuple[str, str], tuple[str, None]]] = {first_edge}
     t_nodes = {first_edge[0], first_edge[1]}
 
     # Keep adding connected edges until no more can be added
@@ -198,8 +198,8 @@ def grow_undirected_tree(
 
 
 def _absorb_crossing_edges(
-    c_nodes: Set[str], edges: Set[Tuple[str, str]]
-) -> Tuple[Set[str], bool]:
+    c_nodes: Set[str], edges: Set[tuple[str, str]]
+) -> tuple[Set[str], bool]:
     """Absorb, in one pass, the edges that cross a component boundary.
 
     Args:
@@ -218,7 +218,7 @@ def _absorb_crossing_edges(
     return c_nodes, grew
 
 
-def grow_component(c_nodes: Set[str], edges: Set[Tuple[str, str]]) -> Set[str]:
+def grow_component(c_nodes: Set[str], edges: Set[tuple[str, str]]) -> Set[str]:
     """Return every node reachable from a starting component.
 
     Args:

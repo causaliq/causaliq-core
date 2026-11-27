@@ -1,6 +1,6 @@
 """Unit tests for causaliq_core.action.parameters."""
 
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 
@@ -260,7 +260,7 @@ def test_resolve_keeps_supplied_parameters() -> None:
 # Test the resolver accepts a class that only declares inputs.
 def test_resolve_accepts_plain_provider_attributes() -> None:
     class Plain:
-        inputs: Dict[str, Any] = {
+        inputs: dict[str, Any] = {
             "timeout": ActionInput(
                 name="timeout", description="Timeout", default=60
             )

@@ -18,12 +18,8 @@ as it represents uncertainty over graphs rather than a single graph.
 from dataclasses import dataclass
 from typing import (
     TYPE_CHECKING,
-    Dict,
     Iterator,
-    List,
     NamedTuple,
-    Optional,
-    Tuple,
 )
 
 from .pdg_codec import (  # noqa: F401
@@ -175,8 +171,8 @@ class PDG:
 
     def __init__(
         self,
-        nodes: List[str],
-        edges: Optional[Dict[Tuple[str, str], EdgeProbabilities]] = None,
+        nodes: list[str],
+        edges: dict[tuple[str, str], EdgeProbabilities] | None = None,
     ) -> None:
         """Initialise a Probabilistic Dependency Graph.
 
@@ -253,7 +249,7 @@ class PDG:
                 none=probs.none,
             )
 
-    def node_pairs(self) -> Iterator[Tuple[str, str]]:
+    def node_pairs(self) -> Iterator[tuple[str, str]]:
         """Iterate over all possible node pairs in canonical order.
 
         Yields:
@@ -263,7 +259,7 @@ class PDG:
             for target in self.nodes[i + 1 :]:
                 yield (source, target)
 
-    def existing_edges(self) -> Iterator[Tuple[str, str, EdgeProbabilities]]:
+    def existing_edges(self) -> Iterator[tuple[str, str, EdgeProbabilities]]:
         """Iterate over node pairs with non-zero edge probability.
 
         Yields:
@@ -403,7 +399,7 @@ class PDG:
         return cls(nodes, edges)
 
 
-def _validate_pdg_nodes(nodes: List[str]) -> List[str]:
+def _validate_pdg_nodes(nodes: list[str]) -> list[str]:
     """Return the node names of a PDG in alphabetical order.
 
     Args:
@@ -433,9 +429,9 @@ def _validate_pdg_nodes(nodes: List[str]) -> List[str]:
 
 
 def _validate_pdg_edges(
-    nodes: List[str],
-    edges: Optional[Dict[Tuple[str, str], EdgeProbabilities]],
-) -> Dict[Tuple[str, str], EdgeProbabilities]:
+    nodes: list[str],
+    edges: dict[tuple[str, str], EdgeProbabilities] | None,
+) -> dict[tuple[str, str], EdgeProbabilities]:
     """Return the validated edge probabilities of a PDG.
 
     Args:
@@ -451,7 +447,7 @@ def _validate_pdg_edges(
         ValueError: If a pair names an unknown node, is a self-loop or is
             not in canonical order.
     """
-    validated: Dict[Tuple[str, str], EdgeProbabilities] = {}
+    validated: dict[tuple[str, str], EdgeProbabilities] = {}
     if edges is None:
         return validated
     if not isinstance(edges, dict):
@@ -501,7 +497,7 @@ def _validate_pdg_edge_pair(
 
 
 def _check_get_probability_nodes(
-    nodes: List[str], node_a: str, node_b: str
+    nodes: list[str], node_a: str, node_b: str
 ) -> None:
     """Validate the node pair requested from a PDG.
 
@@ -521,7 +517,7 @@ def _check_get_probability_nodes(
         raise ValueError("Cannot get probabilities for self-loop")
 
 
-def _canonical_pair(node_a: str, node_b: str) -> Tuple[str, str]:
+def _canonical_pair(node_a: str, node_b: str) -> tuple[str, str]:
     """Return a node pair in alphabetical (canonical) order.
 
     Args:
@@ -554,7 +550,7 @@ def _reversed_probabilities(
 
 
 # Candidate edge: (probability, source, target, direction, is tie break)
-Candidate = Tuple[float, str, str, str, bool]
+Candidate = tuple[float, str, str, str, bool]
 
 # Probabilities closer than this are treated as equal. Merged graphs carry
 # floating-point noise of order 1e-16, so an exact comparison lets that noise
@@ -594,7 +590,7 @@ def _candidate_for(
     return (eff_forward, source, target, "forward", is_tie)
 
 
-def _ranking_key(candidate: Candidate) -> Tuple[float, str, str]:
+def _ranking_key(candidate: Candidate) -> tuple[float, str, str]:
     """Return the deterministic ranking key for a candidate edge.
 
     The probability is rounded so that values differing only by
@@ -613,8 +609,8 @@ def _ranking_key(candidate: Candidate) -> Tuple[float, str, str]:
 
 
 def _candidate_edges(
-    edges: Dict[Tuple[str, str], EdgeProbabilities], threshold: float
-) -> Tuple[List[Candidate], int]:
+    edges: dict[tuple[str, str], EdgeProbabilities], threshold: float
+) -> tuple[list[Candidate], int]:
     """Return ranked candidate edges and those below the threshold.
 
     Args:
@@ -642,7 +638,7 @@ def _candidate_edges(
     return candidates, skipped
 
 
-def _edge_ends(source: str, target: str, direction: str) -> Tuple[str, str]:
+def _edge_ends(source: str, target: str, direction: str) -> tuple[str, str]:
     """Return the (from, to) nodes for a candidate edge direction.
 
     Args:
@@ -659,11 +655,11 @@ def _edge_ends(source: str, target: str, direction: str) -> Tuple[str, str]:
 
 
 def _pass_ancestors_to_children(
-    ancestors: Dict[str, set],
-    dag_edges: List[Tuple[str, str, str]],
+    ancestors: dict[str, set],
+    dag_edges: list[tuple[str, str, str]],
     current: str,
     new_ancestors: set,
-    to_visit: List[str],
+    to_visit: list[str],
 ) -> None:
     """Add new ancestors to a node and queue its children for updating.
 
@@ -683,8 +679,8 @@ def _pass_ancestors_to_children(
 
 
 def _propagate_ancestors(
-    ancestors: Dict[str, set],
-    dag_edges: List[Tuple[str, str, str]],
+    ancestors: dict[str, set],
+    dag_edges: list[tuple[str, str, str]],
     from_node: str,
     to_node: str,
 ) -> None:
@@ -710,12 +706,12 @@ def _propagate_ancestors(
 
 
 def _add_candidate_edge(
-    dag_edges: List[Tuple[str, str, str]],
-    ancestors: Dict[str, set],
+    dag_edges: list[tuple[str, str, str]],
+    ancestors: dict[str, set],
     source: str,
     target: str,
     direction: str,
-) -> Tuple[int, int]:
+) -> tuple[int, int]:
     """Add one candidate edge when it does not create a cycle.
 
     A cycle would arise when the target is already an ancestor of the
@@ -741,8 +737,8 @@ def _add_candidate_edge(
 
 
 def _build_greedy_dag(
-    nodes: List[str], candidates: List[Candidate]
-) -> Tuple[List[Tuple[str, str, str]], int, int, int]:
+    nodes: list[str], candidates: list[Candidate]
+) -> tuple[list[tuple[str, str, str]], int, int, int]:
     """Return the DAG built greedily from ranked candidate edges.
 
     Args:
@@ -753,8 +749,8 @@ def _build_greedy_dag(
         Tuple of (dag edge triples, edges included, edges skipped to avoid
         a cycle, tie breaks applied).
     """
-    dag_edges: List[Tuple[str, str, str]] = []
-    ancestors: Dict[str, set] = {node: set() for node in nodes}
+    dag_edges: list[tuple[str, str, str]] = []
+    ancestors: dict[str, set] = {node: set() for node in nodes}
     included = 0
     skipped_cycle = 0
     tie_breaks = 0

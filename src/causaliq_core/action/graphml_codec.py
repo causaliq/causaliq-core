@@ -9,7 +9,7 @@ the edge triples used to reconstruct the graph.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from causaliq_core.cache import TokenCache
 from causaliq_core.graph import SDG
@@ -29,7 +29,7 @@ def _encode_sdg_edges(result: bytearray, sdg: SDG) -> None:
         result.extend(edge_type.value[0].to_bytes(1, "big"))
 
 
-def _decode_uint16(blob: bytes, pos: int) -> Tuple[int, int]:
+def _decode_uint16(blob: bytes, pos: int) -> tuple[int, int]:
     """Return the big-endian uint16 at a position and the next position.
 
     Args:
@@ -49,7 +49,7 @@ def _decode_uint16(blob: bytes, pos: int) -> Tuple[int, int]:
 
 def _decode_graphml_nodes(
     blob: bytes, cache: TokenCache
-) -> Tuple[List[str], int]:
+) -> tuple[list[str], int]:
     """Return the tokenised node names of a compressed graphml blob.
 
     Args:
@@ -76,8 +76,8 @@ def _decode_graphml_nodes(
 
 
 def _decode_graphml_edges(
-    blob: bytes, pos: int, num_edges: int, nodes: List[str]
-) -> List[Tuple[str, str, str]]:
+    blob: bytes, pos: int, num_edges: int, nodes: list[str]
+) -> list[tuple[str, str, str]]:
     """Return the edges of a compressed graphml blob.
 
     Args:
@@ -118,9 +118,9 @@ def _decode_graphml_edge(
     source_idx: int,
     target_idx: int,
     edge_type_id: int,
-    nodes: List[str],
-    edge_type_lookup: Dict[int, Any],
-) -> Tuple[str, str, str]:
+    nodes: list[str],
+    edge_type_lookup: dict[int, Any],
+) -> tuple[str, str, str]:
     """Return one decoded edge triple from a compressed graphml blob.
 
     Args:

@@ -21,7 +21,7 @@ An entry with ``action=migrate_trace`` and ``algorithm=fci`` receives
 weight ``0.5 * 0.8 = 0.4``.
 """
 
-from typing import Any, Dict
+from typing import Any
 
 
 class WeightSpecError(Exception):
@@ -30,7 +30,7 @@ class WeightSpecError(Exception):
     pass
 
 
-def validate_weight_spec(weight_spec: Dict[str, Dict[str, float]]) -> None:
+def validate_weight_spec(weight_spec: dict[str, dict[str, float]]) -> None:
     """Validate a weight specification.
 
     Checks that the weight specification is well-formed:
@@ -84,7 +84,7 @@ def validate_weight_spec(weight_spec: Dict[str, Dict[str, float]]) -> None:
                 )
 
 
-def _value_weight(field_value: Any, value_weights: Dict[str, float]) -> float:
+def _value_weight(field_value: Any, value_weights: dict[str, float]) -> float:
     """Return the weight for a metadata value, defaulting to 1.0.
 
     Args:
@@ -101,8 +101,8 @@ def _value_weight(field_value: Any, value_weights: Dict[str, float]) -> float:
 
 
 def compute_weight(
-    metadata: Dict[str, Any],
-    weight_spec: Dict[str, Dict[str, float]],
+    metadata: dict[str, Any],
+    weight_spec: dict[str, dict[str, float]],
 ) -> float:
     """Compute a weight from metadata using a weight specification.
 
@@ -141,7 +141,7 @@ def compute_weight(
     return weight
 
 
-def get_weight_fields(weight_spec: Dict[str, Dict[str, float]]) -> set:
+def get_weight_fields(weight_spec: dict[str, dict[str, float]]) -> set:
     """Get the set of metadata field names used in a weight specification.
 
     Useful for validating that required metadata fields are present.

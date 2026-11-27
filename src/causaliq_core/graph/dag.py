@@ -2,7 +2,7 @@
 #   Directed Acyclic Graph (DAG) class
 #
 
-from typing import Generator, List, Tuple
+from typing import Generator
 
 from .pdag import PDAG, NotPDAGError
 
@@ -34,7 +34,7 @@ class DAG(PDAG):
     """
 
     def __init__(
-        self, nodes: List[str], edges: List[Tuple[str, str, str]]
+        self, nodes: list[str], edges: list[tuple[str, str, str]]
     ) -> None:
         """Initialize DAG.
 

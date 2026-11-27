@@ -2,7 +2,7 @@
 #   Graph conversion operations
 #
 
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import Set, Union
 
 from pandas import DataFrame
 
@@ -14,9 +14,9 @@ from .pdag import PDAG
 def _process_incoming_to_x(
     x: str,
     y: str,
-    edges: List[Tuple[str, str, str]],
-    parents: Dict[str, List[str]],
-) -> Tuple[List[Tuple[str, str, str]], bool]:
+    edges: list[tuple[str, str, str]],
+    parents: dict[str, list[str]],
+) -> tuple[list[tuple[str, str, str]], bool]:
     """
     Compel the edges required by steps 5 to 7 of Chickering (1995).
 
@@ -50,9 +50,9 @@ def _process_incoming_to_x(
 def _process_incoming_to_y(
     x: str,
     y: str,
-    edges: List[Tuple[str, str, str]],
-    parents: Dict[str, List[str]],
-) -> List[Tuple[str, str, str]]:
+    edges: list[tuple[str, str, str]],
+    parents: dict[str, list[str]],
+) -> list[tuple[str, str, str]]:
     """
     Compel the edges required by steps 8 and 9 of Chickering (1995).
 
@@ -86,8 +86,8 @@ def _process_incoming_to_y(
 
 
 def _orient_unknown_edges(
-    edges: List[Tuple[str, str, str]], parents: Dict[str, List[str]]
-) -> List[Tuple[str, str, str]]:
+    edges: list[tuple[str, str, str]], parents: dict[str, list[str]]
+) -> list[tuple[str, str, str]]:
     """
     Orientate every unknown edge, following Chickering (1995).
 
@@ -257,10 +257,10 @@ def _valid_x(s: PDAG) -> Union[str, None]:
 
 
 def _orient_edges_into_node(
-    dag_edges: Dict[Tuple[str, str], EdgeType],
-    pdag_edges: Dict[Tuple[str, str], EdgeType],
+    dag_edges: dict[tuple[str, str], EdgeType],
+    pdag_edges: dict[tuple[str, str], EdgeType],
     x: str,
-) -> List[Tuple[str, str, str]]:
+) -> list[tuple[str, str, str]]:
     """
     Return edge triples with every edge incident to x oriented into x.
 
@@ -284,8 +284,8 @@ def _orient_edges_into_node(
 
 
 def _remove_node(
-    nodes: List[str], edges: Dict[Tuple[str, str], EdgeType], x: str
-) -> Tuple[List[str], List[Tuple[str, str, str]]]:
+    nodes: list[str], edges: dict[tuple[str, str], EdgeType], x: str
+) -> tuple[list[str], list[tuple[str, str, str]]]:
     """
     Return the nodes and edge triples left after removing a node.
 
@@ -369,7 +369,7 @@ def extend_pdag(pdag: PDAG) -> DAG:
 
 
 def dict_to_adjmat(
-    columns: Optional[Dict[str, List[int]]] = None,
+    columns: dict[str, list[int]] | None = None,
 ) -> DataFrame:
     """
     Create an adjacency matrix with specified entries.

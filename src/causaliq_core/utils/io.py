@@ -2,7 +2,6 @@
 
 from csv import QUOTE_MINIMAL
 from os.path import isdir, isfile
-from typing import Optional
 
 from pandas import DataFrame
 
@@ -43,7 +42,7 @@ def write_dataframe(
     filename: str,
     compress: bool = False,
     sf: int = 10,
-    zero: Optional[float] = None,
+    zero: float | None = None,
     preserve: bool = True,
 ) -> None:
     """Write DataFrame to CSV with numeric rounding and compression options.

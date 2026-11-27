@@ -1,7 +1,7 @@
 # Linear Guassian implementation of Conditional Node Distribution
 
 from math import sqrt
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Union
 
 from numpy import sum as npsum
 from sklearn.linear_model import LinearRegression  # type: ignore
@@ -39,7 +39,7 @@ class LinGauss:
 
     _model: Any = None
 
-    def __init__(self, lg: Dict[str, Any]) -> None:
+    def __init__(self, lg: dict[str, Any]) -> None:
 
         if (
             not isinstance(lg, dict)
@@ -69,10 +69,10 @@ class LinGauss:
     def fit(
         self,
         node: str,
-        parents: Optional[Tuple[str, ...]],
+        parents: tuple[str, ...] | None,
         data: Union["Pandas", "BNFit"],
         autocomplete: bool = True,
-    ) -> Tuple[Tuple[type, Dict[str, Any]], Optional[int]]:
+    ) -> tuple[tuple[type, dict[str, Any]], int | None]:
         """Fit a Linear Gaussian to data.
 
         Args:
@@ -110,7 +110,7 @@ class LinGauss:
             # Just need to determine mean and sd for univariate Gaussian
 
             values = data.values((node,))
-            lg: Dict[str, Any] = {
+            lg: dict[str, Any] = {
                 "mean": values.mean().item(),
                 "sd": values.std().item(),
                 "coeffs": {},
@@ -146,8 +146,8 @@ class LinGauss:
         return ((LinGauss, lg), None)
 
     def cdist(
-        self, parental_values: Optional[Dict[str, float]] = None
-    ) -> Tuple[float, float]:
+        self, parental_values: dict[str, float] | None = None
+    ) -> tuple[float, float]:
         """Return conditional distribution for specified parental values.
 
         Args:
@@ -171,7 +171,7 @@ class LinGauss:
         ):
             raise TypeError("lingauss.cpt() coeffs/parent values mismatch")
 
-        mean = self.mean + sum(  # type: ignore
+        mean = self.mean + sum(
             [
                 parental_values[p] * self.coeffs[p]  # type: ignore
                 for p in self.coeffs
@@ -179,7 +179,7 @@ class LinGauss:
         )
         return mean, self.sd
 
-    def random_value(self, pvs: Optional[Dict[str, float]]) -> float:
+    def random_value(self, pvs: dict[str, float] | None) -> float:
         """Generate a random value for a node given the value of its parents.
 
         Args:
@@ -191,7 +191,7 @@ class LinGauss:
         mean, sd = self.cdist(pvs)
         return mean + random_generator().normal() * sd
 
-    def parents(self) -> List[str]:
+    def parents(self) -> list[str]:
         """Return parents of node CND relates to.
 
         Returns:
@@ -199,7 +199,7 @@ class LinGauss:
         """
         return sorted(list(self.coeffs.keys()))
 
-    def to_spec(self, name_map: Dict[str, str]) -> Dict[str, Any]:
+    def to_spec(self, name_map: dict[str, str]) -> dict[str, Any]:
         """Returns external specification format of LinGauss,
         renaming nodes according to a name map.
 
@@ -275,8 +275,8 @@ class LinGauss:
     def validate_parents(
         self,
         node: str,
-        parents: Dict[str, List[str]],
-        node_values: Dict[str, List[str]],
+        parents: dict[str, list[str]],
+        node_values: dict[str, list[str]],
     ) -> None:
         """
         Check LinGauss coeff keys consistent with parents in DAG.

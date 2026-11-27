@@ -15,7 +15,7 @@ This format can represent most dependency graph types including:
  - Partial Ancestral Graphs (PAGs)
 """
 
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import Set, Union
 
 from numpy import zeros
 from pandas import DataFrame
@@ -64,7 +64,7 @@ class SDG:
     """
 
     def __init__(
-        self, nodes: List[str], edges: List[Tuple[str, str, str]]
+        self, nodes: list[str], edges: list[tuple[str, str, str]]
     ) -> None:
         """Initialize a Simple Dependency Graph.
 
@@ -78,20 +78,20 @@ class SDG:
 
         # Validate nodes specified
 
-        self.nodes: List[str] = _validate_sdg_nodes(nodes)
+        self.nodes: list[str] = _validate_sdg_nodes(nodes)
 
-        self.edges: Dict[Tuple[str, str], EdgeType] = {}
+        self.edges: dict[tuple[str, str], EdgeType] = {}
         edge_types = {e.value[3]: e for e in EdgeType}
         self.is_directed: bool = True
         self.is_partially_directed: bool = True
-        self.parents: Dict[str, List[str]] = {}
+        self.parents: dict[str, list[str]] = {}
         self.has_directed_cycles: bool = False
 
         for edge in edges:
             self._add_edge(edge, edge_types)
 
     def _add_edge(
-        self, edge: Tuple[str, str, str], edge_types: Dict[str, EdgeType]
+        self, edge: tuple[str, str, str], edge_types: dict[str, EdgeType]
     ) -> None:
         """Validate and store one edge of the graph.
 
@@ -142,7 +142,7 @@ class SDG:
             return
         self.parents[node] = [parent]
 
-    def rename(self, name_map: Dict[str, str]) -> None:
+    def rename(self, name_map: dict[str, str]) -> None:
         """Rename nodes in place according to name map.
 
         Args:
@@ -188,10 +188,10 @@ class SDG:
     @classmethod
     def partial_order(
         cls,
-        parents: Dict[str, List[str]],
-        nodes: Optional[Union[List[str], Set[str]]] = None,
-        new_arc: Optional[Tuple[str, str]] = None,
-    ) -> Optional[List[Set[str]]]:
+        parents: dict[str, list[str]],
+        nodes: Union[list[str], Set[str]] | None = None,
+        new_arc: tuple[str, str] | None = None,
+    ) -> list[Set[str]] | None:
         """Return partial topological ordering for the directed part of a
         graph.
 
@@ -246,7 +246,7 @@ class SDG:
 
     def undirected_trees(
         self,
-    ) -> List[Set[Union[Tuple[str, str], Tuple[str, None]]]]:
+    ) -> list[Set[Union[tuple[str, str], tuple[str, None]]]]:
         """Return undirected trees present in graph.
 
         Returns:
@@ -271,7 +271,7 @@ class SDG:
         trees.extend([{(n, None)} for n in sorted(isolated)])
         return sorted(trees, key=lambda t: min(t))
 
-    def components(self) -> List[List[str]]:
+    def components(self) -> list[list[str]]:
         """Return components present in graph.
 
         Uses tree search algorithm to span the undirected graph to identify
@@ -406,7 +406,7 @@ class SDG:
         return cls(nodes, edges)
 
 
-def _validate_sdg_nodes(nodes: List[str]) -> List[str]:
+def _validate_sdg_nodes(nodes: list[str]) -> list[str]:
     """Return the validated, alphabetically sorted node names.
 
     Args:
@@ -419,7 +419,7 @@ def _validate_sdg_nodes(nodes: List[str]) -> List[str]:
         TypeError: If a node name is not a string.
         ValueError: If a node name is empty or duplicated.
     """
-    validated: List[str] = []
+    validated: list[str] = []
     for node in nodes:
         if type(node) is not str:
             raise TypeError("graph has non-string node name")
@@ -433,10 +433,10 @@ def _validate_sdg_nodes(nodes: List[str]) -> List[str]:
 
 
 def _validate_sdg_edge(
-    edge: Tuple[str, str, str],
-    edge_types: Dict[str, EdgeType],
-    nodes: List[str],
-    edges: Dict[Tuple[str, str], EdgeType],
+    edge: tuple[str, str, str],
+    edge_types: dict[str, EdgeType],
+    nodes: list[str],
+    edges: dict[tuple[str, str], EdgeType],
 ) -> None:
     """Validate one edge of a simple dependency graph.
 
@@ -468,7 +468,7 @@ def _validate_sdg_edge(
 
 
 def _is_reversed_non_directed(
-    edge_type: EdgeType, edge: Tuple[str, str, str]
+    edge_type: EdgeType, edge: tuple[str, str, str]
 ) -> bool:
     """Return whether a non-directed edge needs its nodes reordering.
 

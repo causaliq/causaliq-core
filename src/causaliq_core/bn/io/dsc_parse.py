@@ -6,7 +6,7 @@
 #
 
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from causaliq_core.utils import FileFormatError, values_same
 
@@ -39,7 +39,7 @@ TRANSITIONS = {
 }
 
 
-def _parse_line(line: str) -> Optional[Dict[str, Any]]:
+def _parse_line(line: str) -> dict[str, Any] | None:
     """Parse line in DSC format file.
 
     Args:
@@ -60,7 +60,7 @@ def _parse_line(line: str) -> Optional[Dict[str, Any]]:
     return None
 
 
-def _parse_prob_line(result: Any) -> Dict[str, Any]:
+def _parse_prob_line(result: Any) -> dict[str, Any]:
     """Return the parsed probability section header.
 
     Args:
@@ -72,7 +72,7 @@ def _parse_prob_line(result: Any) -> Dict[str, Any]:
     return {"state": "prob", "node": result.group(1)}
 
 
-def _parse_cond_pmf_line(result: Any) -> Optional[Dict[str, Any]]:
+def _parse_cond_pmf_line(result: Any) -> dict[str, Any] | None:
     """Return the parsed conditional probability entry.
 
     Args:
@@ -97,7 +97,7 @@ def _parse_cond_pmf_line(result: Any) -> Optional[Dict[str, Any]]:
     }
 
 
-def _parse_cond_prob_line(result: Any) -> Dict[str, Any]:
+def _parse_cond_prob_line(result: Any) -> dict[str, Any]:
     """Return the parsed conditional probability section header.
 
     Args:
@@ -113,7 +113,7 @@ def _parse_cond_prob_line(result: Any) -> Dict[str, Any]:
     }
 
 
-def _parse_node_line(result: Any) -> Dict[str, Any]:
+def _parse_node_line(result: Any) -> dict[str, Any]:
     """Return the parsed node section header.
 
     Args:
@@ -125,7 +125,7 @@ def _parse_node_line(result: Any) -> Dict[str, Any]:
     return {"state": "node", "node": result.group(1)}
 
 
-def _parse_type_line(result: Any) -> Optional[Dict[str, Any]]:
+def _parse_type_line(result: Any) -> dict[str, Any] | None:
     """Return the parsed node type and values line.
 
     Args:
@@ -148,7 +148,7 @@ def _parse_type_line(result: Any) -> Optional[Dict[str, Any]]:
     return {"state": "type", "values": values}
 
 
-def _parse_pmf_line(result: Any) -> Optional[Dict[str, Any]]:
+def _parse_pmf_line(result: Any) -> dict[str, Any] | None:
     """Return the parsed non-conditional probabilities line.
 
     Args:
@@ -166,7 +166,7 @@ def _parse_pmf_line(result: Any) -> Optional[Dict[str, Any]]:
     return {"state": "pmf", "pmf": pmf}
 
 
-def _parse_network_line(result: Any) -> Dict[str, Any]:
+def _parse_network_line(result: Any) -> dict[str, Any]:
     """Return the parsed belief network header.
 
     Args:
@@ -191,9 +191,9 @@ _LINE_PARSERS = [
 
 
 def _process_parsed(
-    parsed: Dict[str, Any],
-    nodes: List[str],
-    edges: List[Tuple[str, str, str]],
+    parsed: dict[str, Any],
+    nodes: list[str],
+    edges: list[tuple[str, str, str]],
     cptdata: Any,
     node: Any,
 ) -> Any:
@@ -221,7 +221,7 @@ def _process_parsed(
 
 
 def _check_cond_pmf_entry(
-    parsed: Dict[str, Any], cptdata: Any, node: Any, parent_values: List[int]
+    parsed: dict[str, Any], cptdata: Any, node: Any, parent_values: list[int]
 ) -> None:
     """Check a cond_pmf entry against the entries already recorded.
 
@@ -246,9 +246,9 @@ def _check_cond_pmf_entry(
 
 
 def _apply_cond_pmf(
-    parsed: Dict[str, Any],
-    nodes: List[str],
-    edges: List[Tuple[str, str, str]],
+    parsed: dict[str, Any],
+    nodes: list[str],
+    edges: list[tuple[str, str, str]],
     cptdata: Any,
     node: Any,
 ) -> Any:
@@ -276,9 +276,9 @@ def _apply_cond_pmf(
 
 
 def _apply_node(
-    parsed: Dict[str, Any],
-    nodes: List[str],
-    edges: List[Tuple[str, str, str]],
+    parsed: dict[str, Any],
+    nodes: list[str],
+    edges: list[tuple[str, str, str]],
     cptdata: Any,
     node: Any,
 ) -> Any:
@@ -304,9 +304,9 @@ def _apply_node(
 
 
 def _apply_prob(
-    parsed: Dict[str, Any],
-    nodes: List[str],
-    edges: List[Tuple[str, str, str]],
+    parsed: dict[str, Any],
+    nodes: list[str],
+    edges: list[tuple[str, str, str]],
     cptdata: Any,
     node: Any,
 ) -> Any:
@@ -331,7 +331,7 @@ def _apply_prob(
     return node
 
 
-def _check_cond_prob_parent(parent: str, nodes: List[str], node: Any) -> None:
+def _check_cond_prob_parent(parent: str, nodes: list[str], node: Any) -> None:
     """Check a parent named in a conditional probability header.
 
     Args:
@@ -347,9 +347,9 @@ def _check_cond_prob_parent(parent: str, nodes: List[str], node: Any) -> None:
 
 
 def _apply_cond_prob(
-    parsed: Dict[str, Any],
-    nodes: List[str],
-    edges: List[Tuple[str, str, str]],
+    parsed: dict[str, Any],
+    nodes: list[str],
+    edges: list[tuple[str, str, str]],
     cptdata: Any,
     node: Any,
 ) -> Any:
@@ -378,9 +378,9 @@ def _apply_cond_prob(
 
 
 def _apply_type(
-    parsed: Dict[str, Any],
-    nodes: List[str],
-    edges: List[Tuple[str, str, str]],
+    parsed: dict[str, Any],
+    nodes: list[str],
+    edges: list[tuple[str, str, str]],
     cptdata: Any,
     node: Any,
 ) -> Any:
@@ -431,9 +431,9 @@ def _check_cond_pmf_complete(cptdata: Any, node: Any) -> None:
 
 
 def _apply_close(
-    parsed: Dict[str, Any],
-    nodes: List[str],
-    edges: List[Tuple[str, str, str]],
+    parsed: dict[str, Any],
+    nodes: list[str],
+    edges: list[tuple[str, str, str]],
     cptdata: Any,
     node: Any,
 ) -> Any:
@@ -458,9 +458,9 @@ def _apply_close(
 
 
 def _apply_pmf(
-    parsed: Dict[str, Any],
-    nodes: List[str],
-    edges: List[Tuple[str, str, str]],
+    parsed: dict[str, Any],
+    nodes: list[str],
+    edges: list[tuple[str, str, str]],
     cptdata: Any,
     node: Any,
 ) -> Any:
@@ -487,9 +487,9 @@ def _apply_pmf(
 
 
 def _apply_network(
-    parsed: Dict[str, Any],
-    nodes: List[str],
-    edges: List[Tuple[str, str, str]],
+    parsed: dict[str, Any],
+    nodes: list[str],
+    edges: list[tuple[str, str, str]],
     cptdata: Any,
     node: Any,
 ) -> Any:
@@ -523,7 +523,7 @@ _STATE_HANDLERS = {
 
 def _parse_dsc_lines(
     f: Any,
-) -> Tuple[List[str], List[Tuple[str, str, str]], Any, str]:
+) -> tuple[list[str], list[tuple[str, str, str]], Any, str]:
     """Parse every line of an open DSC format file.
 
     Args:
@@ -537,8 +537,8 @@ def _parse_dsc_lines(
     """
     line_num = 0
     prev_state = "start"
-    nodes: List[str] = []
-    edges: List[Tuple[str, str, str]] = []
+    nodes: list[str] = []
+    edges: list[tuple[str, str, str]] = []
     cptdata: Any = {}
     node = None
 
@@ -563,12 +563,12 @@ def _parse_dsc_lines(
 def _parse_dsc_line(
     line_num: int,
     line: str,
-    nodes: List[str],
-    edges: List[Tuple[str, str, str]],
+    nodes: list[str],
+    edges: list[tuple[str, str, str]],
     cptdata: Any,
     node: Any,
     prev_state: str,
-) -> Tuple[List[str], List[Tuple[str, str, str]], Any, Any, str]:
+) -> tuple[list[str], list[tuple[str, str, str]], Any, Any, str]:
     """Parse one line of a DSC format file into the parse state.
 
     Args:
@@ -595,7 +595,7 @@ def _parse_dsc_line(
     return nodes, edges, cptdata, node, parsed["state"]
 
 
-def _parented_cpt_data(data: Any, cptdata: Any) -> List[Tuple[Any, Any]]:
+def _parented_cpt_data(data: Any, cptdata: Any) -> list[tuple[Any, Any]]:
     """Return the conditional PMFs of a node with parents.
 
     Args:

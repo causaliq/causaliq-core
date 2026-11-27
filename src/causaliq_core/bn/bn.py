@@ -2,7 +2,7 @@
 #   Bayesian Network class
 #
 
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Union
 
 from pandas import DataFrame
 
@@ -53,8 +53,8 @@ class BN:
     def __init__(
         self,
         dag: DAG,
-        cnd_specs: Dict[str, Any],
-        estimated_pmfs: Dict[str, Any] = {},
+        cnd_specs: dict[str, Any],
+        estimated_pmfs: dict[str, Any] = {},
     ) -> None:
 
         if not isinstance(dag, DAG) or not isinstance(cnd_specs, dict):
@@ -115,7 +115,7 @@ class BN:
 
         return cls(dag, cnd_specs, estimated_pmfs)
 
-    def rename(self, name_map: Dict[str, str]) -> None:
+    def rename(self, name_map: dict[str, str]) -> None:
         """Rename nodes in place according to name map.
 
         Args:
@@ -126,7 +126,7 @@ class BN:
             ValueError: With bad arg values e.g. unknown node names.
         """
 
-        def _map(odict: Dict[str, Any]) -> Dict[str, Any]:
+        def _map(odict: dict[str, Any]) -> dict[str, Any]:
             # rename and re-sort dict keys
             ndict = {
                 name_map[k] if k in name_map else k: v
@@ -169,7 +169,7 @@ class BN:
         # Loop over all possible combinations of node values (i.e. a "case")
         # and collect the probability of each one
 
-        values: Dict[str, List[Any]] = {n: [] for n in self.dag.nodes}
+        values: dict[str, list[Any]] = {n: [] for n in self.dag.nodes}
         probs = []
         for case in NodeValueCombinations(node_values):
             for node, value in case.items():
@@ -192,7 +192,7 @@ class BN:
         return result
 
     def marginal_distribution(
-        self, node: str, parents: Optional[List[str]] = None
+        self, node: str, parents: list[str] | None = None
     ) -> DataFrame:
         """Generate a marginal probability distribution for a specified node
         and its parents in same format returned by Panda crosstab function.
@@ -225,11 +225,11 @@ class BN:
 
     def _dist(
         self,
-        dist: List[Tuple[Dict[str, Any], float]],
+        dist: list[tuple[dict[str, Any], float]],
         required: set,
         node: str,
         cpt: CPT,
-    ) -> List[Tuple[Dict[str, Any], float]]:
+    ) -> list[tuple[dict[str, Any], float]]:
         """Merge a node's CPT into marginal distribution.
 
         Args:
@@ -245,7 +245,7 @@ class BN:
         # print('_dist: dist={}, required={}, node={}'
         #       .format(dist, required, node))
         parents = cpt.parents()
-        result: Dict[Any, Any] = {}
+        result: dict[Any, Any] = {}
         for entry in dist:  # Loop over entries in current marginal
 
             # extract parental values for this entry
@@ -279,8 +279,8 @@ class BN:
         return result_list
 
     def _build_marginals(
-        self, nodes: List[str]
-    ) -> List[Tuple[Dict[str, Any], float]]:
+        self, nodes: list[str]
+    ) -> list[tuple[dict[str, Any], float]]:
         """Build the marginal distribution of a set of nodes.
 
         Args:
@@ -292,7 +292,7 @@ class BN:
         order, parents, children = _ordered_required_nodes(self.dag, nodes)
 
         required: set = set()  # running set of nodes of interested
-        dist: List[Tuple[Dict[str, Any], float]] = [({}, 1.0)]
+        dist: list[tuple[dict[str, Any], float]] = [({}, 1.0)]
 
         for node in order:  # go down the order
             required = required | {node}
@@ -315,7 +315,7 @@ class BN:
 
         return dist
 
-    def marginals(self, nodes: List[str]) -> DataFrame:
+    def marginals(self, nodes: list[str]) -> DataFrame:
         """Return marginal distribution for specified nodes.
 
         Args:
@@ -344,8 +344,8 @@ class BN:
         return _marginals_frame(nodes, dist, self.cnds)
 
     def lnprob_case(
-        self, case_values: Dict[str, Any], base: Union[int, str] = 10
-    ) -> Optional[float]:
+        self, case_values: dict[str, Any], base: Union[int, str] = 10
+    ) -> float | None:
         """Return log of probability of set of node values (case) occuring.
 
         Args:
@@ -375,7 +375,7 @@ class BN:
         return float(lnprob)
 
     def generate_cases(
-        self, n: int, outfile: Optional[str] = None, pseudo: bool = True
+        self, n: int, outfile: str | None = None, pseudo: bool = True
     ) -> DataFrame:
         """Generate specified number of random data cases for this BN.
 
@@ -406,7 +406,7 @@ class BN:
 
         set_random_seed(1234 if pseudo else None)  # set pseudo-random or not
 
-        cases: Dict[str, List[Any]] = {node: [] for node in self.dag.nodes}
+        cases: dict[str, list[Any]] = {node: [] for node in self.dag.nodes}
         for count in range(0, n):
             for node in self.dag.ordered_nodes():
                 pvs = (

@@ -3,7 +3,7 @@
 #
 
 from re import sub
-from typing import Any, Dict
+from typing import Any
 
 from ..dist import CPT, NodeValueCombinations
 from .xdsl_common import (
@@ -198,7 +198,7 @@ def _genie_renamed_bn(bn: Any) -> Any:
     return renamed
 
 
-def _categorical_node_values(bn: Any) -> Dict[Any, Any]:
+def _categorical_node_values(bn: Any) -> dict[Any, Any]:
     """Return the allowed values of each categorical node of a BN.
 
     Args:
@@ -215,7 +215,7 @@ def _categorical_node_values(bn: Any) -> Dict[Any, Any]:
     }
 
 
-def _node_parents(bn: Any) -> Dict[Any, Any]:
+def _node_parents(bn: Any) -> dict[Any, Any]:
     """Return the parents of each node of a BN.
 
     Args:

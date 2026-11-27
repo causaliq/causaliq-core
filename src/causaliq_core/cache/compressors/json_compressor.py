@@ -12,7 +12,7 @@ import json
 import re
 import struct
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from causaliq_core.cache.compressors.base import Compressor
 
@@ -476,7 +476,7 @@ class JsonCompressor(Compressor):
 
     def _closing_brace_offset(
         self, blob: bytes, offset: int, token_cache: TokenCache
-    ) -> Optional[int]:
+    ) -> int | None:
         """Return the offset after a closing brace at offset, if present.
 
         Args:

@@ -1,7 +1,6 @@
 """bnlearn graph utilities using Rscript subprocess."""
 
 import os
-from typing import Dict, List, Optional, Tuple
 
 from causaliq_core.bn import BN, LinGauss
 from causaliq_core.graph import DAG, PDAG, EdgeType
@@ -13,7 +12,7 @@ from causaliq_core.r.exceptions import (
 from causaliq_core.r.session import run_r_script
 
 
-def _build_r_network_script(varname: str, pdag: PDAG) -> List[str]:
+def _build_r_network_script(varname: str, pdag: PDAG) -> list[str]:
     """Return R code lines that create a bnlearn network variable.
 
     Args:
@@ -37,7 +36,7 @@ def _build_r_network_script(varname: str, pdag: PDAG) -> List[str]:
     return lines
 
 
-def _parse_r_arc_output(output: str) -> List[Tuple[str, str]]:
+def _parse_r_arc_output(output: str) -> list[tuple[str, str]]:
     """Return the arcs listed in tab-delimited R output.
 
     Args:
@@ -46,7 +45,7 @@ def _parse_r_arc_output(output: str) -> List[Tuple[str, str]]:
     Returns:
         List of (tail, head) node pairs.
     """
-    arcs: List[Tuple[str, str]] = []
+    arcs: list[tuple[str, str]] = []
     if not output.strip():
         return arcs
     for row in output.strip().split("\n"):
@@ -100,7 +99,7 @@ def bnlearn_cpdag(pdag: PDAG) -> PDAG:
     return PDAG(pdag.nodes, edges)
 
 
-def bnlearn_compare(pdag: PDAG, ref: PDAG) -> Dict[str, int]:
+def bnlearn_compare(pdag: PDAG, ref: PDAG) -> dict[str, int]:
     """Compare a PDAG against a reference PDAG using bnlearn.
 
     Note: bnlearn converts graphs to CPDAGs before computing SHD.
@@ -205,7 +204,7 @@ def bnlearn_import(rda_path: str) -> BN:
         raise RRuntimeError(f"bnlearn_import failed: {exc}") from exc
 
 
-def _build_imported_bn(nodes_list: List[str], node_data: Dict) -> BN:
+def _build_imported_bn(nodes_list: list[str], node_data: dict) -> BN:
     """Return a LinGauss BN from parsed bnlearn serialisation data.
 
     Args:
@@ -218,8 +217,8 @@ def _build_imported_bn(nodes_list: List[str], node_data: Dict) -> BN:
     Raises:
         ValueError: If the data does not describe a LinGauss network.
     """
-    arcs: List[Tuple[str, str, str]] = []
-    cnd_specs: Dict = {}
+    arcs: list[tuple[str, str, str]] = []
+    cnd_specs: dict = {}
     for node in nodes_list:
         info = node_data[node]
         coefs = dict(info["coefs"])
@@ -237,7 +236,7 @@ def _build_imported_bn(nodes_list: List[str], node_data: Dict) -> BN:
 
 def _parse_bn_output(
     output: str,
-) -> Tuple[List[str], Dict]:
+) -> tuple[list[str], dict]:
     """Parse the tab-delimited BN serialisation output from R.
 
     Args:
@@ -247,9 +246,9 @@ def _parse_bn_output(
         Tuple of (ordered node list, dict mapping node name to
         dict with keys 'coefs', 'parents', 'sd').
     """
-    nodes_list: List[str] = []
-    node_data: Dict = {}
-    current_node: Optional[str] = None
+    nodes_list: list[str] = []
+    node_data: dict = {}
+    current_node: str | None = None
     for raw_line in output.strip().split("\n"):
         line = raw_line.strip()
         if not line:
@@ -262,11 +261,11 @@ def _parse_bn_output(
 
 
 def _apply_bn_line(
-    parts: List[str],
-    nodes_list: List[str],
-    node_data: Dict,
-    current: Optional[str],
-) -> Optional[str]:
+    parts: list[str],
+    nodes_list: list[str],
+    node_data: dict,
+    current: str | None,
+) -> str | None:
     """Apply one tab-delimited BN line to the accumulated parse state.
 
     Args:
@@ -289,7 +288,7 @@ def _apply_bn_line(
     return current
 
 
-def _apply_bn_node_line(node: Dict, parts: List[str]) -> None:
+def _apply_bn_node_line(node: dict, parts: list[str]) -> None:
     """Apply one PARENTS, COEF or SD line to a node's serialisation data.
 
     Args:
@@ -307,7 +306,7 @@ def _apply_bn_node_line(node: Dict, parts: List[str]) -> None:
         node["sd"] = float(parts[1])
 
 
-def _set_bn_parents(node: Dict, parts: List[str]) -> None:
+def _set_bn_parents(node: dict, parts: list[str]) -> None:
     """Record the parent list of a node from a PARENTS line.
 
     Args:

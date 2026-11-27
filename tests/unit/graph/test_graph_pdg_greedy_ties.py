@@ -1,14 +1,12 @@
 """Greedy DAG extraction: tolerance-based ties and deterministic ranking."""
 
-from typing import Dict, List, Tuple
-
 from causaliq_core.graph import PDG, EdgeProbabilities
 
-PairMap = Dict[Tuple[str, str], Tuple[float, float]]
+PairMap = dict[tuple[str, str], tuple[float, float]]
 
 
 # Return the extracted DAG edges for a forward/backward probability map.
-def _dag_edges(pairs: PairMap) -> List[Tuple[str, str]]:
+def _dag_edges(pairs: PairMap) -> list[tuple[str, str]]:
     """Extract DAG edges from forward/backward probability pairs."""
     edges = {
         pair: EdgeProbabilities(

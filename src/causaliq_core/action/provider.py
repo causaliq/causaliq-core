@@ -9,7 +9,7 @@ compression hooks used by the workflow cache.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Set, Union
 
 from causaliq_core.action.errors import ActionValidationError
 from causaliq_core.action.parameters import _check_input_specs
@@ -20,10 +20,10 @@ from causaliq_core.metadata import ActionMetadata
 # Type alias for action result tuple: (status, metadata, objects).
 # CausalIQ actions return structured metadata holding ``inputs`` and
 # ``result``; a legacy flat mapping is accepted from third-party actions.
-ActionResult = Tuple[
+ActionResult = tuple[
     str,
-    Union[ActionMetadata, Dict[str, Any]],
-    List[Dict[str, Any]],
+    Union[ActionMetadata, dict[str, Any]],
+    list[dict[str, Any]],
 ]
 
 
@@ -87,22 +87,22 @@ class CausalIQActionProvider(ABC):
     supported_actions: Set[str] = set()
 
     # Action patterns for workflow validation (action name -> pattern)
-    action_patterns: Dict[str, ActionPattern] = {}
+    action_patterns: dict[str, ActionPattern] = {}
 
     # Data types this provider can compress/expand
     supported_types: Set[str] = set()
 
     # Input/output specifications
-    inputs: Dict[str, ActionInput] = {}
-    outputs: Dict[str, str] = {}  # name -> description mapping
+    inputs: dict[str, ActionInput] = {}
+    outputs: dict[str, str] = {}  # name -> description mapping
 
     def run(
         self,
         action: str,
-        parameters: Dict[str, Any],
+        parameters: dict[str, Any],
         mode: str = "dry-run",
-        context: Optional[Any] = None,
-        logger: Optional[Any] = None,
+        context: Any | None = None,
+        logger: Any | None = None,
     ) -> ActionResult:
         """Template method for action execution.
 
@@ -145,7 +145,7 @@ class CausalIQActionProvider(ABC):
     def validate_parameters(
         self,
         action: str,
-        parameters: Dict[str, Any],
+        parameters: dict[str, Any],
     ) -> None:
         """Validate action name and parameters.
 
@@ -174,7 +174,7 @@ class CausalIQActionProvider(ABC):
     def _dry_run_result(
         self,
         action: str,
-        parameters: Dict[str, Any],
+        parameters: dict[str, Any],
     ) -> ActionResult:
         """Return result for dry-run mode without execution.
 
@@ -194,10 +194,10 @@ class CausalIQActionProvider(ABC):
     def _execute(
         self,
         action: str,
-        parameters: Dict[str, Any],
+        parameters: dict[str, Any],
         mode: str,
-        context: Optional[Any],
-        logger: Optional[Any],
+        context: Any | None,
+        logger: Any | None,
     ) -> ActionResult:
         """Execute the action (called only when mode != "dry-run").
 

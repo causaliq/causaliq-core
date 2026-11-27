@@ -3,7 +3,7 @@
 # with specified precision (significant figures)
 
 from math import floor, isnan, log10
-from typing import Any, Dict, Union
+from typing import Any, Union
 
 from pandas import DataFrame
 
@@ -59,8 +59,8 @@ def values_same(
 
 
 def dicts_same(
-    dict1: Dict[str, Any],
-    dict2: Dict[str, Any],
+    dict1: dict[str, Any],
+    dict2: dict[str, Any],
     sf: int = 10,
     strict: bool = True,
 ) -> bool:
@@ -131,7 +131,7 @@ def _dists_axes_same(df1: DataFrame, df2: DataFrame) -> bool:
 
 
 def _dists_pmfs_same(
-    dict1: Dict[Any, Any], dict2: Dict[Any, Any], sf: int
+    dict1: dict[Any, Any], dict2: dict[Any, Any], sf: int
 ) -> bool:
     """Return whether the PMFs of two column dictionaries agree.
 

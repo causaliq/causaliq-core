@@ -3,7 +3,7 @@
 #
 
 import csv
-from typing import List, Optional, Tuple, Union
+from typing import Union
 
 from causaliq_core.utils import FileFormatError, is_valid_path
 
@@ -28,14 +28,14 @@ class _BayesysReader:
         error: Description of the first problem found, if any.
     """
 
-    def __init__(self, all_nodes: Optional[List[str]]) -> None:
+    def __init__(self, all_nodes: list[str] | None) -> None:
         self.all_nodes = all_nodes
-        self.nodes: List[str] = list(all_nodes) if all_nodes else []
-        self.edges: List[Tuple[str, str, str]] = []
+        self.nodes: list[str] = list(all_nodes) if all_nodes else []
+        self.edges: list[tuple[str, str, str]] = []
         self.num_lines = 0
         self.error = ""
 
-    def consume(self, row: List[str], path: str, strict: bool) -> bool:
+    def consume(self, row: list[str], path: str, strict: bool) -> bool:
         """Consume one CSV row, returning whether reading should continue.
 
         Args:
@@ -59,7 +59,7 @@ class _BayesysReader:
             return False
         return self._consume_edge(row, path)
 
-    def _consume_header(self, row: List[str], strict: bool) -> bool:
+    def _consume_header(self, row: list[str], strict: bool) -> bool:
         """Consume the header row, returning whether it was valid.
 
         Args:
@@ -78,7 +78,7 @@ class _BayesysReader:
             return False
         return True
 
-    def _consume_edge(self, row: List[str], path: str) -> bool:
+    def _consume_edge(self, row: list[str], path: str) -> bool:
         """Consume an edge row, returning whether it was valid.
 
         Args:
@@ -143,7 +143,7 @@ def _consume_bayesys_file(
 
 
 def read(
-    path: str, all_nodes: Optional[List[str]] = None, strict: bool = True
+    path: str, all_nodes: list[str] | None = None, strict: bool = True
 ) -> Union[PDAG, DAG]:
     """Reads in a graph from a Bayesys format graph specification file.
 

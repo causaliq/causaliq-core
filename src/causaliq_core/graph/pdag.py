@@ -2,7 +2,6 @@
 #   Partially Directed Acyclic Graph (PDAG) class
 #
 
-from typing import List, Tuple
 
 from .sdg import SDG
 
@@ -34,7 +33,7 @@ class PDAG(SDG):
     """
 
     def __init__(
-        self, nodes: List[str], edges: List[Tuple[str, str, str]]
+        self, nodes: list[str], edges: list[tuple[str, str, str]]
     ) -> None:
         """Initialize PDAG.
 
@@ -50,7 +49,7 @@ class PDAG(SDG):
         if not self.is_PDAG():
             raise NotPDAGError("graph is not a PDAG")
 
-    def edge_reversible(self, edge: Tuple[str, str]) -> bool:
+    def edge_reversible(self, edge: tuple[str, str]) -> bool:
         """Return whether specified edge is in CPDAG and is reversible.
 
         Args:

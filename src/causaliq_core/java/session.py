@@ -3,7 +3,6 @@
 import os
 import shutil
 import subprocess
-from typing import List, Optional
 
 from causaliq_core.java.exceptions import (
     JavaNotAvailableError,
@@ -11,7 +10,7 @@ from causaliq_core.java.exceptions import (
 )
 
 
-def _find_java() -> Optional[str]:
+def _find_java() -> str | None:
     """Return path to Java executable, or None if not found.
 
     Searches PATH first, then falls back to the JAVA_HOME environment
@@ -37,7 +36,7 @@ def _find_java() -> Optional[str]:
     return None
 
 
-def _validate_java_args(jar_path: str, args: Optional[List[str]]) -> List[str]:
+def _validate_java_args(jar_path: str, args: list[str] | None) -> list[str]:
     """Validate Java invocation arguments and normalise the argument list.
 
     Args:
@@ -70,7 +69,7 @@ def _validate_java_args(jar_path: str, args: Optional[List[str]]) -> List[str]:
     return args
 
 
-def _run_java_command(command: List[str], timeout: int) -> str:
+def _run_java_command(command: list[str], timeout: int) -> str:
     """Run a Java command and return its standard output.
 
     Args:
@@ -97,7 +96,7 @@ def _run_java_command(command: List[str], timeout: int) -> str:
 
 def run_java_jar(
     jar_path: str,
-    args: Optional[List[str]] = None,
+    args: list[str] | None = None,
     timeout: int = 120,
 ) -> str:
     """Run a Java JAR and return stdout.

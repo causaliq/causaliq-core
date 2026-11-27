@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, TextIO, Tuple, Union
+from typing import Iterable, TextIO, Union
 
 from causaliq_core.utils import FileFormatError, is_valid_path
 
@@ -37,7 +37,7 @@ ENDPOINT_TO_MARK = {
 }
 
 # Build lookup from (source_mark, target_mark) to EdgeType
-_MARKS_TO_EDGE_TYPE: Dict[tuple, EdgeType] = {}
+_MARKS_TO_EDGE_TYPE: dict[tuple, EdgeType] = {}
 for et in EdgeType:
     if et != EdgeType.NONE:
         _MARKS_TO_EDGE_TYPE[(et.value[1], et.value[2])] = et
@@ -53,7 +53,7 @@ _MARK_TO_ENDPOINT = {
 }
 
 
-def _describe_graphml_source(file: FileLike, func: str) -> Tuple[bool, str]:
+def _describe_graphml_source(file: FileLike, func: str) -> tuple[bool, str]:
     """Return whether a source is a path and how to describe it.
 
     Args:
@@ -132,7 +132,7 @@ def _check_graphml_write_target(file: FileLike, func: str) -> bool:
 
 def _open_graphml_root(
     file: FileLike, is_path: bool, func: str, source_desc: str
-) -> Tuple[ET.Element, dict]:
+) -> tuple[ET.Element, dict]:
     """Parse a GraphML source and resolve its namespace.
 
     Args:
@@ -155,7 +155,7 @@ def _open_graphml_root(
         if is_path:
             tree = ET.parse(str(file))
         else:
-            tree = ET.parse(file)  # type: ignore[arg-type]
+            tree = ET.parse(file)
         root = tree.getroot()
     except ET.ParseError as e:
         raise FileFormatError(f"file {source_desc} invalid XML: {e}")
@@ -223,7 +223,7 @@ def add_edge_key_definitions(
 
 def _parse_key_definitions(
     root: ET.Element, ns: dict
-) -> Dict[str, Dict[str, Optional[str]]]:
+) -> dict[str, dict[str, str | None]]:
     """Parse GraphML key definitions for edge attributes.
 
     Args:
@@ -233,7 +233,7 @@ def _parse_key_definitions(
     Returns:
         Dictionary mapping key id to attribute info.
     """
-    keys: Dict[str, Dict[str, Optional[str]]] = {}
+    keys: dict[str, dict[str, str | None]] = {}
     key_tag = "g:key" if ns else "key"
     for key_elem in root.findall(key_tag, ns):
         key_id = key_elem.get("id")
@@ -246,7 +246,7 @@ def _parse_key_definitions(
 
 def _parse_nodes(
     graph_elem: ET.Element, ns: dict, source_desc: str
-) -> List[str]:
+) -> list[str]:
     """Parse node elements from the graph.
 
     Args:
@@ -358,7 +358,7 @@ def _write_graphml_document(
 
 def _edge_endpoints(
     edge_elem: ET.Element, source_desc: str
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """Return the source and target node names of an edge element.
 
     Args:

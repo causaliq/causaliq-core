@@ -3,7 +3,7 @@
 #
 
 import re
-from typing import List, Optional, Tuple, Union
+from typing import Union
 
 from causaliq_core.utils import FileFormatError, is_valid_path
 
@@ -46,7 +46,7 @@ def _has_bad_section_header(num_line: int, line: str) -> bool:
 
 def _parse_edge_line(
     line: str,
-) -> Optional[Tuple[Tuple[str, str, str], bool]]:
+) -> tuple[tuple[str, str, str], bool] | None:
     """Return the edge described by a Tetrad edge line.
 
     Args:
@@ -83,8 +83,8 @@ class _TetradReader:
     """
 
     def __init__(self) -> None:
-        self.nodes: List[str] = []
-        self.edges: List[Tuple[str, str, str]] = []
+        self.nodes: list[str] = []
+        self.edges: list[tuple[str, str, str]] = []
         self.is_pdag = False
         self.num_lines = 0
         self.error = ""

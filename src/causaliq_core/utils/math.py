@@ -1,12 +1,12 @@
 """Mathematical utility functions."""
 
 from math import floor
-from typing import Optional, Union
+from typing import Union
 
 import numpy as np
 
 
-def rndsf(x: Union[int, float], sf: int, zero: Optional[float] = None) -> str:
+def rndsf(x: Union[int, float], sf: int, zero: float | None = None) -> str:
     """Round number to specified significant figures.
 
     Args:

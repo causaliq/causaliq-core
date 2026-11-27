@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Tuple
+from typing import Any
 
 import numpy as np
 
@@ -20,13 +20,13 @@ class BNFit(ABC):
 
     @abstractmethod
     def marginals(
-        self, node: str, parents: Dict, values_reqd: bool = False
-    ) -> Tuple:
+        self, node: str, parents: dict, values_reqd: bool = False
+    ) -> tuple:
         """Return marginal counts for a node and its parents.
 
         Args:
             node: Node for which marginals required.
-            parents: Dictionary {node: parents} for non-orphan nodes.
+            parents: dictionary {node: parents} for non-orphan nodes.
             values_reqd: Whether parent and child values required.
 
         Returns:
@@ -43,7 +43,7 @@ class BNFit(ABC):
         pass
 
     @abstractmethod
-    def values(self, nodes: Tuple[str, ...]) -> np.ndarray:
+    def values(self, nodes: tuple[str, ...]) -> np.ndarray:
         """Return the (float) values for specified nodes.
 
         Suitable for passing into e.g. linear regression fitting.
@@ -78,7 +78,7 @@ class BNFit(ABC):
 
     @property
     @abstractmethod
-    def node_values(self) -> Dict[str, Dict]:
+    def node_values(self) -> dict[str, dict]:
         """Node value counts for categorical variables.
 
         Returns:
@@ -89,13 +89,13 @@ class BNFit(ABC):
 
     @node_values.setter
     @abstractmethod
-    def node_values(self, value: Dict[str, Dict]) -> None:
+    def node_values(self, value: dict[str, dict]) -> None:
         """Set node value counts."""
         pass
 
     @property
     @abstractmethod
-    def nodes(self) -> Tuple[str, ...]:
+    def nodes(self) -> tuple[str, ...]:
         """Column names in the dataset.
 
         Returns:
@@ -116,7 +116,7 @@ class BNFit(ABC):
 
     @property
     @abstractmethod
-    def node_types(self) -> Dict[str, str]:
+    def node_types(self) -> dict[str, str]:
         """Node type mapping for each variable.
 
         Returns:

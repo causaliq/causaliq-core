@@ -2,7 +2,7 @@
 #   Functions to read and write DSC format BN specification files
 #
 
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from causaliq_core.utils import FileFormatError, is_valid_path
 
@@ -23,7 +23,7 @@ PROB_HDR = "probability ( {}{} ) {{\n"
 CPT_ENTRY = "  ({}) : {};\n"
 
 
-def read(path: str) -> Tuple[List[str], List[Tuple[str, str, str]], Any]:
+def read(path: str) -> tuple[list[str], list[tuple[str, str, str]], Any]:
     """Reads in a BN from a DSC format BN specification file.
 
     Args:
@@ -51,7 +51,7 @@ def read(path: str) -> Tuple[List[str], List[Tuple[str, str, str]], Any]:
     return (nodes, edges, cptdata)
 
 
-def _write_node_sections(f: Any, bn: Any) -> Dict[str, Any]:
+def _write_node_sections(f: Any, bn: Any) -> dict[str, Any]:
     """Write a node section for every node of a BN.
 
     Args:
@@ -76,8 +76,8 @@ def _write_cpt_pmf(
     f: Any,
     node: str,
     cpt: Any,
-    values: Dict[str, Any],
-    parental_values: Dict[str, str] = {},
+    values: dict[str, Any],
+    parental_values: dict[str, str] = {},
 ) -> None:
     """Write the conditional probability entries of a node's CPT.
 

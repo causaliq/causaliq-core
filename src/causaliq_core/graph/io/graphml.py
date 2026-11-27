@@ -12,7 +12,7 @@
 from __future__ import annotations
 
 import xml.etree.ElementTree as ET
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Union
 
 from causaliq_core.utils import FileFormatError
 
@@ -100,8 +100,8 @@ def read(file: FileLike) -> Union[SDG, PDAG, DAG]:
 
 
 def _graph_for_edges(
-    nodes: List[str],
-    edges: List[Tuple[str, str, str]],
+    nodes: list[str],
+    edges: list[tuple[str, str, str]],
     has_undirected: bool,
     has_non_pdag: bool,
 ) -> Union[SDG, PDAG, DAG]:
@@ -155,9 +155,9 @@ class _EdgeTypes:
 def _parse_edges(
     graph_elem: ET.Element,
     ns: dict,
-    edge_keys: Dict[str, Dict[str, Optional[str]]],
+    edge_keys: dict[str, dict[str, str | None]],
     source_desc: str,
-) -> Tuple[List[Tuple[str, str, str]], bool, bool]:
+) -> tuple[list[tuple[str, str, str]], bool, bool]:
     """Parse edge elements from the graph.
 
     Args:
@@ -169,7 +169,7 @@ def _parse_edges(
     Returns:
         Tuple of (edges list, has_undirected, has_non_pdag edges).
     """
-    edges: List[Tuple[str, str, str]] = []
+    edges: list[tuple[str, str, str]] = []
     types = _EdgeTypes()
 
     edge_tag = "g:edge" if ns else "edge"
@@ -187,12 +187,12 @@ def _parse_edges(
 def _edge_triples(
     edge_elem: ET.Element,
     ns: dict,
-    edge_keys: Dict[str, Dict[str, Optional[str]]],
+    edge_keys: dict[str, dict[str, str | None]],
     source_desc: str,
     source: str,
     target: str,
     types: "_EdgeTypes",
-) -> List[Tuple[str, str, str]]:
+) -> list[tuple[str, str, str]]:
     """Return the edge triples described by one GraphML edge element.
 
     Args:
@@ -222,12 +222,12 @@ def _edge_triples(
 def _explicit_edge_triples(
     edge_elem: ET.Element,
     ns: dict,
-    edge_keys: Dict[str, Dict[str, Optional[str]]],
+    edge_keys: dict[str, dict[str, str | None]],
     source_desc: str,
     source: str,
     target: str,
     types: "_EdgeTypes",
-) -> List[Tuple[str, str, str]]:
+) -> list[tuple[str, str, str]]:
     """Return edge triples given by explicit edgeType data elements.
 
     Args:
@@ -242,7 +242,7 @@ def _explicit_edge_triples(
     Returns:
         List of edge triples, empty when no edgeType data is present.
     """
-    triples: List[Tuple[str, str, str]] = []
+    triples: list[tuple[str, str, str]] = []
     data_tag = "g:data" if ns else "data"
 
     for data_elem in edge_elem.findall(data_tag, ns):
@@ -256,9 +256,9 @@ def _explicit_edge_triples(
 
 def _explicit_edge_symbol(
     data_elem: ET.Element,
-    edge_keys: Dict[str, Dict[str, Optional[str]]],
+    edge_keys: dict[str, dict[str, str | None]],
     source_desc: str,
-) -> Optional[str]:
+) -> str | None:
     """Return the edge symbol given by an edgeType data element.
 
     Args:
@@ -279,7 +279,7 @@ def _explicit_edge_symbol(
 def _marked_or_default_symbol(
     edge_elem: ET.Element,
     ns: dict,
-    edge_keys: Dict[str, Dict[str, Optional[str]]],
+    edge_keys: dict[str, dict[str, str | None]],
 ) -> str:
     """Return the edge symbol from endpoint marks or the directed attribute.
 
@@ -300,8 +300,8 @@ def _marked_or_default_symbol(
 def _endpoint_marks(
     edge_elem: ET.Element,
     ns: dict,
-    edge_keys: Dict[str, Dict[str, Optional[str]]],
-) -> Tuple[EdgeMark, EdgeMark]:
+    edge_keys: dict[str, dict[str, str | None]],
+) -> tuple[EdgeMark, EdgeMark]:
     """Return the endpoint marks described by an edge's data elements.
 
     Args:
@@ -314,7 +314,7 @@ def _endpoint_marks(
     """
     source_mark = EdgeMark.LINE  # default: tail/line
     target_mark = EdgeMark.ARROW  # default: arrow/head (directed)
-    marks: Dict[str, EdgeMark] = {}
+    marks: dict[str, EdgeMark] = {}
     data_tag = "g:data" if ns else "data"
 
     for data_elem in edge_elem.findall(data_tag, ns):
@@ -329,8 +329,8 @@ def _endpoint_marks(
 
 def _endpoint_mark_for(
     data_elem: ET.Element,
-    edge_keys: Dict[str, Dict[str, Optional[str]]],
-) -> Tuple[str, EdgeMark]:
+    edge_keys: dict[str, dict[str, str | None]],
+) -> tuple[str, EdgeMark]:
     """Return the endpoint attribute name and mark of a data element.
 
     Args:
@@ -420,7 +420,7 @@ def _add_graph_element(
 
 def _add_graph_edges(
     graph_elem: ET.Element,
-    edges: Dict[Tuple[str, str], EdgeType],
+    edges: dict[tuple[str, str], EdgeType],
     is_dag: bool,
 ) -> None:
     """Add edge elements with endpoint data to the graph element.

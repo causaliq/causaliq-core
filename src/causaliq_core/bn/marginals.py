@@ -2,7 +2,7 @@
 #   Cache for marginal distributions computed for a Bayesian Network
 #
 
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Union
 
 from pandas import DataFrame, MultiIndex
 
@@ -29,7 +29,7 @@ class MarginalsCache:
 
     def __init__(self) -> None:
         """Initialize the marginals cache with empty cache and statistics."""
-        self.cache: Dict[Any, Any] = {}
+        self.cache: dict[Any, Any] = {}
         self.stats = {
             "get.ok": 0,
             "get.miss": 0,
@@ -39,7 +39,7 @@ class MarginalsCache:
             "put.big": 0,
         }
 
-    def get(self, nodes: List[str]) -> Optional[Any]:
+    def get(self, nodes: list[str]) -> Any | None:
         """Retrieve cached marginal distribution for specified nodes.
 
         Args:
@@ -89,7 +89,7 @@ class MarginalsCache:
 
 
 def _check_marginal_distribution_args(
-    dag_nodes: List[str], node: str, parents: Optional[List[str]]
+    dag_nodes: list[str], node: str, parents: list[str] | None
 ) -> None:
     """Validate the arguments of BN.marginal_distribution().
 
@@ -126,9 +126,9 @@ def _check_marginal_distribution_args(
 def _accumulate_marginals(
     bn: Any,
     node: str,
-    parents: Optional[List[str]],
-    node_values: Dict[str, List[str]],
-) -> Dict[Any, Dict[str, float]]:
+    parents: list[str] | None,
+    node_values: dict[str, list[str]],
+) -> dict[Any, dict[str, float]]:
     """Accumulate marginal probabilities for a node and its parents.
 
     Args:
@@ -141,7 +141,7 @@ def _accumulate_marginals(
         Marginal probabilities keyed by parental value combination, or by
         the node itself for a parentless node.
     """
-    marginals: Dict[Any, Dict[str, float]] = {}
+    marginals: dict[Any, dict[str, float]] = {}
     for case in NodeValueCombinations(node_values):
         lnprob = bn.lnprob_case(case)
         if lnprob is None:
@@ -155,7 +155,7 @@ def _accumulate_marginals(
 
 
 def _marginal_frame(
-    node: str, node_values: List[str], marginals: Dict[str, float]
+    node: str, node_values: list[str], marginals: dict[str, float]
 ) -> DataFrame:
     """Return a parentless node's marginal distribution as a frame.
 
@@ -170,15 +170,15 @@ def _marginal_frame(
     df: DataFrame = DataFrame(
         [[v, marginals[v]] for v in node_values], columns=[node, ""]
     )
-    indexed: DataFrame = df.set_index(node)  # type: ignore[assignment]
+    indexed: DataFrame = df.set_index(node)
     return indexed
 
 
 def _parental_marginal_frame(
     node: str,
-    parents: List[str],
-    node_values: List[str],
-    marginals: Dict[Any, Dict[str, float]],
+    parents: list[str],
+    node_values: list[str],
+    marginals: dict[Any, dict[str, float]],
 ) -> DataFrame:
     """Return a node's marginal distribution over its parents as a frame.
 
@@ -203,11 +203,11 @@ def _parental_marginal_frame(
         columns=MultiIndex.from_tuples(columns, names=parents),
         index=node_values,
     )
-    renamed: DataFrame = result.rename_axis(node)  # type: ignore[assignment]
+    renamed: DataFrame = result.rename_axis(node)
     return renamed
 
 
-def _check_marginal_nodes(dag_nodes: List[str], nodes: List[str]) -> None:
+def _check_marginal_nodes(dag_nodes: list[str], nodes: list[str]) -> None:
     """Validate the node list of BN.marginals().
 
     Args:
@@ -231,11 +231,11 @@ def _check_marginal_nodes(dag_nodes: List[str], nodes: List[str]) -> None:
 
 
 def _record_ancestors(
-    parents: Dict[str, List[str]],
-    children: Dict[str, set],
+    parents: dict[str, list[str]],
+    children: dict[str, set],
     ancestors: set,
     node: str,
-) -> Tuple[set, Dict[str, set]]:
+) -> tuple[set, dict[str, set]]:
     """Record a node and its parents as ancestors, and its parent links.
 
     Args:
@@ -254,8 +254,8 @@ def _record_ancestors(
 
 
 def _ordered_required_nodes(
-    dag: DAG, nodes: List[str]
-) -> Tuple[List[str], Dict[str, List[str]], Dict[str, set]]:
+    dag: DAG, nodes: list[str]
+) -> tuple[list[str], dict[str, list[str]], dict[str, set]]:
     """Return the nodes needed for a marginal, in topological order.
 
     Args:
@@ -273,7 +273,7 @@ def _ordered_required_nodes(
     order = [n for g in (partial_order or []) for n in g]
 
     ancestors: set = set()
-    children: Dict[str, set] = {n: set() for n in dag.nodes}
+    children: dict[str, set] = {n: set() for n in dag.nodes}
     for i in range(len(order) - 1, -1, -1):  # work up the order
         node = order[i]
         if node in nodes or node in ancestors:
@@ -291,7 +291,7 @@ def _ordered_required_nodes(
 
 
 def _single_node_marginals_frame(
-    node: str, dist: List[Tuple[Dict[str, Any], float]]
+    node: str, dist: list[tuple[dict[str, Any], float]]
 ) -> DataFrame:
     """Return the marginal distribution frame of a single node.
 
@@ -305,17 +305,17 @@ def _single_node_marginals_frame(
     df: DataFrame = DataFrame(
         sorted([[(e[0][node]), e[1]] for e in dist]), columns=[node, ""]
     )
-    indexed: DataFrame = df.set_index(node)  # type: ignore[assignment]
+    indexed: DataFrame = df.set_index(node)
     return indexed
 
 
 def _marginal_matrix(
-    dist: List[Tuple[Dict[str, Any], float]],
-    nodes: List[str],
+    dist: list[tuple[dict[str, Any], float]],
+    nodes: list[str],
     index_node: str,
-    node_values: List[str],
-    row_index: Dict[str, int],
-) -> Dict[Tuple[Any, ...], List[Optional[float]]]:
+    node_values: list[str],
+    row_index: dict[str, int],
+) -> dict[tuple[Any, ...], list[float | None]]:
     """Return the node value matrix of a multi-node marginal distribution.
 
     Args:
@@ -328,7 +328,7 @@ def _marginal_matrix(
     Returns:
         Probabilities of each combination of the remaining node values.
     """
-    matrix: Dict[Tuple[Any, ...], List[Optional[float]]] = {}
+    matrix: dict[tuple[Any, ...], list[float | None]] = {}
     for entry in dist:
         values = tuple([entry[0][n] for n in nodes])
         if values not in matrix:
@@ -338,9 +338,9 @@ def _marginal_matrix(
 
 
 def _multi_node_marginals_frame(
-    nodes: List[str],
-    dist: List[Tuple[Dict[str, Any], float]],
-    cnds: Dict[str, Any],
+    nodes: list[str],
+    dist: list[tuple[dict[str, Any], float]],
+    cnds: dict[str, Any],
 ) -> DataFrame:
     """Return the marginal distribution frame of several nodes.
 
@@ -367,16 +367,14 @@ def _multi_node_marginals_frame(
         columns=MultiIndex.from_tuples(columns, names=remaining),
         index=node_values,
     )
-    renamed: DataFrame = dist_df.rename_axis(  # type: ignore[assignment]
-        index_node
-    )
+    renamed: DataFrame = dist_df.rename_axis(index_node)
     return renamed
 
 
 def _marginals_frame(
-    nodes: List[str],
-    dist: List[Tuple[Dict[str, Any], float]],
-    cnds: Dict[str, Any],
+    nodes: list[str],
+    dist: list[tuple[dict[str, Any], float]],
+    cnds: dict[str, Any],
 ) -> DataFrame:
     """Return a marginal distribution in Pandas crosstab format.
 
@@ -394,7 +392,7 @@ def _marginals_frame(
 
 
 def _check_lnprob_args(
-    dag_nodes: List[str], case_values: Dict[str, Any], base: Union[int, str]
+    dag_nodes: list[str], case_values: dict[str, Any], base: Union[int, str]
 ) -> None:
     """Validate the arguments of BN.lnprob_case().
 
@@ -421,8 +419,8 @@ def _check_lnprob_args(
 
 
 def _parental_values_for(
-    parents: Dict[str, List[str]], node: str, case_values: Dict[str, Any]
-) -> Optional[Dict[str, Any]]:
+    parents: dict[str, list[str]], node: str, case_values: dict[str, Any]
+) -> dict[str, Any] | None:
     """Return the parental values of a node within a case.
 
     Args:
@@ -439,8 +437,8 @@ def _parental_values_for(
 
 
 def _node_lnprob(
-    cnd: Any, pvs: Optional[Dict[str, Any]], value: Any, base: Union[int, str]
-) -> Optional[float]:
+    cnd: Any, pvs: dict[str, Any] | None, value: Any, base: Union[int, str]
+) -> float | None:
     """Return the log probability of one node taking a value.
 
     Args:

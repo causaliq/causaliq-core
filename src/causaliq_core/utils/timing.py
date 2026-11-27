@@ -8,7 +8,7 @@ Migrated from legacy.core.timing with exact functionality preservation.
 import queue
 import threading
 from time import time
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 
 class MetaTiming(type):
@@ -39,7 +39,7 @@ class Timing(metaclass=MetaTiming):
     filter = None
 
     @classmethod
-    def on(cls, active: bool, filter: Optional[set] = None) -> None:
+    def on(cls, active: bool, filter: set | None = None) -> None:
         """
         Switching timing on and off
 
@@ -86,7 +86,7 @@ class Timing(metaclass=MetaTiming):
         cls.record(action, scale, start)
 
     @classmethod
-    def now(cls) -> Optional[float]:
+    def now(cls) -> float | None:
         """
         Returns current time, generally for the start of an action
 
@@ -96,8 +96,8 @@ class Timing(metaclass=MetaTiming):
 
     @classmethod
     def record(
-        cls, action: str, scale: int, start: Optional[float]
-    ) -> Optional[float]:
+        cls, action: str, scale: int, start: float | None
+    ) -> float | None:
         """
         Records time for specified action
 
@@ -163,7 +163,7 @@ class Timing(metaclass=MetaTiming):
             stats["max"] = elapsed
 
     @classmethod
-    def to_string(cls, filter: Optional[set] = None) -> str:
+    def to_string(cls, filter: set | None = None) -> str:
         """
         Print out timings in nice format, optionally only for specified
         actions.
@@ -186,7 +186,7 @@ class Timing(metaclass=MetaTiming):
         return res
 
     @classmethod
-    def _validate_action_filter(cls, filter: Optional[set]) -> None:
+    def _validate_action_filter(cls, filter: set | None) -> None:
         """
         Validate the optional action filter argument.
 
@@ -338,8 +338,8 @@ def _collect_thread_result(
 def run_with_timeout(
     func: Callable,
     args: tuple = (),
-    kwargs: Optional[dict] = None,
-    timeout_seconds: Optional[int] = None,
+    kwargs: dict | None = None,
+    timeout_seconds: int | None = None,
 ) -> Any:
     """
     Run a function with a timeout using threading approach.
@@ -392,7 +392,7 @@ def run_with_timeout(
     return _collect_thread_result(result_queue, exception_queue)
 
 
-def with_timeout(timeout_seconds: Optional[int] = None) -> Callable:
+def with_timeout(timeout_seconds: int | None = None) -> Callable:
     """
     Decorator version of run_with_timeout.
 

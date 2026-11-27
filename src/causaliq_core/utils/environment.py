@@ -5,14 +5,14 @@ from json import dump, load
 from pathlib import Path
 from platform import uname
 from time import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 from cpuinfo import get_cpu_info  # type: ignore[import-untyped]
 from platformdirs import user_cache_dir
 from psutil import virtual_memory
 
 
-def _query_environment() -> Dict[str, Any]:
+def _query_environment() -> dict[str, Any]:
     """Query the operating system for fresh environment information.
 
     Returns:
@@ -40,7 +40,7 @@ def _is_env_cache_stale(envfile_path: Path) -> bool:
     return time() - envfile_path.stat().st_mtime > 24 * 3600
 
 
-def _write_environment_cache(envfile_path: Path, env: Dict[str, Any]) -> None:
+def _write_environment_cache(envfile_path: Path, env: dict[str, Any]) -> None:
     """Write environment information to the cache file.
 
     Args:
@@ -51,7 +51,7 @@ def _write_environment_cache(envfile_path: Path, env: Dict[str, Any]) -> None:
         dump(env, file)
 
 
-def _refresh_environment_cache(envfile_path: Path) -> Dict[str, Any]:
+def _refresh_environment_cache(envfile_path: Path) -> dict[str, Any]:
     """Query fresh environment data and try to cache it.
 
     Args:
@@ -69,7 +69,7 @@ def _refresh_environment_cache(envfile_path: Path) -> Dict[str, Any]:
     return env
 
 
-def _read_environment_cache(envfile_path: Path) -> Dict[str, Any]:
+def _read_environment_cache(envfile_path: Path) -> dict[str, Any]:
     """Read cached environment information, refreshing it if unusable.
 
     Args:
@@ -81,14 +81,14 @@ def _read_environment_cache(envfile_path: Path) -> Dict[str, Any]:
     """
     try:
         with open(envfile_path, "r") as file:
-            env: Dict[str, Any] = load(file)
+            env: dict[str, Any] = load(file)
         return env
     except (FileNotFoundError, PermissionError, json.JSONDecodeError):
         # If cache is corrupted or inaccessible, query fresh data
         return _refresh_environment_cache(envfile_path)
 
 
-def environment(cache_dir: Optional[str] = None) -> Dict[str, Any]:
+def environment(cache_dir: str | None = None) -> dict[str, Any]:
     """Obtain details of the hardware and software environment.
 
     For efficiency, this is obtained from a cached file "environment.json"

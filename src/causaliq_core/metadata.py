@@ -18,7 +18,7 @@ See ``docs/architecture/metadata_structure.md`` in ``causaliq-workflow``.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, TypedDict
+from typing import Any, TypedDict
 
 __all__ = [
     "ActionMetadata",
@@ -60,8 +60,8 @@ class MetadataError(ValueError):
 class ActionMetadata(TypedDict):
     """Metadata returned by an action: effective parameters and results."""
 
-    parameters: Dict[str, Any]
-    result: Dict[str, Any]
+    parameters: dict[str, Any]
+    result: dict[str, Any]
 
 
 @dataclass(frozen=True)
@@ -75,25 +75,25 @@ class MetadataParts:
         history: Metadata inherited from earlier actions.
     """
 
-    provenance: Dict[str, Any]
-    parameters: Dict[str, Any]
-    result: Dict[str, Any]
-    history: Dict[str, Any]
+    provenance: dict[str, Any]
+    parameters: dict[str, Any]
+    result: dict[str, Any]
+    history: dict[str, Any]
 
 
 def build_metadata(
     provider: str,
     action: str,
-    parameters: Dict[str, Any],
-    result: Dict[str, Any],
+    parameters: dict[str, Any],
+    result: dict[str, Any],
     *,
-    provider_version: Optional[str] = None,
-    workflow_version: Optional[str] = None,
-    started: Optional[str] = None,
-    elapsed: Optional[float] = None,
-    environment: Optional[Dict[str, Any]] = None,
-    history: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
+    provider_version: str | None = None,
+    workflow_version: str | None = None,
+    started: str | None = None,
+    elapsed: float | None = None,
+    environment: dict[str, Any] | None = None,
+    history: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Build a version 2 metadata envelope.
 
     Args:
@@ -153,7 +153,7 @@ def _require_name(value: str, name: str) -> None:
 
 
 def _require_block(
-    value: Optional[Dict[str, Any]],
+    value: dict[str, Any] | None,
     name: str,
     optional: bool = False,
 ) -> None:
@@ -177,12 +177,12 @@ def _build_provenance(
     *,
     provider: str,
     action: str,
-    provider_version: Optional[str],
-    workflow_version: Optional[str],
-    started: Optional[str],
-    elapsed: Optional[float],
-    environment: Optional[Dict[str, Any]],
-) -> Dict[str, Any]:
+    provider_version: str | None,
+    workflow_version: str | None,
+    started: str | None,
+    elapsed: float | None,
+    environment: dict[str, Any] | None,
+) -> dict[str, Any]:
     """Build the provenance block, defaulting unknown values to None.
 
     Args:
@@ -222,7 +222,7 @@ def is_v2_metadata(metadata: Any) -> bool:
     return isinstance(metadata.get("provenance"), dict)
 
 
-def normalise_metadata(metadata: Dict[str, Any]) -> Dict[str, Any]:
+def normalise_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
     """Return a version 2 envelope for version 1, flat or version 2 data.
 
     Version 1 metadata is the legacy ``provider -> action -> fields``
@@ -249,7 +249,7 @@ def normalise_metadata(metadata: Dict[str, Any]) -> Dict[str, Any]:
     return _normalise_flat(metadata)
 
 
-def _is_legacy_metadata(metadata: Dict[str, Any]) -> bool:
+def _is_legacy_metadata(metadata: dict[str, Any]) -> bool:
     """Return True when metadata uses the legacy provider/action shape.
 
     Args:
@@ -274,7 +274,7 @@ def _is_legacy_block(actions: Any) -> bool:
     return all(isinstance(fields, dict) for fields in actions.values())
 
 
-def _normalise_flat(metadata: Dict[str, Any]) -> Dict[str, Any]:
+def _normalise_flat(metadata: dict[str, Any]) -> dict[str, Any]:
     """Place a flat metadata mapping in the result block.
 
     Args:
@@ -288,7 +288,7 @@ def _normalise_flat(metadata: Dict[str, Any]) -> Dict[str, Any]:
     return envelope
 
 
-def _normalise_v2(metadata: Dict[str, Any]) -> Dict[str, Any]:
+def _normalise_v2(metadata: dict[str, Any]) -> dict[str, Any]:
     """Return a complete version 2 envelope with every block present.
 
     Provenance is rebuilt from :data:`PROVENANCE_KEYS`, so obsolete keys
@@ -310,7 +310,7 @@ def _normalise_v2(metadata: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def _normalise_legacy(metadata: Dict[str, Any]) -> Dict[str, Any]:
+def _normalise_legacy(metadata: dict[str, Any]) -> dict[str, Any]:
     """Convert the legacy provider -> action -> fields shape to version 2.
 
     Args:
@@ -338,8 +338,8 @@ def _normalise_legacy(metadata: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _legacy_blocks(
-    metadata: Dict[str, Any],
-) -> List[Tuple[str, str, Dict[str, Any]]]:
+    metadata: dict[str, Any],
+) -> list[tuple[str, str, dict[str, Any]]]:
     """Return the legacy provider/action/field blocks in insertion order.
 
     Args:
@@ -348,7 +348,7 @@ def _legacy_blocks(
     Returns:
         List of (provider, action, fields) tuples.
     """
-    blocks: List[Tuple[str, str, Dict[str, Any]]] = []
+    blocks: list[tuple[str, str, dict[str, Any]]] = []
     for provider, actions in metadata.items():
         if provider in RESERVED_KEYS:
             continue
@@ -357,7 +357,7 @@ def _legacy_blocks(
     return blocks
 
 
-def _empty_envelope() -> Dict[str, Any]:
+def _empty_envelope() -> dict[str, Any]:
     """Return an empty version 2 envelope.
 
     Returns:
@@ -372,7 +372,7 @@ def _empty_envelope() -> Dict[str, Any]:
     }
 
 
-def split_metadata(metadata: Dict[str, Any]) -> MetadataParts:
+def split_metadata(metadata: dict[str, Any]) -> MetadataParts:
     """Return the four blocks of an envelope, normalising legacy data.
 
     Args:

@@ -3,7 +3,7 @@
 #
 
 from math import prod
-from typing import Any, Dict, List, Tuple
+from typing import Any
 from xml.dom import minidom
 
 from causaliq_core.utils import FileFormatError, is_valid_path
@@ -49,7 +49,7 @@ def _process_equation_element(elem: Any) -> Any:
     return {node: _parse_equation_definition(text, node, parent_names)}
 
 
-def _element_parents(parents: Any) -> List[Any]:
+def _element_parents(parents: Any) -> list[Any]:
     """Return the parent names held in a <parents> element.
 
     Args:
@@ -129,7 +129,7 @@ def _process_cpt_element(elem: Any) -> Any:
     }
 
 
-def _cpt_element_children(elem: Any) -> Tuple[Any, Any, Any, Any]:
+def _cpt_element_children(elem: Any) -> tuple[Any, Any, Any, Any]:
     """Return the children of a <cpt> element grouped by element name.
 
     Args:
@@ -169,7 +169,7 @@ def _check_cpt_element_children(
         raise FileFormatError("xdsl.read() <cpt> has missing/invalid children")
 
 
-def _cpt_element_states(states: Any) -> List[Any]:
+def _cpt_element_states(states: Any) -> list[Any]:
     """Return the values (states) defined by a <cpt> element.
 
     Args:
@@ -190,7 +190,7 @@ def _cpt_element_states(states: Any) -> List[Any]:
     return values
 
 
-def _cpt_element_probs(probs: Any) -> List[Any]:
+def _cpt_element_probs(probs: Any) -> list[Any]:
     """Return the probabilities held in a <probabilities> element.
 
     Args:
@@ -287,7 +287,7 @@ def _categorical_cnd(
 
 def _parented_cnd(
     node: Any, node_parents: Any, values: Any, probs: Any, correct: Any
-) -> List[Any]:
+) -> list[Any]:
     """Return the CPT entries of a categorical node with parents.
 
     Args:
@@ -397,7 +397,7 @@ def _parse_xdsl_root(path: str) -> Any:
     xdsl = _parse_xdsl_document(path)
 
     root = xdsl.documentElement
-    if root.tagName != "smile":  # type: ignore[union-attr]
+    if root.tagName != "smile":
         raise FileFormatError("xdsl.read() invalid root")
     return root
 
@@ -436,7 +436,7 @@ def _parse_xml_file(xml_file: Any) -> Any:
         raise FileFormatError("xdsl.read() invalid XML")
 
 
-def _xdsl_top_level(root: Any) -> List[Any]:
+def _xdsl_top_level(root: Any) -> list[Any]:
     """Return the elements directly under the <smile> root element.
 
     Args:
@@ -460,7 +460,7 @@ def _xdsl_top_level(root: Any) -> List[Any]:
     return top_level
 
 
-def _xdsl_node_data(nodes_elem: Any) -> Dict[Any, Any]:
+def _xdsl_node_data(nodes_elem: Any) -> dict[Any, Any]:
     """Return the node data described by a <nodes> element.
 
     Args:
@@ -473,7 +473,7 @@ def _xdsl_node_data(nodes_elem: Any) -> Dict[Any, Any]:
     Raises:
         FileFormatError: If an unexpected element is found under <nodes>.
     """
-    xdsl_data: Dict[Any, Any] = {}
+    xdsl_data: dict[Any, Any] = {}
     for child in nodes_elem.childNodes:
         if child.nodeType != 1:
             continue
@@ -481,7 +481,7 @@ def _xdsl_node_data(nodes_elem: Any) -> Dict[Any, Any]:
     return xdsl_data
 
 
-def _add_node_data(xdsl_data: Dict[Any, Any], child: Any) -> None:
+def _add_node_data(xdsl_data: dict[Any, Any], child: Any) -> None:
     """Add the data described by one element under <nodes>.
 
     Args:

@@ -3,7 +3,6 @@
 import os
 import shutil
 import subprocess
-from typing import Optional
 
 from causaliq_core.r.exceptions import (
     RNotAvailableError,
@@ -11,7 +10,7 @@ from causaliq_core.r.exceptions import (
 )
 
 
-def _find_rscript() -> Optional[str]:
+def _find_rscript() -> str | None:
     """Return path to the Rscript executable, or None if not found.
 
     Searches PATH first, then falls back to the R_HOME environment

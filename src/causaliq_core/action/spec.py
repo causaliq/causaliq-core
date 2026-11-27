@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Optional, Tuple
+from typing import Any
 
 
 class ActionPattern(Enum):
@@ -91,7 +91,7 @@ class ActionInput:
     required: bool = False
     default: Any = NO_DEFAULT
     type_hint: str = "Any"
-    choices: Optional[Tuple[Any, ...]] = None
+    choices: tuple[Any, ...] | None = None
 
 
 @dataclass

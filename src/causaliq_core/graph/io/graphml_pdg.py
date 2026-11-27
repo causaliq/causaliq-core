@@ -13,7 +13,7 @@
 from __future__ import annotations
 
 import xml.etree.ElementTree as ET
-from typing import TYPE_CHECKING, Dict, Tuple
+from typing import TYPE_CHECKING
 
 from causaliq_core.utils import FileFormatError
 
@@ -94,7 +94,7 @@ def read_pdg(file: FileLike) -> "PDG":
 
 def _parse_probability_edges(
     graph_elem: ET.Element, ns: dict, source_desc: str
-) -> Dict[Tuple[str, str], "EdgeProbabilities"]:
+) -> dict[tuple[str, str], "EdgeProbabilities"]:
     """Return the edge probabilities held by a GraphML graph element.
 
     Args:
@@ -109,7 +109,7 @@ def _parse_probability_edges(
         FileFormatError: If an edge is malformed, lacks probability
             attributes or holds an invalid probability value.
     """
-    edges: Dict[Tuple[str, str], "EdgeProbabilities"] = {}
+    edges: dict[tuple[str, str], "EdgeProbabilities"] = {}
     edge_tag = "g:edge" if ns else "edge"
 
     for edge_elem in graph_elem.findall(edge_tag, ns):
@@ -121,7 +121,7 @@ def _parse_probability_edges(
 
 def _edge_probabilities(
     edge_elem: ET.Element, ns: dict, source_desc: str
-) -> Tuple[str, str, "EdgeProbabilities"]:
+) -> tuple[str, str, "EdgeProbabilities"]:
     """Return the canonical node pair and probabilities of an edge element.
 
     Args:
@@ -151,7 +151,7 @@ def _edge_probabilities(
 
 def _edge_probability_values(
     edge_elem: ET.Element, ns: dict, source_desc: str
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """Return the raw probability values of an edge element.
 
     Args:
@@ -165,7 +165,7 @@ def _edge_probability_values(
     Raises:
         FileFormatError: If a probability value cannot be parsed.
     """
-    values: Dict[str, float] = {}
+    values: dict[str, float] = {}
     data_tag = "g:data" if ns else "data"
 
     for data_elem in edge_elem.findall(data_tag, ns):
@@ -200,8 +200,8 @@ def _probability_value(text: str, source_desc: str) -> float:
 
 
 def _canonical_probabilities(
-    source: str, target: str, values: Dict[str, float]
-) -> Tuple[str, str, Dict[str, float]]:
+    source: str, target: str, values: dict[str, float]
+) -> tuple[str, str, dict[str, float]]:
     """Return the node pair and probabilities in canonical order.
 
     Args:
@@ -221,7 +221,7 @@ def _canonical_probabilities(
 
 
 def _edge_distribution(
-    values: Dict[str, float], source_desc: str, source: str, target: str
+    values: dict[str, float], source_desc: str, source: str, target: str
 ) -> "EdgeProbabilities":
     """Return the edge probabilities described by raw probability values.
 
@@ -309,7 +309,7 @@ def write_pdg(pdg: "PDG", file: FileLike) -> None:
 
 
 def _add_pdg_edges(
-    graph_elem: ET.Element, edges: Dict[Tuple[str, str], "EdgeProbabilities"]
+    graph_elem: ET.Element, edges: dict[tuple[str, str], "EdgeProbabilities"]
 ) -> None:
     """Add edge elements with probability data to the graph element.
 

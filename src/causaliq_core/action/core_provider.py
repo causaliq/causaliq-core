@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 from io import StringIO
-from typing import Any, Dict, Optional, Set
+from typing import Any, Set
 
 from causaliq_core.action.graphml_codec import (
     _decode_graphml_edges,
@@ -57,10 +57,10 @@ class CoreActionProvider(CausalIQActionProvider):
     def _execute(
         self,
         action: str,
-        parameters: Dict[str, Any],
+        parameters: dict[str, Any],
         mode: str,
-        context: Optional[Any],
-        logger: Optional[Any],
+        context: Any | None,
+        logger: Any | None,
     ) -> ActionResult:
         """No-op execute - CoreActionProvider has no actions."""
         return ("skipped", {}, [])

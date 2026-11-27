@@ -6,7 +6,6 @@ cross-platform reproducibility in experiments and testing.
 """
 
 from enum import Enum
-from typing import List, Optional
 
 from numpy.random import Generator, default_rng
 
@@ -1027,7 +1026,7 @@ STABLE_RANDOM_SEQUENCE = [
 
 # Global variables for random number generation
 _rng = default_rng(1)
-_stable_random: Optional[List[float]] = None
+_stable_random: list[float] | None = None
 _stable_random_offset: int = 0
 
 
@@ -1053,7 +1052,7 @@ def random_generator() -> Generator:
     return _rng
 
 
-def set_random_seed(seed: Optional[int] = None) -> None:
+def set_random_seed(seed: int | None = None) -> None:
     """
     Set the seed of the random number generator.
 
@@ -1071,7 +1070,7 @@ def set_random_seed(seed: Optional[int] = None) -> None:
     _rng = default_rng(seed)
 
 
-def generate_stable_random(N: int, path: Optional[str] = None) -> List[float]:
+def generate_stable_random(N: int, path: str | None = None) -> list[float]:
     """
     Generate a sequence of random numbers for repeatability.
 
@@ -1098,7 +1097,7 @@ def generate_stable_random(N: int, path: Optional[str] = None) -> List[float]:
     return STABLE_RANDOM_SEQUENCE[:N]
 
 
-def stable_random(path: Optional[str] = None) -> float:
+def stable_random(path: str | None = None) -> float:
     """
     Return next random number in stable sequence.
 
@@ -1118,7 +1117,7 @@ def stable_random(path: Optional[str] = None) -> float:
     # Ensure consistent initialization
     _ensure_stable_random_initialized()
 
-    # After initialization, _stable_random is guaranteed to be a List[float]
+    # After initialization, _stable_random is guaranteed to be a list[float]
     assert _stable_random is not None  # For MyPy type checking
 
     if not len(_stable_random):
@@ -1167,7 +1166,7 @@ class RandomIntegers:
         FileNotFoundError: If stable random sequence unavailable
     """
 
-    def __init__(self, n: int, subsample: int = 0, path: Optional[str] = None):
+    def __init__(self, n: int, subsample: int = 0, path: str | None = None):
         if (
             not isinstance(n, int)
             or not isinstance(subsample, int)
@@ -1181,7 +1180,7 @@ class RandomIntegers:
         self._n = n
         self._subsample = subsample
         self._path = path  # Kept for compatibility but not used
-        self._available: List[int] = [i for i in range(self._n)]
+        self._available: list[int] = [i for i in range(self._n)]
 
     def __iter__(self) -> "RandomIntegers":
         """

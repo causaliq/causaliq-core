@@ -8,7 +8,7 @@ the declared defaults for the parameters that apply to an action.
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any
 
 from causaliq_core.action.errors import ActionValidationError
 from causaliq_core.action.spec import NO_DEFAULT, ActionInput
@@ -75,7 +75,7 @@ def _check_input_spec(provider_name: str, key: str, spec: Any) -> None:
 
 
 def _check_input_specs(
-    provider_name: str, inputs: Dict[str, ActionInput]
+    provider_name: str, inputs: dict[str, ActionInput]
 ) -> None:
     """Raise when a provider's input specifications break the contract.
 
@@ -90,7 +90,7 @@ def _check_input_specs(
         _check_input_spec(provider_name, key, spec)
 
 
-def _applicable_inputs(provider: Any, action: str) -> Dict[str, ActionInput]:
+def _applicable_inputs(provider: Any, action: str) -> dict[str, ActionInput]:
     """Return the input specifications that apply to one action.
 
     A provider that declares ``action_parameters`` (action name to
@@ -106,7 +106,7 @@ def _applicable_inputs(provider: Any, action: str) -> Dict[str, ActionInput]:
     Returns:
         Mapping of applicable input specifications.
     """
-    inputs: Dict[str, ActionInput] = dict(getattr(provider, "inputs", {}))
+    inputs: dict[str, ActionInput] = dict(getattr(provider, "inputs", {}))
     action_parameters = getattr(provider, "action_parameters", None)
     if not isinstance(action_parameters, dict):
         return inputs
@@ -119,8 +119,8 @@ def _applicable_inputs(provider: Any, action: str) -> Dict[str, ActionInput]:
 def resolve_action_parameters(
     provider: Any,
     action: str,
-    supplied: Dict[str, Any],
-) -> Dict[str, Any]:
+    supplied: dict[str, Any],
+) -> dict[str, Any]:
     """Return the effective parameters for one action.
 
     Supplied values win. A parameter that was omitted takes its declared

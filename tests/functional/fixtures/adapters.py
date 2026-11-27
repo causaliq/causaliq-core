@@ -1,6 +1,6 @@
 """Shared test fixtures for functional tests."""
 
-from typing import Any, Dict, Tuple
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -67,7 +67,7 @@ class DataFrameAdapter(BNFit):
             else:
                 return crosstab.values, crosstab.shape[1]
 
-    def values(self, nodes: Tuple[str, ...]) -> np.ndarray:
+    def values(self, nodes: tuple[str, ...]) -> np.ndarray:
         """Return the (float) values for specified nodes."""
         return self.df[list(nodes)].values.astype(float)
 
@@ -82,17 +82,17 @@ class DataFrameAdapter(BNFit):
         self._N = value
 
     @property
-    def node_values(self) -> Dict[str, Dict]:
+    def node_values(self) -> dict[str, dict]:
         """Return node value counts for categorical variables."""
         return self._node_values
 
     @node_values.setter
-    def node_values(self, value: Dict[str, Dict]) -> None:
+    def node_values(self, value: dict[str, dict]) -> None:
         """Set node value counts."""
         self._node_values = value
 
     @property
-    def nodes(self) -> Tuple[str, ...]:
+    def nodes(self) -> tuple[str, ...]:
         """Column names in the dataset."""
         return tuple(self.df.columns)
 
@@ -102,7 +102,7 @@ class DataFrameAdapter(BNFit):
         return self.df
 
     @property
-    def node_types(self) -> Dict[str, str]:
+    def node_types(self) -> dict[str, str]:
         """Node type mapping for each variable."""
         return {col: str(self.df[col].dtype) for col in self.df.columns}
 

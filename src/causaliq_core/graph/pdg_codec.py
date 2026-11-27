@@ -10,10 +10,8 @@ exponent format: value = mantissa x 10^exponent. The p_none value is
 derived from the constraint that the probabilities sum to 1.0.
 """
 
-from typing import Dict, List, Tuple
-
 # Type alias for (forward, backward, undirected, none) probabilities
-EdgeProbs = Tuple[float, float, float, float]
+EdgeProbs = tuple[float, float, float, float]
 
 # Bytes used by each encoded probability value
 PROBABILITY_BYTES = 3
@@ -22,7 +20,7 @@ PROBABILITY_BYTES = 3
 EDGE_BYTES = 13
 
 
-def _significant_figures(value: float) -> Tuple[int, int]:
+def _significant_figures(value: float) -> tuple[int, int]:
     """Return the mantissa and exponent giving 4 significant figures.
 
     Args:
@@ -137,7 +135,7 @@ def _encode_node_name(node: str) -> bytes:
 
 
 def _encode_edge(
-    node_index: Dict[str, int],
+    node_index: dict[str, int],
     source: str,
     target: str,
     probs: EdgeProbs,
@@ -162,7 +160,7 @@ def _encode_edge(
 
 
 def encode_pdg(
-    nodes: List[str], edges: Dict[Tuple[str, str], EdgeProbs]
+    nodes: list[str], edges: dict[tuple[str, str], EdgeProbs]
 ) -> bytes:
     """Encode a PDG's nodes and edge probabilities to compact binary.
 
@@ -210,7 +208,7 @@ def encode_pdg(
     return data
 
 
-def _decode_uint16(data: bytes, pos: int) -> Tuple[int, int]:
+def _decode_uint16(data: bytes, pos: int) -> tuple[int, int]:
     """Return the big-endian uint16 at a position and the next position.
 
     Args:
@@ -228,7 +226,7 @@ def _decode_uint16(data: bytes, pos: int) -> Tuple[int, int]:
     return int.from_bytes(data[pos : pos + 2], "big"), pos + 2
 
 
-def _decode_node_names(data: bytes) -> Tuple[List[str], int]:
+def _decode_node_names(data: bytes) -> tuple[list[str], int]:
     """Return the node names encoded in data and the next position.
 
     Args:
@@ -280,7 +278,7 @@ def _none_probability(
     raise ValueError("PDG.decompress() probabilities sum to more than 1.0")
 
 
-def _decode_probabilities(data: bytes, pos: int) -> Tuple[EdgeProbs, int]:
+def _decode_probabilities(data: bytes, pos: int) -> tuple[EdgeProbs, int]:
     """Return three encoded probabilities and the following position.
 
     Args:
@@ -302,8 +300,8 @@ def _decode_probabilities(data: bytes, pos: int) -> Tuple[EdgeProbs, int]:
 
 
 def _decode_edge(
-    data: bytes, pos: int, nodes: List[str]
-) -> Tuple[str, str, EdgeProbs, int]:
+    data: bytes, pos: int, nodes: list[str]
+) -> tuple[str, str, EdgeProbs, int]:
     """Return the edge decoded at a position and the following position.
 
     Args:
@@ -333,7 +331,7 @@ def _decode_edge(
 
 def decode_pdg(
     data: bytes,
-) -> Tuple[List[str], Dict[Tuple[str, str], EdgeProbs]]:
+) -> tuple[list[str], dict[tuple[str, str], EdgeProbs]]:
     """Decode compact binary into node names and edge probabilities.
 
     Args:
@@ -355,7 +353,7 @@ def decode_pdg(
     nodes, pos = _decode_node_names(data)
     num_edges, pos = _decode_uint16(data, pos)
 
-    edges: Dict[Tuple[str, str], EdgeProbs] = {}
+    edges: dict[tuple[str, str], EdgeProbs] = {}
     for _ in range(num_edges):
         source, target, probs, pos = _decode_edge(data, pos, nodes)
         edges[(source, target)] = probs

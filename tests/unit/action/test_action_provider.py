@@ -117,7 +117,7 @@ def test_decompress_unsupported_type() -> None:
 
 # Test ActionResult is correct tuple type alias.
 def test_action_result_type_alias() -> None:
-    # ActionResult should be Tuple[str, Dict[str, Any], List[Dict[str, Any]]]
+    # ActionResult should be tuple[str, dict[str, Any], list[dict[str, Any]]]
     result: ActionResult = ("success", {"key": "val"}, [{"type": "json"}])
     status, metadata, objects = result
     assert status == "success"

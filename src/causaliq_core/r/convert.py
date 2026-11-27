@@ -1,12 +1,12 @@
 """Data conversion utilities between CausalIQ and R types."""
 
-from typing import Dict, List, Sequence, Tuple
+from typing import Sequence
 
 import numpy as np
 import pandas as pd
 
 # Maps a CausalIQ node type string to its R read.csv colClasses value.
-_R_COL_CLASSES: Dict[str, str] = {
+_R_COL_CLASSES: dict[str, str] = {
     "CONTINUOUS": "numeric",
     "COUNT": "numeric",
     "DISCRETE": "factor",
@@ -19,8 +19,8 @@ _DEFAULT_COL_CLASS = "numeric"
 
 
 def r_arcs_to_edges(
-    arcs: List[Tuple[str, str]],
-) -> List[Tuple[str, str, str]]:
+    arcs: list[tuple[str, str]],
+) -> list[tuple[str, str, str]]:
     """Convert a list of (from, to) arc pairs to CausalIQ edge tuples.
 
     Opposing arc pairs — where both (A, B) and (B, A) are present —
@@ -51,8 +51,8 @@ def r_arcs_to_edges(
 
 def data_to_r_dataframe(
     sample: np.ndarray,
-    columns: List[str],
-    node_types: Dict[str, str],
+    columns: list[str],
+    node_types: dict[str, str],
     varname: str = "df",
 ) -> str:
     """Generate R code that creates a data.frame from a NumPy array.
@@ -114,7 +114,7 @@ def _r_col_class(node_type: str) -> str:
 
 def _r_col_classes(
     columns: Sequence[str],
-    node_types: Dict[str, str],
+    node_types: dict[str, str],
 ) -> str:
     """Return an R colClasses vector expression for the given columns.
 
@@ -176,7 +176,7 @@ def write_r_datafile(
 def datafile_to_r_code(
     path: str,
     columns: Sequence[str],
-    node_types: Dict[str, str],
+    node_types: dict[str, str],
     varname: str = "df",
 ) -> str:
     """Return R code that reads a CSV datafile into a data.frame.

@@ -6,15 +6,13 @@ representation and back. It works directly with node names and edge types
 so that it does not need to depend on the graph classes themselves.
 """
 
-from typing import Dict, List, Tuple
-
 from .enums import EdgeType
 
 # Bytes used by each encoded edge: 2 + 2 node indexes + 1 edge type
 EDGE_BYTES = 5
 
 # Mapping of edge type identifier to EdgeType
-_EDGE_TYPE_LOOKUP: Dict[int, EdgeType] = {et.value[0]: et for et in EdgeType}
+_EDGE_TYPE_LOOKUP: dict[int, EdgeType] = {et.value[0]: et for et in EdgeType}
 
 
 def _encode_node_name(node: str) -> bytes:
@@ -36,7 +34,7 @@ def _encode_node_name(node: str) -> bytes:
 
 
 def _encode_edge(
-    node_index: Dict[str, int], source: str, target: str, edge_type: EdgeType
+    node_index: dict[str, int], source: str, target: str, edge_type: EdgeType
 ) -> bytes:
     """Return the encoded form of one edge.
 
@@ -56,7 +54,7 @@ def _encode_edge(
 
 
 def encode_sdg(
-    nodes: List[str], edges: Dict[Tuple[str, str], EdgeType]
+    nodes: list[str], edges: dict[tuple[str, str], EdgeType]
 ) -> bytes:
     """Encode an SDG's nodes and edges to compact binary.
 
@@ -104,7 +102,7 @@ def encode_sdg(
     return data
 
 
-def _decode_uint16(data: bytes, pos: int) -> Tuple[int, int]:
+def _decode_uint16(data: bytes, pos: int) -> tuple[int, int]:
     """Return the big-endian uint16 at a position and the next position.
 
     Args:
@@ -122,7 +120,7 @@ def _decode_uint16(data: bytes, pos: int) -> Tuple[int, int]:
     return int.from_bytes(data[pos : pos + 2], "big"), pos + 2
 
 
-def _decode_node_names(data: bytes) -> Tuple[List[str], int]:
+def _decode_node_names(data: bytes) -> tuple[list[str], int]:
     """Return the node names encoded in data and the next position.
 
     Args:
@@ -149,8 +147,8 @@ def _decode_node_names(data: bytes) -> Tuple[List[str], int]:
 
 
 def _decode_edge(
-    data: bytes, pos: int, nodes: List[str]
-) -> Tuple[str, str, str, int]:
+    data: bytes, pos: int, nodes: list[str]
+) -> tuple[str, str, str, int]:
     """Return the edge decoded at a position and the following position.
 
     Args:
@@ -182,7 +180,7 @@ def _decode_edge(
     return nodes[source_idx], edge_type.value[3], nodes[target_idx], pos
 
 
-def decode_sdg(data: bytes) -> Tuple[List[str], List[Tuple[str, str, str]]]:
+def decode_sdg(data: bytes) -> tuple[list[str], list[tuple[str, str, str]]]:
     """Decode compact binary into node names and edge triples.
 
     Args:

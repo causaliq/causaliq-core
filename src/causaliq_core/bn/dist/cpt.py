@@ -3,7 +3,7 @@
 #
 
 from itertools import combinations
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Union
 
 from causaliq_core.utils.random import random_generator
 from causaliq_core.utils.same import values_same
@@ -40,7 +40,7 @@ class CPT(CND):
     def __init__(
         self,
         pmfs: Union[
-            Dict[str, float], List[Tuple[Dict[str, str], Dict[str, float]]]
+            dict[str, float], list[tuple[dict[str, str], dict[str, float]]]
         ],
         estimated: int = 0,
     ) -> None:
@@ -54,7 +54,7 @@ class CPT(CND):
             # node with parents - multi-entry CPT
             self._init_parented(pmfs)
 
-    def _init_parentless(self, pmfs: Dict[str, float]) -> None:
+    def _init_parentless(self, pmfs: dict[str, float]) -> None:
         """Record a parentless node's simple CPT.
 
         Args:
@@ -64,13 +64,13 @@ class CPT(CND):
             ValueError: If the PMF is malformed or does not sum to 1.
         """
         _check_pmf(pmfs)
-        self.cpt: Dict[Any, Any] = pmfs
+        self.cpt: dict[Any, Any] = pmfs
         self.has_parents = False
         self.free_params = len(pmfs) - 1
         self.values = set(self.cpt.keys())
 
     def _init_parented(
-        self, pmfs: List[Tuple[Dict[str, str], Dict[str, float]]]
+        self, pmfs: list[tuple[dict[str, str], dict[str, float]]]
     ) -> None:
         """Record a parented node's multi-entry CPT.
 
@@ -84,8 +84,8 @@ class CPT(CND):
             raise ValueError("CPT has fewer than two entries")
         self.cpt = {}
         self.has_parents = True
-        prev_parents: Optional[frozenset] = None
-        prev_values: Optional[frozenset] = None
+        prev_parents: frozenset | None = None
+        prev_values: frozenset | None = None
 
         for entry in pmfs:
             prev_parents, prev_values = _add_cpt_entry(
@@ -102,10 +102,10 @@ class CPT(CND):
     def fit(
         cls,
         node: str,
-        parents: Optional[Tuple[str, ...]],
+        parents: tuple[str, ...] | None,
         data: Union[BNFit, Any],
         autocomplete: bool = True,
-    ) -> Tuple[Tuple[type, Dict[str, Any]], Optional[int]]:
+    ) -> tuple[tuple[type, dict[str, Any]], int | None]:
         """Constructs a CPT (Conditional Probability Table) from data.
 
         Args:
@@ -132,8 +132,8 @@ class CPT(CND):
         return ((CPT, cptdata), estimated_pmfs)  # type: ignore[return-value]
 
     def cdist(
-        self, parental_values: Optional[Dict[str, str]] = None
-    ) -> Dict[str, float]:
+        self, parental_values: dict[str, str] | None = None
+    ) -> dict[str, float]:
         """Return conditional probabilities of node values for specified
         parental values.
 
@@ -156,11 +156,11 @@ class CPT(CND):
             pvs = frozenset(
                 [(k, v) for k, v in parental_values.items()]  # type: ignore
             )
-            if pvs not in self.cpt:  # type: ignore
+            if pvs not in self.cpt:
                 raise ValueError("Unknown parental values for cdist call")
             return self.cpt[pvs]  # type: ignore
 
-    def random_value(self, pvs: Optional[Dict[str, str]]) -> str:
+    def random_value(self, pvs: dict[str, str] | None) -> str:
         """Generate a random value for a node given the value of its parents.
 
         Args:
@@ -179,7 +179,7 @@ class CPT(CND):
                 return value
         return values[-1]
 
-    def node_values(self) -> List[str]:
+    def node_values(self) -> list[str]:
         """Return node values (states) of node CPT relates to.
 
         Returns:
@@ -188,12 +188,10 @@ class CPT(CND):
         return (
             sorted(list(self.cpt.keys()))
             if not self.has_parents
-            else sorted(
-                list(next(iter(self.cpt.values())).keys())  # type: ignore
-            )
+            else sorted(list(next(iter(self.cpt.values())).keys()))
         )
 
-    def parents(self) -> List[str]:
+    def parents(self) -> list[str]:
         """Return parents of node CPT relates to.
 
         Returns:
@@ -204,7 +202,7 @@ class CPT(CND):
         else:
             return sorted([t[0] for t in (list(self.cpt.keys()))[0]])
 
-    def to_spec(self, name_map: Dict[str, str]) -> Dict[str, Any]:
+    def to_spec(self, name_map: dict[str, str]) -> dict[str, Any]:
         """Returns external specification format of CPT,
         renaming nodes according to a name map.
 
@@ -257,11 +255,9 @@ class CPT(CND):
 
         ratios = {}
         for pvs, pmf in (
-            self.cpt
-            if self.has_parents
-            else {None: self.cdist()}  # type: ignore
+            self.cpt if self.has_parents else {None: self.cdist()}
         ).items():
-            _ratios = {p: pmf[p[0]] / pmf[p[1]] for p in pairs}  # type: ignore
+            _ratios = {p: pmf[p[0]] / pmf[p[1]] for p in pairs}
             ratios[pvs] = pmf
             print("*** {} --> {}: ratios {}".format(pvs, pmf, _ratios))
 
@@ -277,7 +273,7 @@ class CPT(CND):
             str = [
                 "{} -> {}".format(
                     {t[0]: t[1] for t in pvs},
-                    {v: round(p, 6) for v, p in pmf.items()},  # type: ignore
+                    {v: round(p, 6) for v, p in pmf.items()},
                 )
                 for pvs, pmf in self.cpt.items()
             ]
@@ -296,7 +292,7 @@ class CPT(CND):
         """
 
         def _pmfs_same(
-            pmf1: Dict[str, float], pmf2: Dict[str, float]
+            pmf1: dict[str, float], pmf2: dict[str, float]
         ) -> bool:  # compare two PMFs to 6 sig. figures
             return pmf1.keys() == pmf2.keys() and all(
                 [values_same(v, pmf2[k], sf=6) for k, v in pmf1.items()]
@@ -316,18 +312,15 @@ class CPT(CND):
             _pmfs_same(self.cpt, other.cpt)
             if not self.has_parents
             else all(
-                [
-                    _pmfs_same(v, other.cpt[k])  # type: ignore
-                    for k, v in self.cpt.items()
-                ]
+                [_pmfs_same(v, other.cpt[k]) for k, v in self.cpt.items()]
             )
         )
 
     def validate_parents(
         self,
         node: str,
-        parents: Dict[str, List[str]],
-        node_values: Dict[str, List[str]],
+        parents: dict[str, list[str]],
+        node_values: dict[str, list[str]],
     ) -> None:
         """Checks every CPT's parents and parental values are consistent
         with other relevant CPTs and the DAG structure.
@@ -374,7 +367,7 @@ class NodeValueCombinations:
     """
 
     def __init__(
-        self, node_values: Dict[str, List[str]], sort: bool = True
+        self, node_values: dict[str, list[str]], sort: bool = True
     ) -> None:
 
         # store node values, optionally sorting them
@@ -409,7 +402,7 @@ class NodeValueCombinations:
         self.indices[len(self.cards) - 1] = -1
         return self
 
-    def __next__(self) -> Dict[str, str]:
+    def __next__(self) -> dict[str, str]:
         """
         Generate the next node value combination
 
@@ -475,7 +468,7 @@ def _check_cpt_args(pmfs: Any, estimated: int) -> None:
         raise ValueError("CPT has bad estimated value")
 
 
-def _check_pmf(pmf: Dict[str, float]) -> None:
+def _check_pmf(pmf: dict[str, float]) -> None:
     """Validate a probability mass function.
 
     Args:
@@ -495,7 +488,7 @@ def _check_pmf(pmf: Dict[str, float]) -> None:
         raise ValueError("PMF probability does not sum to 1")
 
 
-def _check_parental_values(p_vals: Dict[str, str]) -> None:
+def _check_parental_values(p_vals: dict[str, str]) -> None:
     """Validate the parental values of a multi-entry CPT entry.
 
     Args:
@@ -531,11 +524,11 @@ def _check_cpt_entry(entry: Any) -> None:
 
 
 def _add_cpt_entry(
-    cpt: Dict[Any, Any],
+    cpt: dict[Any, Any],
     entry: Any,
-    prev_parents: Optional[frozenset],
-    prev_values: Optional[frozenset],
-) -> Tuple[frozenset, frozenset]:
+    prev_parents: frozenset | None,
+    prev_values: frozenset | None,
+) -> tuple[frozenset, frozenset]:
     """Add one entry to a multi-entry CPT.
 
     Args:
@@ -582,7 +575,7 @@ def _categorical_value(value: Any) -> str:
     return value if isinstance(value, str) else str(value)
 
 
-def _parentless_cpt_spec(node: str, data: Any) -> Tuple[type, Dict[str, Any]]:
+def _parentless_cpt_spec(node: str, data: Any) -> tuple[type, dict[str, Any]]:
     """Return the CPT specification of a parentless node.
 
     Args:
@@ -602,8 +595,8 @@ def _parentless_cpt_spec(node: str, data: Any) -> Tuple[type, Dict[str, Any]]:
 
 
 def _fit_parented_cpt(
-    node: str, parents: Tuple[str, ...], data: Any, autocomplete: bool
-) -> Tuple[List[Tuple[Any, Dict[str, Any]]], int]:
+    node: str, parents: tuple[str, ...], data: Any, autocomplete: bool
+) -> tuple[list[tuple[Any, dict[str, Any]]], int]:
     """Return the CPT entries and estimate count for a parented node.
 
     Args:
@@ -616,7 +609,7 @@ def _fit_parented_cpt(
     Returns:
         Tuple of (CPT entries, number of PMFs that were estimated).
     """
-    cptdata: List[Tuple[Any, Dict[str, Any]]] = []
+    cptdata: list[tuple[Any, dict[str, Any]]] = []
     parent_map = {node: list(parents)} if len(parents) > 0 else {}
     counts, _, rowval, colval = data.marginals(node, parent_map, True)
     rowval = tuple(_categorical_value(v) for v in rowval)
@@ -639,9 +632,9 @@ def _fit_parented_cpt(
 
 def _autocomplete_cpt_entries(
     node: str,
-    parents: Tuple[str, ...],
+    parents: tuple[str, ...],
     data: Any,
-    cptdata: List[Tuple[Any, Dict[str, Any]]],
+    cptdata: list[tuple[Any, dict[str, Any]]],
 ) -> int:
     """Add CPT entries for parental combinations missing from the data.
 
@@ -674,7 +667,7 @@ def _autocomplete_cpt_entries(
 
 
 def _check_cpt_declared_parents(
-    cpt: CPT, node: str, parents: Dict[str, List[str]]
+    cpt: CPT, node: str, parents: dict[str, list[str]]
 ) -> None:
     """Check a CPT's declared parents agree with the DAG structure.
 
@@ -700,7 +693,7 @@ def _check_cpt_declared_parents(
 
 
 def _check_cpt_parent_values(
-    cpt: Dict[Any, Any], node_values: Dict[str, List[str]]
+    cpt: dict[Any, Any], node_values: dict[str, list[str]]
 ) -> None:
     """Check the values in a CPT's keys are valid for its parents.
 
@@ -720,7 +713,7 @@ def _check_cpt_parent_values(
 
 
 def _cpt_row_count(
-    parents: List[str], node_values: Dict[str, List[str]]
+    parents: list[str], node_values: dict[str, list[str]]
 ) -> int:
     """Return the number of parental value combinations for a node.
 

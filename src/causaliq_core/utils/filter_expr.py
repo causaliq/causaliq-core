@@ -24,13 +24,10 @@ Example:
 import re
 from typing import (
     Any,
-    Dict,
     FrozenSet,
-    List,
     Mapping,
     Sequence,
     Set,
-    Tuple,
 )
 
 from simpleeval import (  # type: ignore[import-untyped]
@@ -53,7 +50,7 @@ class FilterSyntaxError(FilterExpressionError):
 
 
 # Allowed names in filter expressions (empty - all names come from metadata)
-_ALLOWED_NAMES: Dict[str, Any] = {}
+_ALLOWED_NAMES: dict[str, Any] = {}
 
 
 def random_set(values: Sequence[Any], count: int, seed: int) -> FrozenSet[Any]:
@@ -104,7 +101,7 @@ def _random_placeholder(*args: Any) -> None:
 
 
 # Allowed functions in filter expressions
-_ALLOWED_FUNCTIONS: Dict[str, Any] = {
+_ALLOWED_FUNCTIONS: dict[str, Any] = {
     "len": len,
     "str": str,
     "int": int,
@@ -123,7 +120,7 @@ _RANDOM_PATTERN = re.compile(
 )
 
 
-def _create_evaluator(metadata: Dict[str, Any]) -> EvalWithCompoundTypes:
+def _create_evaluator(metadata: dict[str, Any]) -> EvalWithCompoundTypes:
     """Create a simpleeval evaluator with metadata as names.
 
     Args:
@@ -212,7 +209,7 @@ def _evaluate_expression(
         raise FilterExpressionError(f"Filter evaluation failed: {e}") from e
 
 
-def evaluate_filter(expression: str, metadata: Dict[str, Any]) -> bool:
+def evaluate_filter(expression: str, metadata: dict[str, Any]) -> bool:
     """Evaluate filter expression against metadata dictionary.
 
     The expression uses Python syntax with metadata field names as variables.
@@ -389,7 +386,7 @@ def _substitute_random_call(expression: str, match: Any, name: str) -> str:
 def resolve_random_calls(
     expression: str,
     all_metadata: Sequence[Mapping[str, Any]],
-) -> Tuple[str, Dict[str, Any]]:
+) -> tuple[str, dict[str, Any]]:
     """Pre-resolve ``random()`` calls in a filter expression.
 
     Finds ``VAR in random(count, seed)`` patterns, collects the
@@ -426,7 +423,7 @@ def resolve_random_calls(
     if not matches:
         return expression, {}
 
-    extra_names: Dict[str, Any] = {}
+    extra_names: dict[str, Any] = {}
     new_expr = expression
 
     # Process in reverse order to preserve string positions.
@@ -445,10 +442,10 @@ def resolve_random_calls(
 
 
 def _entry_matches(
-    entry: Dict[str, Any],
+    entry: dict[str, Any],
     metadata_key: str,
     expression: str,
-    extra_names: Dict[str, Any],
+    extra_names: dict[str, Any],
 ) -> bool:
     """Return whether a single entry satisfies the filter expression.
 
@@ -473,10 +470,10 @@ def _entry_matches(
 
 
 def filter_entries(
-    entries: List[Dict[str, Any]],
+    entries: list[dict[str, Any]],
     expression: str,
     metadata_key: str = "metadata",
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Filter a list of entries by metadata expression.
 
     Convenience function to filter a list of cache entry dictionaries
